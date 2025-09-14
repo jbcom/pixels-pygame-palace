@@ -7,6 +7,7 @@ import LessonSidebar from "@/components/lesson-sidebar";
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
 import FloatingFeedback from "@/components/floating-feedback";
+import LessonIntroModal from "@/components/lesson-intro-modal";
 import type { Lesson, UserProgress } from "@shared/schema";
 import { usePyodide } from "@/hooks/use-pyodide";
 
@@ -18,6 +19,7 @@ export default function LessonPage() {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
+  const [showIntroModal, setShowIntroModal] = useState(false);
   const [gradingResult, setGradingResult] = useState<{
     passed: boolean;
     feedback: string;
@@ -57,6 +59,8 @@ export default function LessonPage() {
       }
     } else if (lesson && lesson.content.steps[0]) {
       setCode(lesson.content.steps[0].initialCode);
+      // Show intro modal for new lessons (no progress yet)
+      setShowIntroModal(true);
     }
   }, [progress, lesson]);
 
@@ -365,6 +369,14 @@ export default function LessonPage() {
           showNext={gradingResult?.passed || false}
           isLastStep={isLastStep}
           gradingResult={gradingResult}
+        />
+      )}
+
+      {lesson && (
+        <LessonIntroModal
+          lesson={lesson}
+          isOpen={showIntroModal}
+          onClose={() => setShowIntroModal(false)}
         />
       )}
     </div>
