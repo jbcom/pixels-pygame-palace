@@ -14,6 +14,10 @@ export const lessons = pgTable("lessons", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   order: integer("order").notNull(),
+  intro: text("intro"),
+  learningObjectives: json("learningObjectives").$type<string[]>(),
+  goalDescription: text("goalDescription"),
+  previewCode: text("previewCode"),
   content: json("content").notNull().$type<{
     introduction: string;
     steps: Array<{
