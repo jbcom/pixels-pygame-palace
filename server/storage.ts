@@ -34,38 +34,80 @@ export class MemStorage implements IStorage {
       {
         id: "lesson-1",
         title: "Python Basics",
-        description: "Learn Python fundamentals and setup",
+        description: "Variables, data types, and your first Python program",
         order: 1,
-        intro: "Welcome to your first Python adventure! 🎮 In this lesson, you'll set up your game development environment and create your first pygame window. Get ready to see your code come to life!",
+        intro: "🎮 Welcome to Python programming! Every great game starts with the basics. In this lesson, you'll learn about variables (like player scores and lives), data types, and how to display information on screen.",
         learningObjectives: [
-          "Import and initialize the pygame library",
-          "Create your first game window",
-          "Set window properties like size and title",
-          "Understand the basics of game setup"
+          "Create and use variables to store game data",
+          "Work with different data types (strings, numbers, booleans)",
+          "Use print() to display game messages",
+          "Get player input with input()",
+          "Convert between data types"
         ],
-        goalDescription: "By the end of this lesson, you'll have a working pygame window ready for creating amazing games!",
-        previewCode: "pygame.display.set_mode((800, 600))\npygame.display.set_caption('My First Game')",
+        goalDescription: "Create your first interactive Python program that asks for a player's name and greets them!",
+        previewCode: "player_name = input('Enter your name: ')\nprint(f'Welcome to the game, {player_name}!')",
         content: {
-          introduction: "Welcome to Python! In this lesson, you'll learn the basics of Python programming and set up your first pygame window.",
+          introduction: "Python is a powerful language perfect for game development. Let's start with the fundamentals that every game programmer needs to know!",
           steps: [
             {
               id: "step-1",
-              title: "Import pygame",
-              description: "Start by importing the pygame library",
-              initialCode: "# Import pygame library here\n\n",
-              solution: "import pygame\nimport sys",
-              hints: ["Use the 'import' keyword", "Don't forget to import sys as well for system functions"]
+              title: "Your First Game Message",
+              description: "Let's start by displaying a welcome message for players. Use print() to show text on screen.",
+              initialCode: "# Welcome players to your game!\n# Use print() to display a message\n",
+              solution: "print('Welcome to Python Game Academy!')\nprint('Get ready to learn programming through games!')",
+              hints: ["Use print() function", "Put text in quotes", "You can use single or double quotes"],
+              tests: [
+                {
+                  expectedOutput: "Welcome to Python Game Academy!\nGet ready to learn programming through games!",
+                  description: "Should display welcome messages"
+                }
+              ]
             },
             {
               id: "step-2",
-              title: "Initialize pygame",
-              description: "Initialize pygame and create a window",
-              initialCode: "import pygame\nimport sys\n\n# Initialize pygame here\n",
-              solution: "import pygame\nimport sys\n\npygame.init()\nscreen = pygame.display.set_mode((800, 600))\npygame.display.set_caption('My First Game')",
-              hints: ["Call pygame.init() to initialize", "Use pygame.display.set_mode() to create a window", "Set a caption with pygame.display.set_caption()"]
+              title: "Game Variables",
+              description: "Games need to track data like scores, lives, and player names. Let's create variables to store this information.",
+              initialCode: "# Create variables for:\n# - player_score (set to 0)\n# - player_lives (set to 3)\n# - game_title (set to 'Adventure Quest')\n# Then print each variable\n",
+              solution: "player_score = 0\nplayer_lives = 3\ngame_title = 'Adventure Quest'\n\nprint(player_score)\nprint(player_lives)\nprint(game_title)",
+              hints: ["Use = to assign values", "Variable names can't have spaces", "Print each variable separately"],
+              tests: [
+                {
+                  expectedOutput: "0\n3\nAdventure Quest",
+                  description: "Should create and display game variables"
+                }
+              ]
+            },
+            {
+              id: "step-3",
+              title: "Player Input",
+              description: "Make your game interactive! Ask the player for their name and create a personalized greeting.",
+              initialCode: "# Ask for the player's name using input()\n# Store it in a variable called player_name\n# Then print a welcome message that includes their name\n",
+              solution: "player_name = input('Enter your name: ')\nprint('Welcome to the game, ' + player_name + '!')\nprint('Your adventure begins now!')",
+              hints: ["Use input() to get text from player", "Store the result in a variable", "Use + to combine strings"],
+              validation: {
+                type: "function",
+                expected: "Uses input() and print() with player name"
+              }
+            },
+            {
+              id: "step-4",
+              title: "Data Types for Games",
+              description: "Games use different types of data. Let's practice with numbers (int, float), text (str), and true/false values (bool).",
+              initialCode: "# Create these game variables with the right types:\n# health_points = 100 (integer)\n# speed = 5.5 (float)\n# player_name = 'Hero' (string)\n# is_playing = True (boolean)\n# Print the type of each variable using type()\n",
+              solution: "health_points = 100\nspeed = 5.5\nplayer_name = 'Hero'\nis_playing = True\n\nprint(type(health_points))\nprint(type(speed))\nprint(type(player_name))\nprint(type(is_playing))",
+              hints: ["True and False must be capitalized", "Use type() to check data types", "Floats have decimal points"],
+              tests: [
+                {
+                  expectedOutput: "<class 'int'>\n<class 'float'>\n<class 'str'>\n<class 'bool'>",
+                  description: "Should create variables of different types"
+                }
+              ]
             }
           ]
-        }
+        },
+        prerequisites: [],
+        difficulty: "Beginner",
+        estimatedTime: 20
       },
       {
         id: "lesson-2",
@@ -246,10 +288,10 @@ export class MemStorage implements IStorage {
       title: lesson.title,
       description: lesson.description,
       order: lesson.order,
-      intro: lesson.intro,
-      learningObjectives: lesson.learningObjectives,
-      goalDescription: lesson.goalDescription,
-      previewCode: lesson.previewCode,
+      intro: lesson.intro ?? null,
+      learningObjectives: lesson.learningObjectives ?? null,
+      goalDescription: lesson.goalDescription ?? null,
+      previewCode: lesson.previewCode ?? null,
       content: lesson.content
     };
     this.lessons.set(id, newLesson);
