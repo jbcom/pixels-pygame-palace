@@ -31,6 +31,28 @@ export const lessons = pgTable("lessons", {
         input?: string;
         expectedOutput: string;
         description?: string;
+        mode?: 'output' | 'rules';
+        astRules?: {
+          requiredFunctions?: string[];
+          requiredConstructs?: Array<{
+            type: 'variable_assignment' | 'function_call' | 'import' | 'if_statement' | 'loop' | 'string_literal' | 'f_string';
+            name?: string;
+            minCount?: number;
+            maxCount?: number;
+          }>;
+          forbiddenConstructs?: Array<{
+            type: 'variable_assignment' | 'function_call' | 'import' | 'if_statement' | 'loop' | 'string_literal' | 'f_string';
+            name?: string;
+          }>;
+        };
+        runtimeRules?: {
+          outputContains?: string[];
+          outputMatches?: string;
+          variableExists?: string[];
+          functionCalled?: string[];
+          acceptsUserInput?: boolean;
+          outputIncludesInput?: boolean;
+        };
       }>;
       validation?: {
         type: 'output' | 'variable' | 'function' | 'exact';
