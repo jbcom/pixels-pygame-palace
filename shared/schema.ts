@@ -27,8 +27,20 @@ export const lessons = pgTable("lessons", {
       initialCode: string;
       solution: string;
       hints: string[];
+      tests?: Array<{
+        input?: string;
+        expectedOutput: string;
+        description?: string;
+      }>;
+      validation?: {
+        type: 'output' | 'variable' | 'function' | 'exact';
+        expected?: any;
+      };
     }>;
   }>(),
+  prerequisites: json("prerequisites").$type<string[]>(),
+  difficulty: text("difficulty"),
+  estimatedTime: integer("estimated_time"),
 });
 
 export const userProgress = pgTable("user_progress", {
