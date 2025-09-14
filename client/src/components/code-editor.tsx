@@ -179,9 +179,9 @@ export default function CodeEditor({
 
   return (
     <div className="w-1/2 flex flex-col">
-      <div className="bg-card border-b-2 border-border p-5">
+      <div className="code-editor-header">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Code Editor</h3>
+          <h3 className="text-2xl font-bold">Code Editor</h3>
           <div className="flex items-center gap-3">
             <Button
               onClick={() => onExecute(inputValues, false)}
@@ -213,48 +213,50 @@ export default function CodeEditor({
           </div>
         </div>
         
-        {/* Step Instructions */}
+        {/* Enhanced Step Instructions */}
         {currentStep && (
-          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">{currentStep.title}</h4>
-            <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">{currentStep.description}</p>
+          <div className="mb-6 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border-2 border-primary/30 shadow-lg">
+            <h4 className="text-xl font-bold text-primary mb-3">{currentStep.title}</h4>
+            <p className="text-foreground/80 text-lg leading-relaxed">{currentStep.description}</p>
           </div>
         )}
         
-        {/* Expected Output */}
+        {/* Enhanced Expected Output */}
         {currentStep && currentStep.tests && currentStep.tests.length > 0 && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="h-4 w-4 text-green-700 dark:text-green-300" />
-              <h4 className="font-semibold text-green-900 dark:text-green-100">Expected Output:</h4>
+          <div className="mb-6 p-6 bg-gradient-to-br from-success/15 to-success/5 rounded-xl border-2 border-success/40 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <Target className="h-6 w-6 text-success" />
+              <h4 className="text-xl font-bold text-success">Expected Output:</h4>
             </div>
-            <pre className="text-green-800 dark:text-green-200 text-sm font-mono bg-green-100 dark:bg-green-900/50 p-2 rounded">
+            <pre className="text-success/90 text-lg font-mono bg-success/10 p-4 rounded-lg border border-success/20">
               {currentStep.tests[0].expectedOutput}
             </pre>
             {currentStep.tests[0].input && (
-              <p className="text-green-700 dark:text-green-300 text-xs mt-1">
-                (With input: {currentStep.tests[0].input})
+              <p className="text-success/80 text-base mt-3 font-medium">
+                📝 Input provided: <span className="font-mono bg-success/10 px-2 py-1 rounded">{currentStep.tests[0].input}</span>
               </p>
             )}
           </div>
         )}
         
-        {/* Input Values Control */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Keyboard className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="input-values" className="text-sm font-medium whitespace-nowrap">
-              Input Values:
-            </Label>
+        {/* Enhanced Input Values Control */}
+        <div className="bg-gradient-to-r from-secondary/10 to-secondary/5 p-4 rounded-xl border border-secondary/30">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Keyboard className="h-5 w-5 text-secondary" />
+              <Label htmlFor="input-values" className="text-lg font-semibold text-secondary whitespace-nowrap">
+                Input Values:
+              </Label>
+            </div>
+            <Input
+              id="input-values"
+              value={inputValues}
+              onChange={(e) => setInputValues(e.target.value)}
+              placeholder="John, 25, Python (comma-separated for multiple input() calls)"
+              className="flex-1 text-lg border-2 border-secondary/40 focus:border-secondary"
+              data-testid="input-values"
+            />
           </div>
-          <Input
-            id="input-values"
-            value={inputValues}
-            onChange={(e) => setInputValues(e.target.value)}
-            placeholder="John, 25, Python (comma-separated for multiple input() calls)"
-            className="flex-1 text-sm"
-            data-testid="input-values"
-          />
         </div>
       </div>
       
@@ -265,14 +267,14 @@ export default function CodeEditor({
           data-testid="code-editor"
         />
         
-        {/* Console/Output Area */}
+        {/* Enhanced Console/Output Area */}
         <div className="bg-card border-t-2 border-border">
-          <div className="p-4 border-b border-border bg-muted/30">
+          <div className="console-header">
             <div className="flex items-center justify-between">
-              <h4 className="text-lg font-medium">Console Output</h4>
+              <h4 className="text-xl font-bold">Console Output</h4>
             </div>
           </div>
-          <div className="console-output h-48 overflow-auto">
+          <div className="console-output h-52 overflow-auto">
             {gradingResult ? (
               <div className={cn(
                 "p-4",

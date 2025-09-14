@@ -308,7 +308,7 @@ export default function LessonPage() {
   const stepProgress = ((currentStepIndex + 1) / lesson.content.steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="lesson-container">
       <Header 
         lesson={lesson} 
         progress={stepProgress}
