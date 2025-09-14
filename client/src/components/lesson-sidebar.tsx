@@ -1,6 +1,7 @@
-import { CheckCircle, Play, Lock, Circle } from "lucide-react";
+import { CheckCircle, Play, Circle, BookOpen, Trophy, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Lesson, UserProgress } from "@shared/schema";
+import { motion } from "framer-motion";
 
 interface LessonSidebarProps {
   lesson: Lesson;
@@ -10,68 +11,181 @@ interface LessonSidebarProps {
 }
 
 export default function LessonSidebar({ lesson, currentStepIndex, progress, onStepClick }: LessonSidebarProps) {
+  const completedSteps = progress?.currentStep || 0;
+  const totalSteps = lesson.content.steps.length;
+  const progressPercentage = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+
   return (
-    <aside className="w-96 lesson-sidebar flex flex-col">
-      <div className="p-8 border-b-2 border-border bg-gradient-to-br from-primary/5 to-secondary/5">
-        <h2 className="text-3xl font-bold mb-6 text-primary">Lesson Content</h2>
-        <div className="space-y-3">
-          <div className="lesson-tab active">
-            <div className="flex items-center gap-4">
-              <Play className="h-6 w-6 flex-shrink-0" />
-              <div>
-                <div className="text-xl font-bold">Lesson {lesson.order}</div>
-                <div className="text-lg">{lesson.title}</div>
+    <motion.aside 
+      className="w-72 lesson-sidebar flex flex-col"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="p-4 border-b border-border bg-gradient-to-br from-primary/5 to-secondary/5">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Lesson Content
+            </h2>
+            {progressPercentage === 100 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500 }}
+              >
+                <Trophy className="h-5 w-5 text-secondary" />
+              </motion.div>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <motion.div 
+              className="lesson-tab active relative overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 animate-shimmer"></div>
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded blur opacity-50"></div>
+                  <div className="relative bg-white dark:bg-gray-800 rounded p-1">
+                    <Play className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Lesson {lesson.order}</div>
+                  <div className="text-sm">{lesson.title}</div>
+                </div>
               </div>
+            </motion.div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+              <span>Progress</span>
+              <span className="font-medium">{progressPercentage}%</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary to-secondary rounded-full relative overflow-hidden"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-shimmer"></div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
       
-      <div className="p-8 flex-1 overflow-y-auto">
-        <h3 className="text-2xl font-bold mb-6 text-primary/80">Lesson Steps</h3>
-        <div className="space-y-3">
+      <div className="p-4 flex-1 overflow-y-auto">
+        <motion.h3 
+          className="text-base font-semibold mb-3 text-primary/80 flex items-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Sparkles className="h-4 w-4" />
+          Lesson Steps
+        </motion.h3>
+        
+        <div className="space-y-1">
           {lesson.content.steps.map((step, index) => {
             const isCompleted = (progress?.currentStep || 0) > index;
             const isActive = currentStepIndex === index;
-            const isAccessible = index <= (progress?.currentStep || 0);
+            const isAccessible = true;
             
             return (
-              <div
+              <motion.div
                 key={step.id}
-                className={cn(
-                  "sidebar-step flex items-center gap-3 cursor-pointer transition-all duration-200",
-                  isActive && "sidebar-step active",
-                  isCompleted && !isActive && "sidebar-step completed",
-                  !isAccessible && !isCompleted && "opacity-50 cursor-not-allowed",
-                  isAccessible && !isActive && !isCompleted && "hover:bg-accent hover:translate-x-1"
-                )}
-                onClick={() => isAccessible && onStepClick(index)}
-                data-testid={`step-${index}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={!isActive ? { x: 4 } : {}}
               >
-                {isCompleted ? (
-                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
-                ) : isActive ? (
-                  <Play className="h-5 w-5 flex-shrink-0" />
-                ) : isAccessible ? (
-                  <Circle className="h-4 w-4 flex-shrink-0" />
-                ) : (
-                  <Lock className="h-5 w-5 flex-shrink-0" />
-                )}
-                <span className="text-lg font-semibold leading-tight">{step.title}</span>
-              </div>
+                <div
+                  className={cn(
+                    "sidebar-step flex items-center gap-2 cursor-pointer transition-all duration-300 group",
+                    isActive && "sidebar-step active shadow-lg",
+                    isCompleted && !isActive && "sidebar-step completed",
+                    !isActive && !isCompleted && "hover:bg-accent"
+                  )}
+                  onClick={() => onStepClick(index)}
+                  data-testid={`step-${index}`}
+                >
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      scale: isActive ? 1.1 : 1,
+                      rotate: isCompleted ? 360 : 0 
+                    }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="flex-shrink-0"
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="h-4 w-4 text-success" />
+                    ) : isActive ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Play className="h-4 w-4 text-primary" />
+                      </motion.div>
+                    ) : (
+                      <Circle className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                    )}
+                  </motion.div>
+                  
+                  <span className={cn(
+                    "text-sm font-medium leading-tight transition-colors",
+                    isActive && "text-white",
+                    isCompleted && !isActive && "text-success",
+                    !isActive && !isCompleted && "group-hover:text-primary"
+                  )}>
+                    {step.title}
+                  </span>
+                  
+                  {isActive && (
+                    <motion.div
+                      className="ml-auto"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
             );
           })}
         </div>
         
         {lesson.content.introduction && (
-          <div className="mt-10 p-6 bg-gradient-to-br from-secondary/10 to-primary/5 rounded-xl border-2 border-secondary/20">
-            <h4 className="text-xl font-bold mb-4 text-primary/90">About this Lesson</h4>
-            <p className="text-lg text-foreground/80 leading-relaxed">
+          <motion.div 
+            className="mt-4 p-3 bg-gradient-to-br from-secondary/10 to-primary/5 rounded-lg border border-secondary/20 hover:border-secondary/40 transition-colors"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <h4 className="text-sm font-semibold mb-2 text-primary/90 flex items-center gap-2">
+              <BookOpen className="h-3.5 w-3.5" />
+              About this Lesson
+            </h4>
+            <p className="text-xs text-foreground/80 leading-relaxed">
               {lesson.content.introduction}
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
-    </aside>
+    </motion.aside>
   );
 }
