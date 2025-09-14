@@ -159,6 +159,25 @@ export default function Home() {
                   </Button>
                 </motion.div>
                 
+                <motion.div 
+                  className="flex items-center space-x-2"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Link href="/project-builder">
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 hover:shadow-xl transition-all duration-300 group hover:bg-primary hover:text-white hover:border-primary"
+                      data-testid="button-create-game"
+                    >
+                      <Gamepad2 className="h-5 w-5 mr-2" />
+                      Create Your Game
+                      <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </motion.div>
+                
                 <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-2">
                     <Code2 className="h-4 w-4 text-primary" />

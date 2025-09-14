@@ -74,6 +74,24 @@ export const userProgress = pgTable("user_progress", {
   code: text("code"),
 });
 
+export const projects = pgTable("projects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  template: text("template").notNull(),
+  files: json("files").notNull().$type<Array<{
+    path: string;
+    content: string;
+  }>>(),
+  assets: json("assets").notNull().default('[]').$type<Array<{
+    id: string;
+    name: string;
+    type: 'image' | 'sound' | 'other';
+    path: string;
+    dataUrl: string;
+  }>>(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -87,9 +105,15 @@ export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,
 });
 
+export const insertProjectSchema = createInsertSchema(projects).omit({
+  id: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
 export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;

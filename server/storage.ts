@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Lesson, type InsertLesson, type UserProgress, type InsertUserProgress } from "@shared/schema";
+import { type User, type InsertUser, type Lesson, type InsertLesson, type UserProgress, type InsertUserProgress, type Project, type InsertProject } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -13,17 +13,25 @@ export interface IStorage {
   getUserProgress(userId: string): Promise<UserProgress[]>;
   getUserProgressForLesson(userId: string, lessonId: string): Promise<UserProgress | undefined>;
   updateUserProgress(userId: string, lessonId: string, progress: Partial<UserProgress>): Promise<UserProgress>;
+  
+  listProjects(userId: string): Promise<Project[]>;
+  getProject(id: string): Promise<Project | undefined>;
+  createProject(project: InsertProject): Promise<Project>;
+  updateProject(id: string, updates: Partial<Project>): Promise<Project>;
+  deleteProject(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private lessons: Map<string, Lesson>;
   private userProgress: Map<string, UserProgress>;
+  private projects: Map<string, Project>;
 
   constructor() {
     this.users = new Map();
     this.lessons = new Map();
     this.userProgress = new Map();
+    this.projects = new Map();
     
     // Initialize with comprehensive fundamentals curriculum
     this.initializeLessons();
@@ -1218,6 +1226,48 @@ export class MemStorage implements IStorage {
       this.userProgress.set(id, newProgress);
       return newProgress;
     }
+  }
+
+  async listProjects(userId: string): Promise<Project[]> {
+    const userProjects: Project[] = [];
+    for (const project of Array.from(this.projects.values())) {
+      if (project.userId === userId) {
+        userProjects.push(project);
+      }
+    }
+    return userProjects;
+  }
+
+  async getProject(id: string): Promise<Project | undefined> {
+    return this.projects.get(id);
+  }
+
+  async createProject(projectData: InsertProject): Promise<Project> {
+    const id = randomUUID();
+    const project: Project = {
+      id,
+      ...projectData,
+    };
+    this.projects.set(id, project);
+    return project;
+  }
+
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project> {
+    const existing = this.projects.get(id);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+    
+    const updated: Project = {
+      ...existing,
+      ...updates,
+    };
+    this.projects.set(id, updated);
+    return updated;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    this.projects.delete(id);
   }
 }
 
