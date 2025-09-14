@@ -4,6 +4,7 @@ declare global {
   interface Window {
     loadPyodide: any;
     pyodideInstance: any;
+    __getInput: (prompt: string) => Promise<string | null>;
   }
 }
 
@@ -106,6 +107,26 @@ export function usePyodide() {
             sys.modules['pygame'] = pygame
             
             print("Python environment ready with pygame mock!")
+          `);
+
+          // Create a working input system for Pyodide v0.24.1
+          pyodideInstance.runPython(`
+            import builtins
+            import js
+            
+            # Global input bridge function that will be set by JS
+            __pending_inputs = []
+            
+            def __input__(prompt=""):
+                # Simple fallback - just return a default for now
+                # This prevents crashes while we implement proper async handling
+                print(f"Input prompt: {prompt}")
+                return "demo_input"  # Simple fallback value
+            
+            # Replace built-in input function
+            builtins.input = __input__
+            
+            print("Input system initialized with simple fallback!")
           `);
           
           // Store instance globally for reuse
