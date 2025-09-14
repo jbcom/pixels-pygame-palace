@@ -18,6 +18,12 @@ export default function LessonPage() {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
+  const [gradingResult, setGradingResult] = useState<{
+    passed: boolean;
+    feedback: string;
+    expectedOutput?: string;
+    actualOutput?: string;
+  } | null>(null);
 
   const { pyodide, isLoading: pyodideLoading, error: pyodideError } = usePyodide();
 
@@ -54,11 +60,12 @@ export default function LessonPage() {
     }
   }, [progress, lesson]);
 
-  const executeCode = async () => {
+  const executeCode = async (inputValues?: string, runAutoGrading = false) => {
     if (!pyodide || !code.trim()) return;
 
     setError("");
     setOutput("");
+    setGradingResult(null);
 
     try {
       // Capture console output
@@ -69,48 +76,16 @@ export default function LessonPage() {
         sys.stderr = io.StringIO()
       `);
 
-      // Check if code contains input() calls - if so, transform it for async execution
-      const hasInputCall = code.includes('input(');
-      
-      if (hasInputCall) {
-        // Transform code to work with async input system
-        const transformedCode = `
-import asyncio
-from js import __getInput as js_get_input
-
-async def __async_input__(prompt=""):
-    try:
-        # Call the React modal system
-        result = await js_get_input(str(prompt))
-        return str(result) if result is not None else ""
-    except Exception as e:
-        print(f"Input error: {e}")
-        return "input_error"
-
-# Replace input function temporarily
-original_input = input
-import builtins
-builtins.input = lambda prompt="": asyncio.create_task(__async_input__(prompt))
-
-async def main():
-    # User code goes here
-${code.split('\n').map(line => `    ${line}`).join('\n')}
-
-# Run the async main function
-await main()
-`;
-
-        // Execute with async support using runPythonAsync
-        if (pyodide.runPythonAsync) {
-          await pyodide.runPythonAsync(transformedCode);
-        } else {
-          // Fallback to regular execution with simple input
-          pyodide.runPython(code);
-        }
+      // Set up input values for the queue system if provided
+      if (inputValues && inputValues.trim()) {
+        pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
       } else {
-        // No input calls, use regular synchronous execution
-        pyodide.runPython(code);
+        // Clear the input queue if no values provided
+        pyodide.runPython(`set_input_values_from_js("")`);
       }
+
+      // Execute user code synchronously - input() now works with the queue system
+      pyodide.runPython(code);
 
       // Get output
       const stdout = pyodide.runPython("sys.stdout.getvalue()");
@@ -118,11 +93,130 @@ await main()
 
       if (stderr) {
         setError(stderr);
+        if (runAutoGrading) {
+          setGradingResult({
+            passed: false,
+            feedback: "Your code has an error. Please fix it before checking.",
+            actualOutput: stderr
+          });
+        }
       } else {
-        setOutput(stdout || "Code executed successfully!");
+        const actualOutput = stdout || "Code executed successfully!";
+        setOutput(actualOutput);
         
-        // Update progress with current code
-        updateProgressMutation.mutate({ code });
+        // Run auto-grading if requested
+        if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
+          // Run all tests and collect results
+          const testResults: Array<{
+            testIndex: number;
+            passed: boolean;
+            expectedOutput: string;
+            actualOutput: string;
+            input?: string;
+          }> = [];
+          
+          let allTestsPassed = true;
+          
+          for (let i = 0; i < currentStep.tests.length; i++) {
+            const test = currentStep.tests[i];
+            
+            try {
+              // Reset IO streams for clean output capture
+              pyodide.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+              `);
+              
+              // Set up test inputs if provided
+              if (test.input && test.input.trim()) {
+                pyodide.runPython(`set_input_values_from_js("${test.input.replace(/"/g, '\\"')}")`);
+              } else {
+                pyodide.runPython(`set_input_values_from_js("")`);
+              }
+              
+              // Execute code again for this test
+              pyodide.runPython(code);
+              
+              // Get clean output
+              const testStdout = pyodide.runPython("sys.stdout.getvalue()");
+              const testStderr = pyodide.runPython("sys.stderr.getvalue()");
+              
+              if (testStderr) {
+                // Code has error for this test
+                testResults.push({
+                  testIndex: i,
+                  passed: false,
+                  expectedOutput: test.expectedOutput,
+                  actualOutput: testStderr,
+                  input: test.input
+                });
+                allTestsPassed = false;
+              } else {
+                // Normalize outputs for comparison
+                const expectedNormalized = test.expectedOutput.trim().replace(/\s+/g, ' ');
+                const actualNormalized = (testStdout || "").trim().replace(/\s+/g, ' ');
+                const testPassed = actualNormalized === expectedNormalized;
+                
+                testResults.push({
+                  testIndex: i,
+                  passed: testPassed,
+                  expectedOutput: test.expectedOutput,
+                  actualOutput: testStdout || "",
+                  input: test.input
+                });
+                
+                if (!testPassed) {
+                  allTestsPassed = false;
+                }
+              }
+            } catch (testErr) {
+              testResults.push({
+                testIndex: i,
+                passed: false,
+                expectedOutput: test.expectedOutput,
+                actualOutput: `Test execution error: ${testErr}`,
+                input: test.input
+              });
+              allTestsPassed = false;
+            }
+          }
+          
+          // Provide detailed feedback based on test results
+          let feedback = "";
+          if (allTestsPassed) {
+            feedback = "✅ Perfect! Your code passes all tests.";
+          } else {
+            const failedTests = testResults.filter(t => !t.passed);
+            if (failedTests.length === 1) {
+              feedback = `❌ Test failed. Expected: "${failedTests[0].expectedOutput}" but got: "${failedTests[0].actualOutput}"`;
+            } else {
+              feedback = `❌ ${failedTests.length} out of ${testResults.length} tests failed. Check the expected output carefully.`;
+            }
+          }
+          
+          setGradingResult({
+            passed: allTestsPassed,
+            feedback,
+            expectedOutput: currentStep.tests[0].expectedOutput, // Show first test for reference
+            actualOutput: testResults[0]?.actualOutput || ""
+          });
+          
+          // If all tests pass, advance to next step automatically
+          if (allTestsPassed) {
+            updateProgressMutation.mutate({ 
+              code,
+              currentStep: Math.max(currentStepIndex + 1, (progress?.currentStep || 0))
+            });
+          } else {
+            // Still save the code even if tests fail
+            updateProgressMutation.mutate({ code });
+          }
+        } else {
+          // Update progress with current code (regular run without grading)
+          updateProgressMutation.mutate({ code });
+        }
       }
     } catch (err) {
       console.error("Python execution error:", err);
@@ -130,10 +224,25 @@ await main()
       
       // Handle specific input-related errors gracefully
       if (errorMessage.includes("__getInput") || errorMessage.includes("input")) {
-        setError("Input functionality is currently in demo mode. Your code will run with default values.");
+        const message = "Input functionality is currently in demo mode. Your code will run with default values.";
+        setError(message);
         setOutput("Code executed with demo input values!");
+        if (runAutoGrading) {
+          setGradingResult({
+            passed: false,
+            feedback: "Input functionality is currently in demo mode. Please check manually.",
+            actualOutput: message
+          });
+        }
       } else {
         setError(errorMessage);
+        if (runAutoGrading) {
+          setGradingResult({
+            passed: false,
+            feedback: "Your code has an error. Please fix it before checking.",
+            actualOutput: errorMessage
+          });
+        }
       }
     }
   };
@@ -146,6 +255,7 @@ await main()
     setCode(lesson.content.steps[newStepIndex].initialCode);
     setOutput("");
     setError("");
+    setGradingResult(null);
     
     updateProgressMutation.mutate({ 
       currentStep: newStepIndex,
@@ -216,6 +326,7 @@ await main()
               setCode(lesson.content.steps[stepIndex].initialCode);
               setOutput("");
               setError("");
+              setGradingResult(null);
             }
           }}
         />
@@ -228,6 +339,8 @@ await main()
             output={output}
             error={error}
             isExecuting={updateProgressMutation.isPending}
+            gradingResult={gradingResult}
+            currentStep={currentStep}
           />
           
           <GameCanvas
@@ -247,9 +360,11 @@ await main()
             setCode(solution);
             setOutput("");
             setError("");
+            setGradingResult(null);
           }}
-          showNext={!!output && !error}
+          showNext={gradingResult?.passed || false}
           isLastStep={isLastStep}
+          gradingResult={gradingResult}
         />
       )}
     </div>
