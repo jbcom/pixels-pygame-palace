@@ -78,6 +78,10 @@
   --border: hsl(240, 3.7%, 22%);
   --input: hsl(240, 3.7%, 22%);
   --ring: hsl(221, 83%, 63%);
+  --lesson-bg: hsl(240, 10%, 6%);
+  --lesson-sidebar-bg: hsl(240, 10%, 8%);
+  --code-editor-header-bg: hsl(221, 83%, 25%);
+  --console-header-bg: hsl(240, 15%, 12%);
 }
 
 @layer base {
@@ -86,28 +90,49 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground text-lg;
+    @apply font-sans antialiased bg-background text-foreground;
     font-weight: 400;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  
+  /* Ensure text color adapts properly in dark mode */
+  body {
+    color: hsl(240, 10%, 15%);
+  }
+  
+  .dark body {
+    color: hsl(0, 0%, 92%);
   }
   
   h1 {
     @apply text-4xl font-bold tracking-tight;
+    color: hsl(240, 10%, 8%);
+    line-height: 1.2;
   }
   
   h2 {
     @apply text-3xl font-semibold tracking-tight;
+    color: hsl(240, 10%, 12%);
+    line-height: 1.3;
   }
   
   h3 {
     @apply text-2xl font-semibold;
+    color: hsl(240, 10%, 16%);
+    line-height: 1.4;
   }
   
   h4 {
     @apply text-xl font-medium;
+    color: hsl(240, 10%, 20%);
+    line-height: 1.4;
   }
   
   p {
     @apply text-lg leading-relaxed;
+    color: hsl(240, 8%, 25%);
+    line-height: 1.7;
   }
   
   button {
@@ -119,14 +144,32 @@
   }
 }
 
-/* Code Editor Enhancements */
+/* Enhanced Code Editor with Dark Mode */
 .code-editor {
-  background-color: var(--code-bg);
+  background: linear-gradient(135deg, hsl(240, 15%, 6%) 0%, hsl(240, 20%, 4%) 100%);
   color: #f8f8f2;
   font-family: var(--font-mono);
   font-size: 18px;
-  line-height: 1.7;
-  padding: 16px;
+  line-height: 1.8;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid hsl(240, 20%, 12%);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.code-editor-header {
+  background: linear-gradient(135deg, var(--primary) 0%, hsl(221, 83%, 60%) 100%);
+  color: var(--primary-foreground);
+  padding: 16px 24px;
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.dark .code-editor-header {
+  background: linear-gradient(135deg, var(--code-editor-header-bg) 0%, hsl(221, 83%, 35%) 100%);
+  color: white;
 }
 
 .line-numbers {
@@ -164,37 +207,79 @@
   border-radius: 4px;
 }
 
-/* Lesson Tab Enhancements */
+/* Enhanced Sidebar and Lesson Layout with Dark Mode */
+.lesson-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, hsl(221, 20%, 98%) 0%, hsl(47, 30%, 98%) 100%);
+}
+
+.dark .lesson-container {
+  background: linear-gradient(135deg, var(--lesson-bg) 0%, hsl(240, 15%, 4%) 100%);
+}
+
+.lesson-sidebar {
+  background: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(221, 10%, 99%) 100%);
+  border-right: 2px solid hsl(221, 20%, 92%);
+  box-shadow: 2px 0 8px rgba(79, 70, 229, 0.08);
+}
+
+.dark .lesson-sidebar {
+  background: linear-gradient(180deg, var(--lesson-sidebar-bg) 0%, hsl(240, 15%, 6%) 100%);
+  border-right: 2px solid hsl(240, 3.7%, 22%);
+  box-shadow: 2px 0 8px rgba(79, 70, 229, 0.15);
+}
+
 .lesson-tab {
-  font-size: 16px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  font-size: 17px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 4px 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.lesson-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(221, 83%, 63%) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: -1;
+}
+
+.lesson-tab.active::before {
+  opacity: 1;
 }
 
 .lesson-tab.active {
-  background: linear-gradient(135deg, hsl(221, 83%, 53%), hsl(221, 83%, 63%));
   color: white;
-  font-weight: 600;
-  font-size: 17px;
-  padding: 14px 22px;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-  transform: translateX(4px);
+  font-weight: 700;
+  font-size: 18px;
+  padding: 18px 26px;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  transform: translateX(6px) scale(1.02);
 }
 
 .lesson-tab.completed {
-  background-color: hsl(142, 71%, 45.3%);
+  background: linear-gradient(135deg, hsl(142, 71%, 50%) 0%, hsl(142, 71%, 60%) 100%);
   color: white;
-  font-weight: 500;
-  font-size: 16px;
-  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 17px;
+  padding: 16px 24px;
+  box-shadow: 0 3px 8px rgba(34, 197, 94, 0.25);
 }
 
-/* Monaco Editor overrides */
+/* Enhanced Monaco Editor */
 .monaco-editor {
-  background-color: var(--code-bg) !important;
+  background: linear-gradient(135deg, hsl(240, 15%, 6%) 0%, hsl(240, 20%, 4%) 100%) !important;
   font-size: 18px !important;
-  line-height: 1.7 !important;
+  line-height: 1.8 !important;
+  border-radius: 0 0 12px 12px !important;
 }
 
 .monaco-editor .margin {
@@ -237,14 +322,34 @@
   background: hsl(240, 5%, 50%);
 }
 
-/* Console Output Styling */
+/* Enhanced Console Output with Dark Mode */
 .console-output {
   font-family: var(--font-mono);
-  font-size: 16px;
-  line-height: 1.6;
-  padding: 20px;
-  background-color: hsl(240, 10%, 8%);
-  color: hsl(0, 0%, 90%);
+  font-size: 17px;
+  line-height: 1.7;
+  padding: 24px;
+  background: linear-gradient(135deg, hsl(240, 15%, 8%) 0%, hsl(240, 20%, 6%) 100%);
+  color: hsl(0, 0%, 92%);
+  border-radius: 12px;
+  border: 2px solid hsl(240, 20%, 15%);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-height: 120px;
+}
+
+.console-header {
+  background: linear-gradient(135deg, hsl(240, 15%, 15%) 0%, hsl(240, 20%, 12%) 100%);
+  color: hsl(0, 0%, 80%);
+  padding: 12px 20px;
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid hsl(240, 20%, 20%);
+}
+
+.dark .console-header {
+  background: linear-gradient(135deg, var(--console-header-bg) 0%, hsl(240, 20%, 8%) 100%);
+  color: hsl(0, 0%, 85%);
+  border-bottom: 1px solid hsl(240, 20%, 25%);
 }
 
 .console-error {
@@ -267,45 +372,110 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 
-/* Sidebar Enhancements */
+/* Enhanced Sidebar Steps */
 .sidebar-step {
-  font-size: 16px;
-  padding: 12px 16px;
-  margin: 4px 0;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  font-size: 17px;
+  padding: 16px 20px;
+  margin: 6px 8px;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  background: white;
+  border: 2px solid hsl(221, 15%, 94%);
+}
+
+.sidebar-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(221, 83%, 63%) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: -1;
+}
+
+.sidebar-step.active::before {
+  opacity: 1;
 }
 
 .sidebar-step.active {
-  background: linear-gradient(135deg, hsl(221, 83%, 53%), hsl(221, 83%, 63%));
   color: white;
-  font-weight: 600;
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  font-weight: 700;
+  font-size: 18px;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+  border-color: transparent;
 }
 
 .sidebar-step.completed {
-  background-color: hsl(142, 71%, 95%);
-  color: hsl(142, 71%, 25%);
-  font-weight: 500;
-  border: 1px solid hsl(142, 71%, 85%);
+  background: linear-gradient(135deg, hsl(142, 71%, 96%) 0%, hsl(142, 71%, 98%) 100%);
+  color: hsl(142, 71%, 30%);
+  font-weight: 600;
+  border: 2px solid hsl(142, 71%, 80%);
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.12);
 }
 
-/* Button Enhancements */
+.sidebar-step:hover:not(.active):not(.completed) {
+  background: hsl(221, 40%, 97%);
+  transform: translateX(4px);
+  border-color: hsl(221, 30%, 88%);
+  box-shadow: 0 3px 8px rgba(79, 70, 229, 0.15);
+}
+
+/* Enhanced Button Styles */
 .btn-primary {
-  background: linear-gradient(135deg, hsl(221, 83%, 53%), hsl(221, 83%, 60%));
+  background: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(221, 83%, 63%) 100%);
   color: white;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 12px 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  transition: all 0.2s ease;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 16px 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
 }
 
 .btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, hsl(47, 100%, 50%) 0%, hsl(47, 100%, 60%) 100%);
+  color: hsl(240, 10%, 15%);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(255, 193, 7, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.btn-secondary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.35);
 }
 
 /* Form Elements */
