@@ -29,6 +29,346 @@ export default function LessonPage() {
 
   const { pyodide, isLoading: pyodideLoading, error: pyodideError } = usePyodide();
 
+  // Rule-based grading engine
+  const runRuleBasedGrading = async (test: any, actualOutput: string): Promise<{
+    passed: boolean;
+    feedback: string;
+    errors: string[];
+  }> => {
+    console.log("🔍 Running rule-based grading with:", { 
+      hasAstRules: !!test.astRules, 
+      hasRuntimeRules: !!test.runtimeRules,
+      astRules: test.astRules,
+      runtimeRules: test.runtimeRules 
+    });
+    
+    const errors: string[] = [];
+    let allPassed = true;
+
+    try {
+      // Phase A: Parse Python AST for syntax validation
+      if (test.astRules) {
+        console.log("📋 Running AST validation...");
+        const astResult = await parseAndValidateAST(code, test.astRules);
+        console.log("📋 AST validation result:", astResult);
+        
+        if (!astResult.passed) {
+          return {
+            passed: false,
+            feedback: astResult.feedback,
+            errors: astResult.errors
+          };
+        }
+      } else {
+        console.log("⚠️ No AST rules provided for rule-based test");
+      }
+
+      // Phase C: Runtime behavior validation
+      if (test.runtimeRules) {
+        console.log("🏃 Running runtime validation...");
+        const runtimeResult = await validateRuntimeBehavior(actualOutput, test.runtimeRules, test.input);
+        console.log("🏃 Runtime validation result:", runtimeResult);
+        
+        if (!runtimeResult.passed) {
+          allPassed = false;
+          errors.push(...runtimeResult.errors);
+        }
+      } else {
+        console.log("ℹ️ No runtime rules provided for rule-based test");
+      }
+
+      if (allPassed) {
+        console.log("✅ All rule-based validations passed!");
+        return {
+          passed: true,
+          feedback: "✅ Excellent! Your code demonstrates the programming concepts correctly.",
+          errors: []
+        };
+      } else {
+        console.log("❌ Some rule-based validations failed:", errors);
+        return {
+          passed: false,
+          feedback: "❌ Your code runs but doesn't meet all the requirements. " + (Array.isArray(errors) ? errors.join(" ") : "Unknown validation errors"),
+          errors: Array.isArray(errors) ? errors : []
+        };
+      }
+    } catch (error) {
+      console.error("💥 Error during rule validation:", error);
+      return {
+        passed: false,
+        feedback: "Error during rule validation: " + error,
+        errors: [String(error)]
+      };
+    }
+  };
+
+  // Phase A: Parse and validate Python AST
+  const parseAndValidateAST = async (code: string, astRules?: any): Promise<{
+    passed: boolean;
+    feedback: string;
+    errors: string[];
+  }> => {
+    if (!pyodide || !astRules) {
+      console.log("🔍 AST validation skipped: no pyodide or astRules");
+      return { passed: true, feedback: "", errors: [] };
+    }
+
+    console.log("🔍 Starting AST validation with:", { 
+      code: code.substring(0, 100) + (code.length > 100 ? "..." : ""), 
+      astRules 
+    });
+
+    try {
+      // More robust data conversion - create Python dict directly
+      console.log("🔍 Preparing Python execution with safer data conversion...");
+      
+      // Convert JavaScript astRules to Python safely
+      pyodide.globals.set("js_ast_rules", astRules);
+      pyodide.globals.set("js_code", code);
+      
+      // Use Python's ast module to parse the code with better error handling
+      const parseResult = pyodide.runPython(`
+import ast
+import sys
+import json
+from js import js_ast_rules, js_code
+
+def validate_ast(code_str, rules):
+    print(f"🐍 Python AST validator starting...")
+    print(f"🐍 Code to validate: {repr(code_str)}")
+    print(f"🐍 Rules type: {type(rules)}")
+    
+    # Convert JS proxy to Python dict if needed
+    if hasattr(rules, 'to_py'):
+        rules = rules.to_py()
+    print(f"🐍 Converted rules: {rules}")
+    
+    try:
+        # Parse the code into an AST
+        tree = ast.parse(code_str)
+        print(f"🐍 AST parsed successfully")
+        
+        errors = []
+        
+        # Check required functions
+        if 'requiredFunctions' in rules and rules['requiredFunctions']:
+            print(f"🐍 Checking required functions: {rules['requiredFunctions']}")
+            for func_name in rules['requiredFunctions']:
+                found = False
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == func_name:
+                        found = True
+                        print(f"🐍 Found required function: {func_name}")
+                        break
+                if not found:
+                    error_msg = f"Required function '{func_name}()' not found"
+                    print(f"🐍 ERROR: {error_msg}")
+                    errors.append(error_msg)
+        
+        # Check required constructs
+        if 'requiredConstructs' in rules and rules['requiredConstructs']:
+            constructs = rules['requiredConstructs']
+            print(f"🐍 Checking required constructs: {constructs}")
+            
+            # Handle both list and JS proxy
+            if hasattr(constructs, 'to_py'):
+                constructs = constructs.to_py()
+            
+            for i, construct in enumerate(constructs):
+                print(f"🐍 Processing construct {i}: {construct}")
+                
+                # Convert JS proxy to Python dict if needed
+                if hasattr(construct, 'to_py'):
+                    construct = construct.to_py()
+                
+                construct_type = construct.get('type', 'unknown')
+                name = construct.get('name', None)
+                min_count = construct.get('minCount', 1)
+                
+                print(f"🐍 Checking construct: {construct_type}, name: {name}, min_count: {min_count}")
+                
+                count = 0
+                for node in ast.walk(tree):
+                    if construct_type == 'variable_assignment' and isinstance(node, ast.Assign):
+                        if name is None or (len(node.targets) > 0 and isinstance(node.targets[0], ast.Name) and node.targets[0].id == name):
+                            count += 1
+                            print(f"🐍 Found variable assignment: {count}")
+                    elif construct_type == 'function_call' and isinstance(node, ast.Call):
+                        if isinstance(node.func, ast.Name):
+                            if name is None or node.func.id == name:
+                                count += 1
+                                print(f"🐍 Found function call '{node.func.id}': {count}")
+                    elif construct_type == 'string_literal':
+                        # Handle both old ast.Str (Python < 3.8) and new ast.Constant (Python >= 3.8)
+                        if hasattr(ast, 'Str') and isinstance(node, ast.Str):
+                            count += 1
+                            print(f"🐍 Found string literal (Str): {count}")
+                        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                            count += 1
+                            print(f"🐍 Found string literal (Constant): {count}")
+                    elif construct_type == 'f_string' and isinstance(node, ast.JoinedStr):
+                        count += 1
+                        print(f"🐍 Found f-string: {count}")
+                    elif construct_type == 'number_literal':
+                        # Handle numeric constants
+                        if hasattr(ast, 'Num') and isinstance(node, ast.Num):
+                            count += 1
+                            print(f"🐍 Found number literal (Num): {count}")
+                        elif isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+                            count += 1
+                            print(f"🐍 Found number literal (Constant): {count}")
+                    elif construct_type == 'boolean_literal':
+                        # Handle boolean constants
+                        if hasattr(ast, 'NameConstant') and isinstance(node, ast.NameConstant) and node.value in (True, False):
+                            count += 1
+                            print(f"🐍 Found boolean literal (NameConstant): {count}")
+                        elif isinstance(node, ast.Constant) and isinstance(node.value, bool):
+                            count += 1
+                            print(f"🐍 Found boolean literal (Constant): {count}")
+                
+                print(f"🐍 Final count for {construct_type}: {count}, required: {min_count}")
+                
+                if count < min_count:
+                    if name:
+                        error_msg = f"Try using {construct_type.replace('_', ' ')} '{name}' at least {min_count} time(s)"
+                    else:
+                        error_msg = f"Try using {construct_type.replace('_', ' ')} at least {min_count} time(s)"
+                    print(f"🐍 ERROR: {error_msg}")
+                    errors.append(error_msg)
+        
+        # Check forbidden constructs
+        if 'forbiddenConstructs' in rules and rules['forbiddenConstructs']:
+            forbidden = rules['forbiddenConstructs']
+            print(f"🐍 Checking forbidden constructs: {forbidden}")
+            
+            # Handle JS proxy
+            if hasattr(forbidden, 'to_py'):
+                forbidden = forbidden.to_py()
+            
+            for construct in forbidden:
+                if hasattr(construct, 'to_py'):
+                    construct = construct.to_py()
+                    
+                construct_type = construct.get('type', 'unknown')
+                name = construct.get('name', None)
+                
+                for node in ast.walk(tree):
+                    if construct_type == 'function_call' and isinstance(node, ast.Call):
+                        if isinstance(node.func, ast.Name) and (name is None or node.func.id == name):
+                            if name:
+                                error_msg = f"Please don't use the '{name}()' function for this exercise"
+                            else:
+                                error_msg = f"Please avoid using that function call for this exercise"
+                            print(f"🐍 ERROR: {error_msg}")
+                            errors.append(error_msg)
+        
+        result = {'passed': len(errors) == 0, 'errors': errors}
+        print(f"🐍 Validation complete: {result}")
+        return result
+    
+    except SyntaxError as e:
+        error_result = {'passed': False, 'errors': [f"Syntax error: {str(e)}"]}
+        print(f"🐍 Syntax error: {error_result}")
+        return error_result
+    except Exception as e:
+        error_result = {'passed': False, 'errors': [f"Code analysis error: {str(e)}"]}
+        print(f"🐍 Exception error: {error_result}")
+        return error_result
+
+# Use the safer data passing approach
+print(f"🐍 Running validation with JS data objects...")
+result = validate_ast(js_code, js_ast_rules)
+print(f"🐍 Final result: {result}")
+result
+      `);
+
+      console.log("🔍 Raw parseResult:", parseResult);
+      
+      const result = parseResult.toJs();
+      console.log("🔍 Converted result:", result);
+      console.log("🔍 Result type:", typeof result);
+      console.log("🔍 Result properties:", Object.keys(result || {}));
+      
+      if (!result || typeof result !== 'object') {
+        console.error("🔍 Invalid result format:", result);
+        return {
+          passed: false,
+          feedback: "AST validation returned invalid format",
+          errors: ["Invalid validation result format"]
+        };
+      }
+      
+      if (!result.passed) {
+        const errors = Array.isArray(result.errors) ? result.errors : ["Unknown AST validation error"];
+        console.log("🔍 AST validation failed with errors:", errors);
+        return {
+          passed: false,
+          feedback: "Code structure issues: " + errors.join(", "),
+          errors: errors
+        };
+      }
+
+      console.log("🔍 AST validation passed!");
+      return { passed: true, feedback: "", errors: [] };
+    } catch (error) {
+      console.error("🔍 Exception in AST validation:", error);
+      return {
+        passed: false,
+        feedback: "Failed to analyze code structure: " + error,
+        errors: [String(error)]
+      };
+    }
+  };
+
+  // Phase C: Validate runtime behavior
+  const validateRuntimeBehavior = async (actualOutput: string, runtimeRules?: any, testInput?: string): Promise<{
+    passed: boolean;
+    errors: string[];
+  }> => {
+    if (!runtimeRules) {
+      return { passed: true, errors: [] };
+    }
+
+    const errors: string[] = [];
+
+    // Check if output contains required strings
+    if (runtimeRules.outputContains) {
+      for (const required of runtimeRules.outputContains) {
+        if (!actualOutput.includes(required)) {
+          errors.push(`Output should contain "${required}"`);
+        }
+      }
+    }
+
+    // Check if output matches pattern
+    if (runtimeRules.outputMatches) {
+      const regex = new RegExp(runtimeRules.outputMatches);
+      if (!regex.test(actualOutput)) {
+        errors.push(`Output should match pattern: ${runtimeRules.outputMatches}`);
+      }
+    }
+
+    // Check if output includes user input (for interactive programs)
+    if (runtimeRules.outputIncludesInput && testInput) {
+      const inputLines = testInput.split('\n');
+      let allInputsIncluded = true;
+      for (const inputLine of inputLines) {
+        if (inputLine.trim() && !actualOutput.includes(inputLine.trim())) {
+          allInputsIncluded = false;
+          break;
+        }
+      }
+      if (!allInputsIncluded) {
+        errors.push("Output should include the user's input");
+      }
+    }
+
+    return {
+      passed: errors.length === 0,
+      errors
+    };
+  };
+
   const { data: lesson, isLoading: lessonLoading } = useQuery<Lesson>({
     queryKey: ["/api/lessons", lessonId],
     enabled: !!lessonId,
@@ -48,6 +388,72 @@ export default function LessonPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
     }
   });
+
+  // Debug function to test AST validation directly
+  const debugASTValidation = async () => {
+    if (!pyodide) {
+      console.log("🔍 DEBUG: Pyodide not loaded");
+      return;
+    }
+
+    console.log("🔍 DEBUG: Testing AST validation with comprehensive test cases");
+    
+    // Test Case 1: Should FAIL - only 1 print statement when 2 required
+    const failingCode = "print('Hello!')";
+    const testRules = {
+      requiredFunctions: ["print"],
+      requiredConstructs: [
+        { type: "function_call", name: "print", minCount: 2 },
+        { type: "string_literal", minCount: 2 }
+      ]
+    };
+
+    console.log("🔍 DEBUG TEST 1 - Should FAIL:");
+    console.log("🔍 Code:", failingCode);
+    console.log("🔍 Rules:", testRules);
+
+    const result1 = await parseAndValidateAST(failingCode, testRules);
+    console.log("🔍 Result 1 (should fail):", result1);
+
+    // Test Case 2: Should PASS - 2 print statements as required
+    const passingCode = "print('Hello!')\nprint('Welcome!')";
+    
+    console.log("\n🔍 DEBUG TEST 2 - Should PASS:");
+    console.log("🔍 Code:", passingCode);
+    console.log("🔍 Rules:", testRules);
+
+    const result2 = await parseAndValidateAST(passingCode, testRules);
+    console.log("🔍 Result 2 (should pass):", result2);
+
+    // Summary
+    console.log("\n🔍 VERIFICATION SUMMARY:");
+    console.log("Test 1 (1 print) passed:", result1.passed, "- Expected: false");
+    console.log("Test 1 feedback:", result1.feedback);
+    console.log("Test 2 (2 prints) passed:", result2.passed, "- Expected: true");
+    console.log("Test 2 feedback:", result2.feedback);
+    
+    if (!result1.passed && result2.passed) {
+      console.log("✅ AST validation is working correctly!");
+    } else {
+      console.log("❌ AST validation needs more fixes");
+    }
+  };
+
+  // Add debug function to window for manual testing and auto-trigger for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).debugASTValidation = debugASTValidation;
+      console.log("🔍 DEBUG: Added debugASTValidation to window. Call window.debugASTValidation() to test.");
+      
+      // Auto-trigger debug when pyodide is ready
+      if (pyodide) {
+        console.log("🔍 DEBUG: Auto-triggering AST validation test...");
+        setTimeout(() => {
+          debugASTValidation().catch(err => console.error("🔍 DEBUG: Auto-test failed:", err));
+        }, 1000);
+      }
+    }
+  }, [pyodide]);
 
   useEffect(() => {
     if (progress && lesson) {
@@ -158,10 +564,22 @@ export default function LessonPage() {
                 });
                 allTestsPassed = false;
               } else {
-                // Normalize outputs for comparison
-                const expectedNormalized = test.expectedOutput.trim().replace(/\s+/g, ' ');
-                const actualNormalized = (testStdout || "").trim().replace(/\s+/g, ' ');
-                const testPassed = actualNormalized === expectedNormalized;
+                let testPassed = false;
+                let feedback = "";
+                
+                // Check if this test uses rule-based grading or traditional output matching
+                if (test.mode === 'rules' && (test.astRules || test.runtimeRules)) {
+                  // Use new rule-based grading system
+                  const ruleResult = await runRuleBasedGrading(test, testStdout || "");
+                  testPassed = ruleResult.passed;
+                  feedback = ruleResult.feedback;
+                } else {
+                  // Use traditional exact output matching for backward compatibility
+                  const expectedNormalized = test.expectedOutput.trim().replace(/\s+/g, ' ');
+                  const actualNormalized = (testStdout || "").trim().replace(/\s+/g, ' ');
+                  testPassed = actualNormalized === expectedNormalized;
+                  feedback = testPassed ? "Perfect match!" : `Expected: "${test.expectedOutput}" but got: "${testStdout || ""}"`;
+                }
                 
                 testResults.push({
                   testIndex: i,
