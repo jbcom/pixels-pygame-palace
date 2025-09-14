@@ -36,6 +36,15 @@ export class MemStorage implements IStorage {
         title: "Python Basics",
         description: "Learn Python fundamentals and setup",
         order: 1,
+        intro: "Welcome to your first Python adventure! 🎮 In this lesson, you'll set up your game development environment and create your first pygame window. Get ready to see your code come to life!",
+        learningObjectives: [
+          "Import and initialize the pygame library",
+          "Create your first game window",
+          "Set window properties like size and title",
+          "Understand the basics of game setup"
+        ],
+        goalDescription: "By the end of this lesson, you'll have a working pygame window ready for creating amazing games!",
+        previewCode: "pygame.display.set_mode((800, 600))\npygame.display.set_caption('My First Game')",
         content: {
           introduction: "Welcome to Python! In this lesson, you'll learn the basics of Python programming and set up your first pygame window.",
           steps: [
@@ -63,6 +72,15 @@ export class MemStorage implements IStorage {
         title: "Drawing & Movement",
         description: "Learn to draw shapes and create movement",
         order: 2,
+        intro: "Time to bring your games to life with colorful graphics! 🎨 You'll learn to draw shapes on the screen and make them move in response to game logic.",
+        learningObjectives: [
+          "Draw basic shapes like circles and rectangles",
+          "Work with colors using RGB values",
+          "Create a game loop for continuous rendering",
+          "Implement smooth movement and animation"
+        ],
+        goalDescription: "Create beautiful moving graphics that will form the foundation of your games!",
+        previewCode: "pygame.draw.circle(screen, BLUE, (400, 300), 25)\n# A blue circle that can move!",
         content: {
           introduction: "Now let's learn how to draw shapes on the screen and make them move!",
           steps: [
@@ -82,6 +100,15 @@ export class MemStorage implements IStorage {
         title: "User Input & Events",
         description: "Handle keyboard and mouse input",
         order: 3,
+        intro: "Make your games interactive! 🎮 Learn how to capture player input and respond to keyboard and mouse events to create engaging gameplay.",
+        learningObjectives: [
+          "Capture keyboard input with arrow keys",
+          "Handle mouse clicks and movement",
+          "Respond to game events in real-time",
+          "Control game objects with user input"
+        ],
+        goalDescription: "Transform static graphics into interactive games that respond to player commands!",
+        previewCode: "keys = pygame.key.get_pressed()\nif keys[pygame.K_LEFT]:\n    player_x -= speed",
         content: {
           introduction: "Learn how to make your games interactive by handling user input!",
           steps: [
@@ -101,6 +128,15 @@ export class MemStorage implements IStorage {
         title: "Sprites & Animation",
         description: "Work with sprites and create animations",
         order: 4,
+        intro: "Master the art of animation! 🎯 Create bouncing balls, rotating objects, and smooth animations that make your games feel professional.",
+        learningObjectives: [
+          "Create objects that move independently",
+          "Implement collision detection with walls",
+          "Add physics-like bouncing behavior",
+          "Manage multiple animated objects"
+        ],
+        goalDescription: "Build a bouncing ball animation with realistic physics that forms the basis for many game mechanics!",
+        previewCode: "# Ball bounces off walls\nif ball_x <= 0 or ball_x >= WIDTH:\n    ball_speed_x = -ball_speed_x",
         content: {
           introduction: "Learn about sprites and how to create smooth animations in your games.",
           steps: [
@@ -120,6 +156,15 @@ export class MemStorage implements IStorage {
         title: "Game Logic & Scoring",
         description: "Add game logic, scoring, and win conditions",
         order: 5,
+        intro: "Create a complete game experience! 🏆 Add scoring systems, win/lose conditions, and game logic to make a fully playable Pong game.",
+        learningObjectives: [
+          "Implement a scoring system",
+          "Create paddle controls and AI opponent",
+          "Add collision detection between objects",
+          "Design win/lose conditions"
+        ],
+        goalDescription: "Build a fully functional Pong game with scoring, AI opponent, and smooth gameplay!",
+        previewCode: "# Score when ball passes paddle\nif ball_x < 0:\n    score_right += 1\n    reset_ball()",
         content: {
           introduction: "Learn how to add scoring systems and game logic to make a complete game experience.",
           steps: [
@@ -139,6 +184,15 @@ export class MemStorage implements IStorage {
         title: "Final Project",
         description: "Build your own complete game",
         order: 6,
+        intro: "Time to create your masterpiece! 🚀 Use everything you've learned to build your own unique game from scratch.",
+        learningObjectives: [
+          "Design your own game concept",
+          "Implement complete game mechanics",
+          "Add creative features and polish",
+          "Debug and optimize your creation"
+        ],
+        goalDescription: "Create your own complete game like Snake, Breakout, or something entirely original!",
+        previewCode: "# Your creativity unleashed!\n# Snake? Space Invaders? Racing?\n# The choice is yours!",
         content: {
           introduction: "Put everything together to create your own unique game!",
           steps: [
@@ -192,6 +246,10 @@ export class MemStorage implements IStorage {
       title: lesson.title,
       description: lesson.description,
       order: lesson.order,
+      intro: lesson.intro,
+      learningObjectives: lesson.learningObjectives,
+      goalDescription: lesson.goalDescription,
+      previewCode: lesson.previewCode,
       content: lesson.content
     };
     this.lessons.set(id, newLesson);
