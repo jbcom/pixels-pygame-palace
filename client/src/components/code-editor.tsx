@@ -46,8 +46,11 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
               value: code || "",
               language: "python",
               theme: "vs-dark",
-              fontSize: 14,
+              fontSize: 18,
+              lineHeight: 26,
               fontFamily: "JetBrains Mono, Consolas, monospace",
+              fontWeight: "400",
+              letterSpacing: 0.5,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
               automaticLayout: true,
@@ -67,6 +70,7 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
               acceptSuggestionOnEnter: "off",
               tabCompletion: "off",
               snippetSuggestions: "none",
+              padding: { top: 16, bottom: 16 },
             });
           } catch (err) {
             console.error('Error creating Monaco editor:', err);
@@ -146,25 +150,25 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
 
   return (
     <div className="w-1/2 flex flex-col">
-      <div className="bg-card border-b border-border p-4 flex items-center justify-between">
-        <h3 className="font-medium">Code Editor</h3>
-        <div className="flex items-center space-x-2">
+      <div className="bg-card border-b-2 border-border p-5 flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Code Editor</h3>
+        <div className="flex items-center gap-3">
           <Button
             onClick={onExecute}
             disabled={isExecuting}
-            className="bg-primary text-primary-foreground px-4 py-2 hover:bg-primary/90 flex items-center space-x-2"
+            className="btn-primary flex items-center gap-2"
             data-testid="button-run-code"
           >
-            <Play className="h-4 w-4" />
-            <span>{isExecuting ? "Running..." : "Run Code"}</span>
+            <Play className="h-5 w-5" />
+            <span className="text-base font-semibold">{isExecuting ? "Running..." : "Run Code"}</span>
           </Button>
           <Button
             onClick={resetCode}
             variant="outline"
-            className="px-3 py-2"
+            className="min-h-[48px] px-5 text-base font-medium hover:bg-accent"
             data-testid="button-reset-code"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-5 w-5" />
           </Button>
         </div>
       </div>
@@ -177,26 +181,31 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
         />
         
         {/* Console/Output Area */}
-        <div className="bg-card border-t border-border">
-          <div className="p-3 border-b border-border">
+        <div className="bg-card border-t-2 border-border">
+          <div className="p-4 border-b border-border bg-muted/30">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">Console Output</h4>
+              <h4 className="text-lg font-medium">Console Output</h4>
             </div>
           </div>
-          <div className="p-4 h-32 bg-code-bg text-white font-mono text-sm overflow-auto">
+          <div className="console-output h-48 overflow-auto">
             {error ? (
-              <div className="text-destructive" data-testid="console-error">
-                <div className="text-destructive">✗ Error:</div>
-                <div className="mt-1 whitespace-pre-wrap">{error}</div>
+              <div className="console-error" data-testid="console-error">
+                <div className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <span className="text-2xl">✗</span> Error:
+                </div>
+                <div className="whitespace-pre-wrap text-base leading-relaxed">{error}</div>
               </div>
             ) : output ? (
-              <div className="text-success" data-testid="console-output">
-                <div className="text-success">✓ Success:</div>
-                <div className="text-muted-foreground mt-1 whitespace-pre-wrap">{output}</div>
+              <div className="console-success" data-testid="console-output">
+                <div className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <span className="text-2xl">✓</span> Success:
+                </div>
+                <div className="text-gray-300 whitespace-pre-wrap text-base leading-relaxed">{output}</div>
               </div>
             ) : (
-              <div className="text-muted-foreground" data-testid="console-ready">
-                Ready to run code... Press Ctrl+Enter or click Run Code
+              <div className="text-gray-500 text-base" data-testid="console-ready">
+                <div className="text-lg font-medium mb-1">Ready to run code</div>
+                <div className="text-sm opacity-80">Press Ctrl+Enter or click Run Code</div>
               </div>
             )}
           </div>
