@@ -2,11 +2,15 @@
 
 ## Overview
 
-PyGame Academy is an interactive Python programming learning platform focused on teaching PyGame development through hands-on coding exercises. The application features a step-by-step lesson system where users can learn Python and PyGame concepts by writing code in an integrated editor, seeing their results in a simulated game canvas, and receiving real-time feedback on their progress.
+PyGame Academy is an interactive Python programming learning platform that teaches Python fundamentals through game development. The platform features a revolutionary flexible auto-grading system that validates programming concepts rather than exact text matching, allowing students to learn creatively while maintaining educational standards. With its polished visual design, ungated lesson access, and real-time Pyodide execution, it provides an engaging, accessible learning experience for beginners.
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- **Communication Style**: Simple, everyday language without technical jargon
+- **Visual Design**: Warm, soft colors (no harsh black/white contrast)
+- **Educational Philosophy**: Teach concepts, not memorization
+- **Accessibility**: All lessons available immediately (no artificial gating)
+- **Layout**: Efficient use of space with minimal negative areas
 
 ## System Architecture
 
