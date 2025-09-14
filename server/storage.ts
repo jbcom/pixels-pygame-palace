@@ -53,43 +53,79 @@ export class MemStorage implements IStorage {
             {
               id: "step-1",
               title: "Your First Python Message",
-              description: "Let's start by displaying messages on screen. The print() function is used to show text output.",
-              initialCode: "# Type exactly what's shown in the expected output\n# Use the print() function to display text\n",
+              description: "Let's start by displaying messages on screen. The print() function is used to show text output. Write any friendly greeting messages!",
+              initialCode: "# Use the print() function to display at least 2 messages\n# You can write any greeting or welcome messages you like!\n",
               solution: "print('Hello, World!')\nprint('Welcome to Python programming!')",
-              hints: ["Use print() function to display text", "Put text inside quotes", "Each print() goes on a separate line"],
+              hints: ["Use print() function to display text", "Put text inside quotes", "You can write any messages you want", "Try using at least 2 print statements"],
               tests: [
                 {
-                  expectedOutput: "Hello, World!\nWelcome to Python programming!",
-                  description: "Should display the welcome messages"
+                  mode: "rules",
+                  expectedOutput: "Any greeting messages (this is just for reference)",
+                  description: "Should use print() function to display messages",
+                  astRules: {
+                    requiredFunctions: ["print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "print", minCount: 2 },
+                      { type: "string_literal", minCount: 2 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputContains: []
+                  }
                 }
               ]
             },
             {
               id: "step-2", 
               title: "Creating Variables",
-              description: "Variables store data that your program can use later. Let's create variables for different types of information.",
-              initialCode: "# Create these variables with the exact values shown:\n# name = 'Python'\n# version = 3.12\n# is_fun = True\n# Then print each variable\n",
+              description: "Variables store data that your program can use later. Create variables to store different types of information, then display them!",
+              initialCode: "# Create at least 3 variables with different data types:\n# - A string (text in quotes)\n# - A number (integer or decimal)\n# - A boolean (True or False)\n# Then print each variable to see their values\n",
               solution: "name = 'Python'\nversion = 3.12\nis_fun = True\n\nprint(name)\nprint(version)\nprint(is_fun)",
-              hints: ["Variables store values using =", "Strings use quotes", "Numbers don't need quotes", "Boolean values are True or False"],
+              hints: ["Variables store values using =", "Strings use quotes like 'text' or \"text\"", "Numbers don't need quotes", "Boolean values are True or False", "Use print() to display variables"],
               tests: [
                 {
-                  expectedOutput: "Python\n3.12\nTrue",
-                  description: "Should create and display the variables"
+                  mode: "rules",
+                  expectedOutput: "Any variable values (this is just for reference)",
+                  description: "Should create variables of different types and print them",
+                  astRules: {
+                    requiredFunctions: ["print"],
+                    requiredConstructs: [
+                      { type: "variable_assignment", minCount: 3 },
+                      { type: "function_call", name: "print", minCount: 3 },
+                      { type: "string_literal", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputContains: []
+                  }
                 }
               ]
             },
             {
               id: "step-3",
               title: "Getting User Input", 
-              description: "Make your program interactive by getting input from users. The input() function asks users to type something.",
-              initialCode: "# Ask the user for their name and store it in a variable\n# Then greet them with a personalized message\n",
+              description: "Make your program interactive by getting input from users. The input() function asks users to type something, and you can use that input in your program!",
+              initialCode: "# Ask the user for their name and store it in a variable\n# Then greet them with a personalized message using their name\n",
               solution: "name = input('What is your name? ')\nprint('Nice to meet you, ' + name + '!')",
-              hints: ["Use input() to get text from user", "Store the result in a variable", "Use + to combine strings"],
+              hints: ["Use input() to get text from user", "Store the result in a variable", "Use + to combine strings or f-strings", "Make sure to include the user's input in your output"],
               tests: [
                 {
+                  mode: "rules",
                   input: "Alex",
-                  expectedOutput: "What is your name? Nice to meet you, Alex!",
-                  description: "Should ask for name and greet user"
+                  expectedOutput: "Should ask for input and greet the user (flexible)",
+                  description: "Should ask for user input and include it in the output",
+                  astRules: {
+                    requiredFunctions: ["input", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 1 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "variable_assignment", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    acceptsUserInput: true,
+                    outputIncludesInput: true
+                  }
                 }
               ]
             },
@@ -102,9 +138,22 @@ export class MemStorage implements IStorage {
               hints: ["Use int() to convert strings to integers", "Use str() to convert numbers back to strings", "Input always returns a string"],
               tests: [
                 {
+                  mode: "rules",
                   input: "25",
                   expectedOutput: "How old are you? You are 25 years old",
-                  description: "Should get age and convert to integer"
+                  description: "Should get age and convert to integer",
+                  astRules: {
+                    requiredFunctions: ["input", "int", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 1 },
+                      { type: "function_call", name: "int", minCount: 1 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "variable_assignment", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputIncludesInput: true
+                  }
                 }
               ]
             },
@@ -117,9 +166,22 @@ export class MemStorage implements IStorage {
               hints: ["f-strings start with f before the quote", "Use {variable_name} inside the string", "f-strings automatically convert types"],
               tests: [
                 {
+                  mode: "rules",
                   input: "Sam\n7",
                   expectedOutput: "Enter your name: Enter your favorite number: Hi Sam, your favorite number is 7!",
-                  description: "Should use f-string formatting"
+                  description: "Should use f-string formatting",
+                  astRules: {
+                    requiredFunctions: ["input", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 2 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "f_string", minCount: 1 },
+                      { type: "variable_assignment", minCount: 2 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputIncludesInput: true
+                  }
                 }
               ]
             }
@@ -158,8 +220,20 @@ export class MemStorage implements IStorage {
               hints: ["Use if followed by a condition and colon :", "Indent the code inside the if block", "Use > to check if one number is greater than another"],
               tests: [
                 {
+                  mode: "rules",
                   expectedOutput: "Great job!",
-                  description: "Should print congratulations for high score"
+                  description: "Should print congratulations for high score",
+                  astRules: {
+                    requiredFunctions: ["print"],
+                    requiredConstructs: [
+                      { type: "variable_assignment", minCount: 1 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "string_literal", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputContains: ["Great job!"]
+                  }
                 }
               ]
             },
@@ -172,9 +246,22 @@ export class MemStorage implements IStorage {
               hints: ["Use >= for greater than or equal to", "else doesn't need a condition", "Make sure indentation matches"],
               tests: [
                 {
+                  mode: "rules",
                   input: "20",
                   expectedOutput: "Enter your age: You are an adult",
-                  description: "Should classify adult correctly"
+                  description: "Should classify adult correctly",
+                  astRules: {
+                    requiredFunctions: ["input", "int", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 1 },
+                      { type: "function_call", name: "int", minCount: 1 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "variable_assignment", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputIncludesInput: true
+                  }
                 }
               ]
             },
@@ -187,9 +274,22 @@ export class MemStorage implements IStorage {
               hints: ["elif checks a condition if previous if/elif was false", "Conditions are checked in order", "Only the first true condition runs"],
               tests: [
                 {
+                  mode: "rules",
                   input: "87",
                   expectedOutput: "Enter your test score: Grade: B",
-                  description: "Should assign correct grade"
+                  description: "Should assign correct grade",
+                  astRules: {
+                    requiredFunctions: ["input", "int", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 1 },
+                      { type: "function_call", name: "int", minCount: 1 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "variable_assignment", minCount: 1 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputIncludesInput: true
+                  }
                 }
               ]
             },
@@ -202,9 +302,22 @@ export class MemStorage implements IStorage {
               hints: ["Use == to check equality (not =)", "Use != for not equal", "< and > compare which is bigger"],
               tests: [
                 {
+                  mode: "rules",
                   input: "15\n10",
                   expectedOutput: "Enter first number: Enter second number: First number is greater",
-                  description: "Should compare numbers correctly"
+                  description: "Should compare numbers correctly",
+                  astRules: {
+                    requiredFunctions: ["input", "int", "print"],
+                    requiredConstructs: [
+                      { type: "function_call", name: "input", minCount: 2 },
+                      { type: "function_call", name: "int", minCount: 2 },
+                      { type: "function_call", name: "print", minCount: 1 },
+                      { type: "variable_assignment", minCount: 2 }
+                    ]
+                  },
+                  runtimeRules: {
+                    outputIncludesInput: true
+                  }
                 }
               ]
             },
@@ -1015,7 +1128,7 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
+    for (const user of Array.from(this.users.values())) {
       if (user.username === username) {
         return user;
       }
@@ -1046,6 +1159,13 @@ export class MemStorage implements IStorage {
     const lesson: Lesson = {
       id,
       ...lessonData,
+      intro: lessonData.intro || null,
+      learningObjectives: lessonData.learningObjectives || null,
+      goalDescription: lessonData.goalDescription || null,
+      previewCode: lessonData.previewCode || null,
+      prerequisites: lessonData.prerequisites || null,
+      difficulty: lessonData.difficulty || null,
+      estimatedTime: lessonData.estimatedTime || null,
     };
     this.lessons.set(id, lesson);
     return lesson;
@@ -1053,7 +1173,7 @@ export class MemStorage implements IStorage {
 
   async getUserProgress(userId: string): Promise<UserProgress[]> {
     const userProgressList: UserProgress[] = [];
-    for (const progress of this.userProgress.values()) {
+    for (const progress of Array.from(this.userProgress.values())) {
       if (progress.userId === userId) {
         userProgressList.push(progress);
       }
@@ -1062,7 +1182,7 @@ export class MemStorage implements IStorage {
   }
 
   async getUserProgressForLesson(userId: string, lessonId: string): Promise<UserProgress | undefined> {
-    for (const progress of this.userProgress.values()) {
+    for (const progress of Array.from(this.userProgress.values())) {
       if (progress.userId === userId && progress.lessonId === lessonId) {
         return progress;
       }
