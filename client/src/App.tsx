@@ -9,12 +9,14 @@ import { InputPromptDialog } from "@/components/input-prompt-dialog";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import LessonPage from "@/pages/lesson";
+import ProjectBuilder from "@/pages/project-builder";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/lesson/:lessonId" component={LessonPage} />
+      <Route path="/project-builder" component={ProjectBuilder} />
       <Route component={NotFound} />
     </Switch>
   );
