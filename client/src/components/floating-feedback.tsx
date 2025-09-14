@@ -23,13 +23,13 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
   if (!isVisible) return null;
 
   return (
-    <Card className="fixed bottom-6 right-6 w-80 shadow-lg border-border" data-testid="floating-feedback">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start space-x-3">
-            <Lightbulb className="text-secondary mt-1 h-5 w-5" />
+    <Card className="fixed bottom-8 right-8 w-96 shadow-xl border-2 border-border bg-card" data-testid="floating-feedback">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="text-secondary mt-1 h-6 w-6 flex-shrink-0" />
             <div className="flex-1">
-              <h4 className="font-medium text-sm mb-1">
+              <h4 className="text-lg font-semibold mb-1">
                 {showNext ? "Great job!" : "Step Hint"}
               </h4>
             </div>
@@ -38,26 +38,27 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
             variant="ghost"
             size="sm"
             onClick={() => setIsVisible(false)}
-            className="h-6 w-6 p-0"
+            className="h-8 w-8 p-0 hover:bg-muted rounded-full"
             data-testid="button-dismiss-feedback"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {showNext ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground leading-relaxed">
               Excellent work! You've successfully completed this step. 
               {isLastStep ? " You're ready to finish this lesson!" : " Ready for the next challenge?"}
             </p>
           ) : (
             <>
               {step.hints.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {step.hints.map((hint, index) => (
-                    <p key={index} className="text-sm text-muted-foreground">
-                      • {hint}
+                    <p key={index} className="text-base text-muted-foreground flex gap-2">
+                      <span className="text-lg">•</span>
+                      <span className="leading-relaxed">{hint}</span>
                     </p>
                   ))}
                 </div>
@@ -65,22 +66,22 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
             </>
           )}
 
-          <div className="flex items-center space-x-2 pt-2">
+          <div className="flex items-center gap-3 pt-3">
             {showNext ? (
               <Button
                 onClick={isLastStep ? onCompleteLesson : onNextStep}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
+                className="btn-primary flex items-center gap-2"
                 data-testid={isLastStep ? "button-complete-lesson" : "button-next-step"}
               >
                 {isLastStep ? (
                   <>
-                    <Trophy className="h-4 w-4" />
-                    <span>Complete Lesson</span>
+                    <Trophy className="h-5 w-5" />
+                    <span className="text-base font-semibold">Complete Lesson</span>
                   </>
                 ) : (
                   <>
-                    <ArrowRight className="h-4 w-4" />
-                    <span>Next Step</span>
+                    <ArrowRight className="h-5 w-5" />
+                    <span className="text-base font-semibold">Next Step</span>
                   </>
                 )}
               </Button>
@@ -88,7 +89,7 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
               <Button
                 variant="outline"
                 onClick={() => setShowSolution(!showSolution)}
-                className="text-xs"
+                className="min-h-[44px] px-5 text-base font-medium"
                 data-testid="button-show-solution"
               >
                 {showSolution ? "Hide Solution" : "Show Solution"}
@@ -97,8 +98,8 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
           </div>
 
           {showSolution && (
-            <div className="mt-3 p-3 bg-code-bg text-white font-mono text-xs rounded overflow-x-auto">
-              <pre className="whitespace-pre-wrap">{step.solution}</pre>
+            <div className="mt-4 p-4 bg-code-bg text-white font-mono text-base rounded-lg overflow-x-auto">
+              <pre className="whitespace-pre-wrap leading-relaxed">{step.solution}</pre>
             </div>
           )}
         </div>

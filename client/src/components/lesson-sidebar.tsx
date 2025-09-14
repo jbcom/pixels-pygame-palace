@@ -11,25 +11,25 @@ interface LessonSidebarProps {
 
 export default function LessonSidebar({ lesson, currentStepIndex, progress, onStepClick }: LessonSidebarProps) {
   return (
-    <aside className="w-80 bg-card border-r border-border flex flex-col">
-      <div className="p-4 border-b border-border">
-        <h2 className="font-semibold text-lg mb-3">Lesson Content</h2>
-        <div className="space-y-2">
-          <div className="p-3 rounded-md bg-primary text-primary-foreground">
-            <div className="flex items-center space-x-3">
-              <Play className="h-5 w-5" />
+    <aside className="w-96 bg-card border-r-2 border-border flex flex-col">
+      <div className="p-6 border-b-2 border-border bg-muted/10">
+        <h2 className="text-2xl font-semibold mb-4">Lesson Content</h2>
+        <div className="space-y-3">
+          <div className="p-4 rounded-lg bg-primary text-primary-foreground shadow-md">
+            <div className="flex items-center gap-4">
+              <Play className="h-6 w-6 flex-shrink-0" />
               <div>
-                <div className="font-medium">Lesson {lesson.order}</div>
-                <div className="text-sm opacity-90">{lesson.title}</div>
+                <div className="text-lg font-semibold">Lesson {lesson.order}</div>
+                <div className="text-base opacity-95">{lesson.title}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="p-4 flex-1">
-        <h3 className="font-medium mb-3">Lesson Steps</h3>
-        <div className="space-y-2">
+      <div className="p-6 flex-1 overflow-y-auto">
+        <h3 className="text-xl font-semibold mb-4">Lesson Steps</h3>
+        <div className="space-y-3">
           {lesson.content.steps.map((step, index) => {
             const isCompleted = (progress?.currentStep || 0) > index;
             const isActive = currentStepIndex === index;
@@ -39,34 +39,34 @@ export default function LessonSidebar({ lesson, currentStepIndex, progress, onSt
               <div
                 key={step.id}
                 className={cn(
-                  "flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors",
-                  isActive && "bg-primary/10 text-primary border border-primary/20",
-                  isCompleted && !isActive && "bg-success/10 text-success",
-                  !isAccessible && !isCompleted && "text-muted-foreground cursor-not-allowed",
-                  isAccessible && !isActive && !isCompleted && "hover:bg-accent"
+                  "sidebar-step flex items-center gap-3 cursor-pointer transition-all duration-200",
+                  isActive && "sidebar-step active",
+                  isCompleted && !isActive && "sidebar-step completed",
+                  !isAccessible && !isCompleted && "opacity-50 cursor-not-allowed",
+                  isAccessible && !isActive && !isCompleted && "hover:bg-accent hover:translate-x-1"
                 )}
                 onClick={() => isAccessible && onStepClick(index)}
                 data-testid={`step-${index}`}
               >
                 {isCompleted ? (
-                  <CheckCircle className="h-4 w-4" />
+                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
                 ) : isActive ? (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-5 w-5 flex-shrink-0" />
                 ) : isAccessible ? (
-                  <Circle className="h-3 w-3" />
+                  <Circle className="h-4 w-4 flex-shrink-0" />
                 ) : (
-                  <Lock className="h-4 w-4" />
+                  <Lock className="h-5 w-5 flex-shrink-0" />
                 )}
-                <span className="text-sm font-medium">{step.title}</span>
+                <span className="text-base font-medium leading-tight">{step.title}</span>
               </div>
             );
           })}
         </div>
         
         {lesson.content.introduction && (
-          <div className="mt-6">
-            <h4 className="font-medium mb-2">About this Lesson</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+          <div className="mt-8 p-4 bg-muted/20 rounded-lg">
+            <h4 className="text-lg font-medium mb-3">About this Lesson</h4>
+            <p className="text-base text-muted-foreground leading-relaxed">
               {lesson.content.introduction}
             </p>
           </div>

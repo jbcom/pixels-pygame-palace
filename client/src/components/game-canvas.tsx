@@ -63,27 +63,27 @@ export default function GameCanvas({ code, pyodide, isRunning }: GameCanvasProps
   }, [code, isRunning]);
 
   return (
-    <div className="w-1/2 flex flex-col border-l border-border">
-      <div className="bg-card border-b border-border p-4 flex items-center justify-between">
-        <h3 className="font-medium">Game Preview</h3>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1 text-sm">
+    <div className="w-1/2 flex flex-col border-l-2 border-border">
+      <div className="bg-card border-b-2 border-border p-5 flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Game Preview</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-base font-medium">
             <Circle 
-              className={`h-3 w-3 ${isRunning ? 'text-success fill-success' : 'text-muted-foreground'}`} 
+              className={`h-4 w-4 ${isRunning ? 'text-success fill-success' : 'text-muted-foreground'}`} 
             />
-            <span className={isRunning ? 'text-success' : 'text-muted-foreground'}>
+            <span className={isRunning ? 'text-success font-semibold' : 'text-muted-foreground'}>
               {isRunning ? 'Running' : 'Stopped'}
             </span>
           </div>
-          <Button variant="ghost" size="sm" data-testid="button-fullscreen">
-            <Expand className="h-4 w-4" />
+          <Button variant="ghost" size="sm" className="p-2" data-testid="button-fullscreen">
+            <Expand className="h-5 w-5" />
           </Button>
         </div>
       </div>
       
       {/* Game Canvas Area */}
-      <div className="flex-1 bg-black flex items-center justify-center p-4">
-        <div className="bg-white w-full h-full max-w-2xl max-h-96 relative rounded-lg overflow-hidden shadow-lg">
+      <div className="flex-1 bg-gray-900 flex items-center justify-center p-6">
+        <div className="bg-white w-full h-full max-w-3xl max-h-[500px] relative rounded-xl overflow-hidden shadow-2xl border-2 border-gray-300">
           <canvas
             ref={canvasRef}
             width={640}
@@ -95,38 +95,38 @@ export default function GameCanvas({ code, pyodide, isRunning }: GameCanvasProps
       </div>
       
       {/* Game Controls and Info */}
-      <div className="bg-card border-t border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium text-sm">Game Status</h4>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">FPS:</span>
-            <Badge variant="secondary" className="font-mono">
+      <div className="bg-card border-t-2 border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-medium">Game Status</h4>
+          <div className="flex items-center gap-3">
+            <span className="text-base text-muted-foreground font-medium">FPS:</span>
+            <Badge variant="secondary" className="font-mono text-base px-3 py-1 font-semibold">
               {gameState.fps}
             </Badge>
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-6 text-base">
           <div>
-            <div className="text-muted-foreground">Objects:</div>
-            <Badge variant="outline" className="font-mono mt-1">
+            <div className="text-muted-foreground font-medium mb-2">Objects:</div>
+            <Badge variant="outline" className="font-mono text-base px-3 py-1 font-semibold">
               {gameState.objects.length}
             </Badge>
           </div>
           <div>
-            <div className="text-muted-foreground">Resolution:</div>
-            <Badge variant="outline" className="font-mono mt-1">
+            <div className="text-muted-foreground font-medium mb-2">Resolution:</div>
+            <Badge variant="outline" className="font-mono text-base px-3 py-1 font-semibold">
               640x480
             </Badge>
           </div>
         </div>
 
         {gameState.objects.length > 0 && (
-          <div className="mt-4">
-            <div className="text-sm text-muted-foreground mb-2">Active Objects:</div>
-            <div className="space-y-1">
+          <div className="mt-5 p-3 bg-muted/20 rounded-lg">
+            <div className="text-base font-medium text-muted-foreground mb-3">Active Objects:</div>
+            <div className="space-y-2">
               {gameState.objects.map((obj, index) => (
-                <div key={index} className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                <div key={index} className="text-base font-mono bg-muted px-3 py-2 rounded font-medium">
                   {obj.type} at ({Math.round(obj.x)}, {Math.round(obj.y)})
                 </div>
               ))}
