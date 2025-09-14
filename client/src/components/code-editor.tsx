@@ -1,6 +1,9 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Play, RotateCcw, Keyboard, CheckCircle2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Monaco Editor types
@@ -13,16 +16,42 @@ declare global {
 interface CodeEditorProps {
   code: string;
   onChange: (code: string) => void;
-  onExecute: () => void;
+  onExecute: (inputValues?: string, runAutoGrading?: boolean) => void;
   output: string;
   error: string;
   isExecuting: boolean;
+  gradingResult?: {
+    passed: boolean;
+    feedback: string;
+    expectedOutput?: string;
+    actualOutput?: string;
+  } | null;
+  currentStep?: {
+    id: string;
+    title: string;
+    description: string;
+    tests?: Array<{
+      input?: string;
+      expectedOutput: string;
+      description?: string;
+    }>;
+  };
 }
 
-export default function CodeEditor({ code, onChange, onExecute, output, error, isExecuting }: CodeEditorProps) {
+export default function CodeEditor({ 
+  code, 
+  onChange, 
+  onExecute, 
+  output, 
+  error, 
+  isExecuting, 
+  gradingResult, 
+  currentStep 
+}: CodeEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const monacoEditorRef = useRef<any>(null);
   const scriptLoadedRef = useRef<boolean>(false);
+  const [inputValues, setInputValues] = useState("");
 
   useEffect(() => {
     // Prevent multiple script loads
@@ -95,7 +124,7 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
               window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.Enter,
               () => {
                 if (typeof onExecute === 'function') {
-                  onExecute();
+                  onExecute(inputValues);
                 }
               }
             );
@@ -150,26 +179,82 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
 
   return (
     <div className="w-1/2 flex flex-col">
-      <div className="bg-card border-b-2 border-border p-5 flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Code Editor</h3>
+      <div className="bg-card border-b-2 border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">Code Editor</h3>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => onExecute(inputValues, false)}
+              disabled={isExecuting}
+              variant="outline"
+              className="min-h-[48px] px-5 text-base font-medium hover:bg-accent flex items-center gap-2"
+              data-testid="button-run-code"
+            >
+              <Play className="h-5 w-5" />
+              <span className="font-semibold">{isExecuting ? "Running..." : "Run Code"}</span>
+            </Button>
+            <Button
+              onClick={() => onExecute(inputValues, true)}
+              disabled={isExecuting}
+              className="btn-primary flex items-center gap-2"
+              data-testid="button-run-check"
+            >
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="text-base font-semibold">{isExecuting ? "Checking..." : "Run & Check"}</span>
+            </Button>
+            <Button
+              onClick={resetCode}
+              variant="outline"
+              className="min-h-[48px] px-5 text-base font-medium hover:bg-accent"
+              data-testid="button-reset-code"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Step Instructions */}
+        {currentStep && (
+          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">{currentStep.title}</h4>
+            <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">{currentStep.description}</p>
+          </div>
+        )}
+        
+        {/* Expected Output */}
+        {currentStep && currentStep.tests && currentStep.tests.length > 0 && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-green-700 dark:text-green-300" />
+              <h4 className="font-semibold text-green-900 dark:text-green-100">Expected Output:</h4>
+            </div>
+            <pre className="text-green-800 dark:text-green-200 text-sm font-mono bg-green-100 dark:bg-green-900/50 p-2 rounded">
+              {currentStep.tests[0].expectedOutput}
+            </pre>
+            {currentStep.tests[0].input && (
+              <p className="text-green-700 dark:text-green-300 text-xs mt-1">
+                (With input: {currentStep.tests[0].input})
+              </p>
+            )}
+          </div>
+        )}
+        
+        {/* Input Values Control */}
         <div className="flex items-center gap-3">
-          <Button
-            onClick={onExecute}
-            disabled={isExecuting}
-            className="btn-primary flex items-center gap-2"
-            data-testid="button-run-code"
-          >
-            <Play className="h-5 w-5" />
-            <span className="text-base font-semibold">{isExecuting ? "Running..." : "Run Code"}</span>
-          </Button>
-          <Button
-            onClick={resetCode}
-            variant="outline"
-            className="min-h-[48px] px-5 text-base font-medium hover:bg-accent"
-            data-testid="button-reset-code"
-          >
-            <RotateCcw className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Keyboard className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="input-values" className="text-sm font-medium whitespace-nowrap">
+              Input Values:
+            </Label>
+          </div>
+          <Input
+            id="input-values"
+            value={inputValues}
+            onChange={(e) => setInputValues(e.target.value)}
+            placeholder="John, 25, Python (comma-separated for multiple input() calls)"
+            className="flex-1 text-sm"
+            data-testid="input-values"
+          />
         </div>
       </div>
       
@@ -188,7 +273,41 @@ export default function CodeEditor({ code, onChange, onExecute, output, error, i
             </div>
           </div>
           <div className="console-output h-48 overflow-auto">
-            {error ? (
+            {gradingResult ? (
+              <div className={cn(
+                "p-4",
+                gradingResult.passed ? "console-success" : "console-error"
+              )} data-testid="grading-result">
+                <div className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <span className="text-2xl">{gradingResult.passed ? "✅" : "❌"}</span>
+                  <span>{gradingResult.passed ? "Test Passed!" : "Test Failed"}</span>
+                </div>
+                <div className="whitespace-pre-wrap text-base leading-relaxed mb-3">
+                  {gradingResult.feedback}
+                </div>
+                {gradingResult.expectedOutput && gradingResult.actualOutput && (
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Expected:</div>
+                      <div className="text-green-300 bg-green-900/30 p-2 rounded font-mono text-sm">
+                        {gradingResult.expectedOutput}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Your Output:</div>
+                      <div className={cn(
+                        "p-2 rounded font-mono text-sm",
+                        gradingResult.passed 
+                          ? "text-green-300 bg-green-900/30" 
+                          : "text-red-300 bg-red-900/30"
+                      )}>
+                        {gradingResult.actualOutput}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : error ? (
               <div className="console-error" data-testid="console-error">
                 <div className="text-lg font-semibold mb-2 flex items-center gap-2">
                   <span className="text-2xl">✗</span> Error:

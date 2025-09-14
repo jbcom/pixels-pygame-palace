@@ -106,27 +106,59 @@ export function usePyodide() {
             pygame = MockPygame()
             sys.modules['pygame'] = pygame
             
-            print("Python environment ready with pygame mock!")
+            # Don't print initialization message - keep stdout clean for grading
           `);
 
-          // Create a working input system for Pyodide v0.24.1
+          // Create a synchronous queue-based input system
           pyodideInstance.runPython(`
             import builtins
             import js
             
-            # Global input bridge function that will be set by JS
-            __pending_inputs = []
+            # Global input queue that will be managed by JS
+            __input_queue = []
+            __input_index = 0
             
             def __input__(prompt=""):
-                # Simple fallback - just return a default for now
-                # This prevents crashes while we implement proper async handling
-                print(f"Input prompt: {prompt}")
-                return "demo_input"  # Simple fallback value
+                global __input_queue, __input_index
+                # Don't print debug messages - they pollute stdout and break grading
+                
+                # Return the next value from the queue if available
+                if __input_index < len(__input_queue):
+                    value = __input_queue[__input_index]
+                    __input_index += 1
+                    return str(value)
+                else:
+                    # If queue is empty, return a reasonable default
+                    return "default_input"
             
-            # Replace built-in input function
+            # Synchronous function to set input values from JS
+            def __set_input_values__(values_list):
+                global __input_queue, __input_index
+                __input_queue = values_list
+                __input_index = 0
+                # Don't print debug messages - they pollute stdout and break grading
+            
+            # Replace built-in input function with synchronous version
             builtins.input = __input__
             
-            print("Input system initialized with simple fallback!")
+            # Don't print initialization message - keep stdout clean
+          `);
+          
+          // Add function to set input values from JavaScript
+          pyodideInstance.runPython(`
+            # Expose the function to JavaScript
+            from js import console
+            def set_input_values_from_js(values_str):
+                if values_str and values_str.strip():
+                    # Split by newline to match test data format, strip whitespace
+                    values = [v.strip() for v in values_str.split('\\n') if v.strip()]
+                    __set_input_values__(values)
+                else:
+                    __set_input_values__([])
+            
+            # Make it available to JS
+            import sys
+            sys.modules['__main__'].set_input_values_from_js = set_input_values_from_js
           `);
           
           // Store instance globally for reuse

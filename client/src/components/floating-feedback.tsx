@@ -16,9 +16,15 @@ interface FloatingFeedbackProps {
   onApplySolution: (solution: string) => void;
   showNext: boolean;
   isLastStep: boolean;
+  gradingResult?: {
+    passed: boolean;
+    feedback: string;
+    expectedOutput?: string;
+    actualOutput?: string;
+  } | null;
 }
 
-export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, onApplySolution, showNext, isLastStep }: FloatingFeedbackProps) {
+export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, onApplySolution, showNext, isLastStep, gradingResult }: FloatingFeedbackProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [showSolution, setShowSolution] = useState(false);
   const { toast } = useToast();
