@@ -196,6 +196,11 @@ export default function LessonPage() {
           step={currentStep}
           onNextStep={nextStep}
           onCompleteLesson={completeLesson}
+          onApplySolution={(solution) => {
+            setCode(solution);
+            setOutput("");
+            setError("");
+          }}
           showNext={!!output && !error}
           isLastStep={isLastStep}
         />

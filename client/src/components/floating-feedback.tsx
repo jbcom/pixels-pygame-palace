@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lightbulb, ArrowRight, Trophy, X } from "lucide-react";
+import { Lightbulb, ArrowRight, Trophy, X, Copy, Code } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface FloatingFeedbackProps {
   step: {
@@ -12,13 +13,39 @@ interface FloatingFeedbackProps {
   };
   onNextStep: () => void;
   onCompleteLesson: () => void;
+  onApplySolution: (solution: string) => void;
   showNext: boolean;
   isLastStep: boolean;
 }
 
-export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, showNext, isLastStep }: FloatingFeedbackProps) {
+export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, onApplySolution, showNext, isLastStep }: FloatingFeedbackProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [showSolution, setShowSolution] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopySolution = async () => {
+    try {
+      await navigator.clipboard.writeText(step.solution);
+      toast({
+        title: "Solution copied!",
+        description: "The solution has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try selecting and copying the text manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApplySolution = () => {
+    onApplySolution(step.solution);
+    toast({
+      title: "Solution applied!",
+      description: "The solution has been added to the code editor.",
+    });
+  };
 
   if (!isVisible) return null;
 
@@ -67,7 +94,7 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
           )}
 
           <div className="flex items-center gap-3 pt-3">
-            {showNext ? (
+            {showNext && (
               <Button
                 onClick={isLastStep ? onCompleteLesson : onNextStep}
                 className="btn-primary flex items-center gap-2"
@@ -85,21 +112,44 @@ export default function FloatingFeedback({ step, onNextStep, onCompleteLesson, s
                   </>
                 )}
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={() => setShowSolution(!showSolution)}
-                className="min-h-[44px] px-5 text-base font-medium"
-                data-testid="button-show-solution"
-              >
-                {showSolution ? "Hide Solution" : "Show Solution"}
-              </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => setShowSolution(!showSolution)}
+              className="min-h-[44px] px-5 text-base font-medium"
+              data-testid="button-show-solution"
+            >
+              {showSolution ? "Hide Solution" : "Show Solution"}
+            </Button>
           </div>
 
           {showSolution && (
-            <div className="mt-4 p-4 bg-code-bg text-white font-mono text-base rounded-lg overflow-x-auto">
-              <pre className="whitespace-pre-wrap leading-relaxed">{step.solution}</pre>
+            <div className="mt-4 space-y-3">
+              <div className="p-4 bg-gray-900 text-gray-100 font-mono text-base rounded-lg overflow-x-auto border border-gray-700" data-testid="solution-display">
+                <pre className="whitespace-pre-wrap leading-relaxed">{step.solution}</pre>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCopySolution}
+                  className="flex items-center gap-2"
+                  data-testid="button-copy-solution"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Solution
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleApplySolution}
+                  className="flex items-center gap-2"
+                  data-testid="button-apply-solution"
+                >
+                  <Code className="h-4 w-4" />
+                  Apply to Editor
+                </Button>
+              </div>
             </div>
           )}
         </div>
