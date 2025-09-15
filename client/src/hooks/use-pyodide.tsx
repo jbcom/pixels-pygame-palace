@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { registerPygameShim } from "@/lib/pygame-simulation";
+import { registerPygameShim, verifyPygameShimReady, getPygameStatus } from "@/lib/pygame-simulation";
 import { createEnhancedErrorCapture, type FormattedError, type ErrorContext } from "@/lib/python-error-handler";
 
 declare global {
@@ -46,7 +46,18 @@ export function usePyodide() {
           await pyodideInstance.loadPackage(['numpy', 'matplotlib']);
           
           // Register the enhanced pygame shim
-          registerPygameShim(pyodideInstance);
+          const shimRegistered = registerPygameShim(pyodideInstance);
+          if (!shimRegistered) {
+            console.warn('Pygame shim registration failed - games may not work properly');
+          }
+          
+          // Verify pygame shim is ready
+          const pygameReady = verifyPygameShimReady(pyodideInstance);
+          if (!pygameReady) {
+            console.warn('Pygame shim verification failed - games may not render correctly');
+          } else {
+            console.log('Pygame shim successfully verified and ready');
+          }
 
           // CRITICAL: Store instance globally BEFORE setting up enhanced error capture
           // The error capture system needs window.pyodideInstance to be available during setup
@@ -160,6 +171,17 @@ export function usePyodide() {
     loadPyodideInstance();
   }, []);
 
+  // Pygame verification functions
+  const verifyPygame = () => {
+    if (!pyodide) return false;
+    return verifyPygameShimReady(pyodide);
+  };
+
+  const getPygameStatusInfo = () => {
+    if (!pyodide) return { isAvailable: false, modules: [], errors: ['Pyodide not loaded'] };
+    return getPygameStatus(pyodide);
+  };
+
   return { 
     pyodide, 
     isLoading, 
@@ -170,6 +192,9 @@ export function usePyodide() {
     setupErrorCapture: enhancedCapture ? 
       () => enhancedCapture.setupErrorCapture() : 
       () => {},
-    isEnhancedReady: !!enhancedCapture && !!pyodide && enhancedCapture.isReadyForCapture?.() === true
+    isEnhancedReady: !!enhancedCapture && !!pyodide && enhancedCapture.isReadyForCapture?.() === true,
+    verifyPygame,
+    getPygameStatus: getPygameStatusInfo,
+    isPygameReady: !!pyodide && verifyPygameShimReady(pyodide)
   };
 }

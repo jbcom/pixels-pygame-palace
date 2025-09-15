@@ -23,7 +23,15 @@ export default function ProjectViewer() {
   const [match, params] = useRoute("/gallery/:id");
   const projectId = params?.id;
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
+  const { 
+    pyodide, 
+    isLoading: pyodideLoading, 
+    executeWithEnhancedErrors, 
+    isEnhancedReady,
+    verifyPygame,
+    getPygameStatus,
+    isPygameReady
+  } = usePyodide();
 
   // Project state
   const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -43,13 +51,46 @@ export default function ProjectViewer() {
     enabled: !!projectId,
   });
 
+  // Check if project contains pygame code
+  const isPygameProject = project?.files.some(file => 
+    file.content.includes('import pygame') || 
+    file.content.includes('from pygame') || 
+    file.content.includes('pygame.')
+  ) || false;
+
   // Execute code (read-only preview)
   const executeCode = useCallback(async (inputValues = "") => {
-    if (!pyodide || !project || project.files.length === 0) return;
+    if (!pyodide || !project || project.files.length === 0) {
+      setError("Unable to execute: Project or Python runtime not available");
+      return;
+    }
 
     setIsExecuting(true);
     setError("");
     setOutput("");
+
+    // Pygame project setup and verification (non-blocking)
+    if (isPygameProject) {
+      console.log('Pygame project detected - setting up pygame environment...');
+      
+      const pygameStatus = getPygameStatus();
+      console.log('Pygame status:', pygameStatus);
+      
+      if (!pygameStatus.isAvailable) {
+        const warningMsg = `⚠️ Pygame Setup Warning: ${pygameStatus.errors.join(', ')}`;
+        console.warn(warningMsg);
+        setOutput(`${warningMsg}\n\nProject will attempt to run with limited pygame support. Graphics may appear as simulation.\n\n`);
+      } else {
+        // Verify extended pygame functionality
+        if (!verifyPygame()) {
+          const warningMsg = '⚠️ Some pygame features may not work correctly in browser preview';
+          console.warn(warningMsg);
+          setOutput(`${warningMsg}\n\nProject will run with simulation fallback for unsupported features.\n\n`);
+        } else {
+          console.log('✅ Pygame environment ready for project execution');
+          setOutput('🎮 Pygame environment initialized - starting project...\n\n');
+        }
+      }
 
     try {
       // Set up input values if provided
@@ -224,9 +265,19 @@ finally:
           const capturedError = pyodide.globals.get("fallback_error");
 
           if (capturedError) {
-            setError(capturedError);
+            // Don't block execution for pygame-related errors, show as warnings
+            if (isPygameProject && capturedError.toLowerCase().includes('pygame')) {
+              setOutput(prev => `${prev}\n⚠️ Pygame Warning: ${capturedError}\n\n📖 This project uses pygame features that are simulated in browser preview. The core logic should still execute correctly.`);
+            } else {
+              setError(capturedError);
+            }
           } else {
-            setOutput(capturedOutput || "Program executed successfully!");
+            const finalOutput = capturedOutput || "Program executed successfully!";
+            if (isPygameProject) {
+              setOutput(prev => `${prev}${finalOutput}\n\n🎮 Pygame project completed. Check the game preview panel for visual output.`);
+            } else {
+              setOutput(finalOutput);
+            }
           }
           
         } catch (err) {
@@ -237,11 +288,22 @@ finally:
 
     } catch (error) {
       console.error("Execution error:", error);
-      setError(error instanceof Error ? error.message : String(error));
+      
+      // Enhanced error handling with educational context
+      if (isPygameProject && error instanceof Error) {
+        if (error.message.includes('pygame')) {
+          setError(`🎮 Pygame Compatibility Note: ${error.message}\n\n💡 This is expected in browser preview mode. The pygame functionality is simulated to show you how the game would work. In a full pygame environment, this would render actual graphics and handle real input events.`);
+        } else {
+          setError(`⚠️ Project Error: ${error.message}\n\n🔍 This appears to be a code issue rather than a pygame limitation. Check the error details above for debugging information.`);
+        }
+      } else {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setError(`Execution error: ${errorMessage}`);
+      }
     } finally {
       setIsExecuting(false);
     }
-  }, [pyodide, project, isEnhancedReady, executeWithEnhancedErrors]);
+  }, [pyodide, project, isEnhancedReady, executeWithEnhancedErrors, isPygameProject, verifyPygame, getPygameStatus]);
 
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content).then(() => {
@@ -544,8 +606,35 @@ finally:
                 </CardHeader>
                 
                 <CardContent>
+                  {/* Pygame Status Alert */}
+                  {isPygameProject && (
+                    <div className="mb-4">
+                      <Alert className={`${isPygameReady ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800'}`}>
+                        <AlertDescription className={isPygameReady ? 'text-green-800 dark:text-green-200' : 'text-yellow-800 dark:text-yellow-200'}>
+                          🎮 {isPygameReady 
+                            ? 'Pygame project ready - graphics will render when you run the game!' 
+                            : 'Pygame project detected - initializing graphics support...'}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                  
+                  {!isPygameProject && (
+                    <div className="mb-4">
+                      <Alert className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+                        <AlertDescription>
+                          🎮 This is a preview of a published project. Click "Run Game" to see it in action!
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+                  
                   <div className="aspect-[4/3] bg-black rounded-lg overflow-hidden border border-border/50">
-                    <GameCanvas />
+                    <GameCanvas 
+                      code={project.files[activeFileIndex]?.content || ''}
+                      pyodide={pyodide}
+                      isRunning={isExecuting}
+                    />
                   </div>
                 </CardContent>
               </Card>
