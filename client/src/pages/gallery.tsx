@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Eye, Code2, Gamepad2, Star, Users, Play, 
   Filter, Grid3X3, Trophy, Sparkles, ArrowRight, Heart,
-  Calendar, User, Zap, Palette
+  Calendar, User, Zap, Palette, Clock, Plus
 } from "lucide-react";
 import type { Project } from "@shared/schema";
 import { motion } from "framer-motion";
@@ -57,7 +57,12 @@ export default function Gallery() {
     })
     ?.sort((a, b) => {
       if (sortBy === "newest") {
-        return b.id.localeCompare(a.id); // Simple alphabetical sort as proxy for newest
+        // Backend already returns projects sorted by publishedAt (newest first)
+        // For additional client-side sorting, use publishedAt if available
+        if (a.publishedAt && b.publishedAt) {
+          return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        }
+        return 0; // Keep backend order if timestamps are missing
       } else if (sortBy === "name") {
         return a.name.localeCompare(b.name);
       }
@@ -89,7 +94,32 @@ export default function Gallery() {
     }
   };
 
-  const uniqueTemplates = [...new Set(projects?.map(p => p.template) || [])];
+  const uniqueTemplates = Array.from(new Set(projects?.map(p => p.template) || []));
+
+  // Utility functions for timestamp handling
+  const formatTimeAgo = (publishedAt: string | Date | null): string => {
+    if (!publishedAt) return 'Published';
+    
+    const now = new Date();
+    const publishTime = new Date(publishedAt);
+    const diffMs = now.getTime() - publishTime.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffHours < 1) return 'Just published';
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) === 1 ? '' : 's'} ago`;
+    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) === 1 ? '' : 's'} ago`;
+  };
+
+  const isRecentlyPublished = (publishedAt: string | Date | null): boolean => {
+    if (!publishedAt) return false;
+    const now = new Date();
+    const publishTime = new Date(publishedAt);
+    const diffHours = (now.getTime() - publishTime.getTime()) / (1000 * 60 * 60);
+    return diffHours <= 48; // Consider "recent" if published within 48 hours
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-950 dark:to-purple-950">
@@ -370,10 +400,16 @@ export default function Gallery() {
                         </div>
                       )}
                       
-                      <div className="absolute top-3 right-3">
+                      <div className="absolute top-3 right-3 flex flex-col space-y-2">
                         <Badge variant="secondary" className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
                           {getTemplateIcon(project.template)} {getTemplateDisplayName(project.template)}
                         </Badge>
+                        {isRecentlyPublished(project.publishedAt) && (
+                          <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg animate-pulse">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            NEW
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -403,21 +439,31 @@ export default function Gallery() {
                     
                     <CardContent className="pt-0 space-y-4 relative z-10">
                       {/* Project Stats */}
-                      <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                        <div className="flex items-center space-x-1">
-                          <User className="h-3 w-3" />
-                          <span>Student</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Code2 className="h-3 w-3" />
-                          <span>{project.files.length} files</span>
-                        </div>
-                        {project.assets.length > 0 && (
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                        <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-1">
-                            <Palette className="h-3 w-3" />
-                            <span>{project.assets.length} assets</span>
+                            <User className="h-3 w-3" />
+                            <span>Student</span>
                           </div>
-                        )}
+                          <div className="flex items-center space-x-1">
+                            <Code2 className="h-3 w-3" />
+                            <span>{project.files.length} files</span>
+                          </div>
+                          {project.assets.length > 0 && (
+                            <div className="flex items-center space-x-1">
+                              <Palette className="h-3 w-3" />
+                              <span>{project.assets.length} assets</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Publication Info */}
+                      <div className="flex items-center text-xs text-muted-foreground mb-4">
+                        <Clock className="h-3 w-3 mr-1" />
+                        <span className={`${isRecentlyPublished(project.publishedAt) ? 'text-emerald-600 font-medium' : ''}`}>
+                          {formatTimeAgo(project.publishedAt)}
+                        </span>
                       </div>
                       
                       {/* Action Buttons */}
