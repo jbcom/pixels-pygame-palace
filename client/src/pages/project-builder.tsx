@@ -20,23 +20,11 @@ import {
 } from "lucide-react";
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
+import AssetManager from "@/components/asset-manager";
 import { usePyodide } from "@/hooks/use-pyodide";
 import { gameTemplates, getTemplateOptions } from "@/lib/game-templates";
-import type { Project } from "@shared/schema";
+import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
 import { motion } from "framer-motion";
-
-interface ProjectFile {
-  path: string;
-  content: string;
-}
-
-interface ProjectAsset {
-  id: string;
-  name: string;
-  type: 'image' | 'sound' | 'other';
-  path: string;
-  dataUrl: string;
-}
 
 export default function ProjectBuilder() {
   const [, setLocation] = useLocation();
@@ -568,24 +556,15 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="assets" className="flex-1 m-4 mt-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">Game Assets</h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!currentProject}
-                  data-testid="button-upload-asset"
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="text-center text-muted-foreground py-8">
-                <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Asset management coming soon!</p>
-                <p className="text-xs mt-1">Upload images, sounds, and other game assets</p>
-              </div>
+            <TabsContent value="assets" className="flex-1 mt-2">
+              <AssetManager
+                assets={assets}
+                onAssetsChange={(newAssets) => {
+                  setAssets(newAssets);
+                  setUnsavedChanges(true);
+                }}
+                disabled={!currentProject}
+              />
             </TabsContent>
           </Tabs>
         </div>
