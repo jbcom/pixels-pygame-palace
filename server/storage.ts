@@ -19,6 +19,11 @@ export interface IStorage {
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+  
+  // Gallery methods
+  listPublishedProjects(): Promise<Project[]>;
+  publishProject(id: string): Promise<Project>;
+  unpublishProject(id: string): Promise<Project>;
 }
 
 export class MemStorage implements IStorage {
@@ -1166,12 +1171,27 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const lesson: Lesson = {
       id,
-      ...lessonData,
+      title: lessonData.title,
+      description: lessonData.description,
+      order: lessonData.order,
+      content: {
+        introduction: lessonData.content.introduction,
+        steps: lessonData.content.steps.map((step: any) => ({
+          id: step.id,
+          title: step.title,
+          description: step.description,
+          initialCode: step.initialCode,
+          solution: step.solution,
+          hints: [...step.hints],
+          tests: step.tests ? [...step.tests] : undefined,
+          validation: step.validation
+        }))
+      },
       intro: lessonData.intro || null,
-      learningObjectives: lessonData.learningObjectives || null,
+      learningObjectives: lessonData.learningObjectives ? [...lessonData.learningObjectives] : null,
       goalDescription: lessonData.goalDescription || null,
       previewCode: lessonData.previewCode || null,
-      prerequisites: lessonData.prerequisites || null,
+      prerequisites: lessonData.prerequisites ? [...lessonData.prerequisites] : null,
       difficulty: lessonData.difficulty || null,
       estimatedTime: lessonData.estimatedTime || null,
     };
@@ -1246,7 +1266,20 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const project: Project = {
       id,
-      ...projectData,
+      userId: projectData.userId,
+      name: projectData.name,
+      template: projectData.template,
+      description: projectData.description || null,
+      published: projectData.published || false,
+      thumbnailDataUrl: projectData.thumbnailDataUrl || null,
+      files: [...projectData.files],
+      assets: projectData.assets ? projectData.assets.map((asset: any) => ({
+        id: asset.id,
+        name: asset.name,
+        type: asset.type as "image" | "sound" | "other",
+        path: asset.path,
+        dataUrl: asset.dataUrl
+      })) : [],
     };
     this.projects.set(id, project);
     return project;
@@ -1268,6 +1301,45 @@ export class MemStorage implements IStorage {
 
   async deleteProject(id: string): Promise<void> {
     this.projects.delete(id);
+  }
+
+  // Gallery methods implementation
+  async listPublishedProjects(): Promise<Project[]> {
+    const publishedProjects: Project[] = [];
+    for (const project of Array.from(this.projects.values())) {
+      if (project.published) {
+        publishedProjects.push(project);
+      }
+    }
+    return publishedProjects;
+  }
+
+  async publishProject(id: string): Promise<Project> {
+    const existing = this.projects.get(id);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+    
+    const updated: Project = {
+      ...existing,
+      published: true,
+    };
+    this.projects.set(id, updated);
+    return updated;
+  }
+
+  async unpublishProject(id: string): Promise<Project> {
+    const existing = this.projects.get(id);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+    
+    const updated: Project = {
+      ...existing,
+      published: false,
+    };
+    this.projects.set(id, updated);
+    return updated;
   }
 }
 
