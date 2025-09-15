@@ -21,6 +21,7 @@ import {
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
 import AssetManager from "@/components/asset-manager";
+import ExportDialog from "@/components/export-dialog";
 import { usePyodide } from "@/hooks/use-pyodide";
 import { gameTemplates, getTemplateOptions } from "@/lib/game-templates";
 import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
@@ -41,6 +42,7 @@ export default function ProjectBuilder() {
   // UI state
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showOpenProjectDialog, setShowOpenProjectDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("blank");
   
@@ -594,16 +596,28 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
               </Dialog>
 
               {currentProject && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => saveProjectMutation.mutate()}
-                  disabled={!unsavedChanges || saveProjectMutation.isPending}
-                  data-testid="button-save-project"
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  {saveProjectMutation.isPending ? "Saving..." : "Save"}
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => saveProjectMutation.mutate()}
+                    disabled={!unsavedChanges || saveProjectMutation.isPending}
+                    data-testid="button-save-project"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    {saveProjectMutation.isPending ? "Saving..." : "Save"}
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    onClick={() => setShowExportDialog(true)}
+                    disabled={files.length === 0}
+                    data-testid="button-export-game"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Export Game
+                  </Button>
+                </>
               )}
             </motion.div>
           </div>
@@ -778,6 +792,18 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
           )}
         </div>
       </div>
+
+      {/* Export Dialog */}
+      {currentProject && (
+        <ExportDialog
+          open={showExportDialog}
+          onOpenChange={setShowExportDialog}
+          projectName={currentProject.name}
+          files={files}
+          assets={assets}
+          template={currentProject.template}
+        />
+      )}
     </div>
   );
 }
