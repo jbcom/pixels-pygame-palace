@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, json, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, json, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -81,6 +81,8 @@ export const projects = pgTable("projects", {
   template: text("template").notNull(),
   description: text("description"),
   published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  publishedAt: timestamp("published_at"),
   thumbnailDataUrl: text("thumbnail_data_url"),
   files: json("files").notNull().$type<Array<{
     path: string;
@@ -110,6 +112,8 @@ export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
 
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
+  createdAt: true,
+  publishedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
