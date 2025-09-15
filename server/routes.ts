@@ -154,6 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = z.object({
         name: z.string().optional(),
         template: z.string().optional(),
+        description: z.string().optional(),
+        published: z.boolean().optional(),
+        thumbnailDataUrl: z.string().optional(),
         files: z.array(z.object({
           path: z.string(),
           content: z.string(),
@@ -190,6 +193,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Gallery endpoints
+  
+  // Get all published projects for gallery
+  app.get("/api/gallery", async (req, res) => {
+    try {
+      const publishedProjects = await storage.listPublishedProjects();
+      res.json(publishedProjects);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch gallery projects" });
+    }
+  });
+
+  // Publish a project
+  app.post("/api/projects/:id/publish", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const project = await storage.publishProject(id);
+      res.json(project);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Project not found") {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.status(500).json({ message: "Failed to publish project" });
+    }
+  });
+
+  // Unpublish a project
+  app.post("/api/projects/:id/unpublish", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const project = await storage.unpublishProject(id);
+      res.json(project);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Project not found") {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.status(500).json({ message: "Failed to unpublish project" });
     }
   });
 

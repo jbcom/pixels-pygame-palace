@@ -79,6 +79,9 @@ export const projects = pgTable("projects", {
   userId: varchar("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   template: text("template").notNull(),
+  description: text("description"),
+  published: boolean("published").notNull().default(false),
+  thumbnailDataUrl: text("thumbnail_data_url"),
   files: json("files").notNull().$type<Array<{
     path: string;
     content: string;
