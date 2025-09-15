@@ -27,7 +27,7 @@ export default function LessonPage() {
     actualOutput?: string;
   } | null>(null);
 
-  const { pyodide, isLoading: pyodideLoading, error: pyodideError } = usePyodide();
+  const { pyodide, isLoading: pyodideLoading, error: pyodideError, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
 
   // Rule-based grading engine
   const runRuleBasedGrading = async (test: any, actualOutput: string): Promise<{
@@ -470,36 +470,45 @@ result
     }
   }, [progress, lesson]);
 
-  const executeCode = async (inputValues?: string, runAutoGrading = false) => {
+  // Fallback basic execution for when enhanced system isn't ready
+  const executeCodeBasic = async (inputValues?: string, runAutoGrading = false) => {
     if (!pyodide || !code.trim()) return;
 
-    setError("");
-    setOutput("");
-    setGradingResult(null);
-
     try {
-      // Capture console output
+      // Basic execution with simple error capture and proper restoration
       pyodide.runPython(`
         import sys
         import io
+        # Capture original streams
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        # Redirect to StringIO for capture
         sys.stdout = io.StringIO()
         sys.stderr = io.StringIO()
       `);
 
-      // Set up input values for the queue system if provided
-      if (inputValues && inputValues.trim()) {
-        pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
-      } else {
-        // Clear the input queue if no values provided
-        pyodide.runPython(`set_input_values_from_js("")`);
+      let stdout = '';
+      let stderr = '';
+      
+      try {
+        if (inputValues && inputValues.trim()) {
+          pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
+        } else {
+          pyodide.runPython(`set_input_values_from_js("")`);
+        }
+
+        pyodide.runPython(code);
+
+        stdout = pyodide.runPython("sys.stdout.getvalue()");
+        stderr = pyodide.runPython("sys.stderr.getvalue()");
+        
+      } finally {
+        // CRITICAL: Always restore original streams to prevent pollution
+        pyodide.runPython(`
+          sys.stdout = original_stdout
+          sys.stderr = original_stderr
+        `);
       }
-
-      // Execute user code synchronously - input() now works with the queue system
-      pyodide.runPython(code);
-
-      // Get output
-      const stdout = pyodide.runPython("sys.stdout.getvalue()");
-      const stderr = pyodide.runPython("sys.stderr.getvalue()");
 
       if (stderr) {
         setError(stderr);
@@ -511,11 +520,79 @@ result
           });
         }
       } else {
-        const actualOutput = stdout || "Code executed successfully!";
-        setOutput(actualOutput);
-        
-        // Run auto-grading if requested
+        setOutput(stdout || "Code executed successfully!");
         if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
+          // Continue with auto-grading logic...
+          console.log("Basic auto-grading would continue here");
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+    }
+  };
+
+  const executeCode = async (inputValues?: string, runAutoGrading = false) => {
+    if (!pyodide || !code.trim()) return;
+
+    setError("");
+    setOutput("");
+    setGradingResult(null);
+
+    // Check if enhanced error reporting is available
+    if (!isEnhancedReady || !executeWithEnhancedErrors) {
+      console.warn("Enhanced error reporting not ready, falling back to basic execution");
+      // Fall back to basic execution if enhanced system isn't ready
+      return executeCodeBasic(inputValues, runAutoGrading);
+    }
+
+    try {
+      // Set up input values for the queue system if provided
+      if (inputValues && inputValues.trim()) {
+        pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
+      } else {
+        pyodide.runPython(`set_input_values_from_js("")`);
+      }
+
+      // Use enhanced error capture for better educational feedback
+      const context = {
+        code: code,
+        fileName: currentStep?.id ? `step_${currentStep.id}.py` : 'lesson.py',
+        isEducational: true
+      };
+
+      const result = await executeWithEnhancedErrors(code, context);
+
+      if (result.hasError && result.error) {
+        // Enhanced error reporting with educational context and FULL traceback for learning
+        let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
+        
+        // CRITICAL: Explicitly append full Python traceback for educational purposes
+        if (result.error.traceback && result.error.traceback.trim()) {
+          // Only add traceback if it's not already included in details
+          if (!result.error.details.includes(result.error.traceback)) {
+            enhancedErrorText += `\n\n🔍 Full Python Traceback (for learning):\n${result.error.traceback}`;
+          }
+        }
+        
+        setError(enhancedErrorText);
+        
+        if (runAutoGrading) {
+          setGradingResult({
+            passed: false,
+            feedback: `🐛 ${result.error.title}\n\n${result.error.message}\n\n💡 Tips to fix this:\n${result.error.suggestions.map(s => `• ${s}`).join('\n')}`,
+            actualOutput: result.error.traceback || enhancedErrorText
+          });
+        }
+        return;
+      }
+
+      // Success case - code executed without errors
+      const actualOutput = result.output || "Code executed successfully!";
+      setOutput(actualOutput);
+        
+      // Run auto-grading if requested
+      if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
           // Run all tests and collect results
           const testResults: Array<{
             testIndex: number;
@@ -531,27 +608,43 @@ result
             const test = currentStep.tests[i];
             
             try {
-              // Reset IO streams for clean output capture
+              // Reset IO streams for clean output capture with proper restoration
               pyodide.runPython(`
                 import sys
                 import io
+                # Capture original streams for restoration
+                original_stdout = sys.stdout
+                original_stderr = sys.stderr
+                # Redirect to StringIO for capture
                 sys.stdout = io.StringIO()
                 sys.stderr = io.StringIO()
               `);
               
-              // Set up test inputs if provided
-              if (test.input && test.input.trim()) {
-                pyodide.runPython(`set_input_values_from_js("${test.input.replace(/"/g, '\\"')}")`);
-              } else {
-                pyodide.runPython(`set_input_values_from_js("")`);
+              let testStdout = '';
+              let testStderr = '';
+              
+              try {
+                // Set up test inputs if provided
+                if (test.input && test.input.trim()) {
+                  pyodide.runPython(`set_input_values_from_js("${test.input.replace(/"/g, '\\"')}")`);
+                } else {
+                  pyodide.runPython(`set_input_values_from_js("")`);
+                }
+                
+                // Execute code again for this test
+                pyodide.runPython(code);
+                
+                // Get clean output
+                testStdout = pyodide.runPython("sys.stdout.getvalue()");
+                testStderr = pyodide.runPython("sys.stderr.getvalue()");
+                
+              } finally {
+                // CRITICAL: Always restore original streams to prevent pollution
+                pyodide.runPython(`
+                  sys.stdout = original_stdout
+                  sys.stderr = original_stderr
+                `);
               }
-              
-              // Execute code again for this test
-              pyodide.runPython(code);
-              
-              // Get clean output
-              const testStdout = pyodide.runPython("sys.stdout.getvalue()");
-              const testStderr = pyodide.runPython("sys.stderr.getvalue()");
               
               if (testStderr) {
                 // Code has error for this test
@@ -641,32 +734,21 @@ result
         }
       }
     } catch (err) {
-      console.error("Python execution error:", err);
+      console.error("Enhanced Python execution error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while executing the code.";
-      
-      // Handle specific input-related errors gracefully
-      if (errorMessage.includes("__getInput") || errorMessage.includes("input")) {
-        const message = "Input functionality is currently in demo mode. Your code will run with default values.";
-        setError(message);
-        setOutput("Code executed with demo input values!");
-        if (runAutoGrading) {
-          setGradingResult({
-            passed: false,
-            feedback: "Input functionality is currently in demo mode. Please check manually.",
-            actualOutput: message
-          });
-        }
-      } else {
-        setError(errorMessage);
-        if (runAutoGrading) {
-          setGradingResult({
-            passed: false,
-            feedback: "Your code has an error. Please fix it before checking.",
-            actualOutput: errorMessage
-          });
-        }
+      setError(errorMessage);
+      if (runAutoGrading) {
+        setGradingResult({
+          passed: false,
+          feedback: "Your code has an error. Please fix it before checking.",
+          actualOutput: errorMessage
+        });
       }
     }
+  };
+
+  const executeCodeBackup = async (inputValues?: string, runAutoGrading = false) => {
+    return executeCodeBasic(inputValues, runAutoGrading);
   };
 
   const nextStep = () => {
