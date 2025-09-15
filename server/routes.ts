@@ -208,6 +208,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a specific published project by ID
+  app.get("/api/gallery/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const publishedProjects = await storage.listPublishedProjects();
+      const project = publishedProjects.find(p => p.id === id);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Published project not found" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch gallery project" });
+    }
+  });
+
   // Publish a project
   app.post("/api/projects/:id/publish", async (req, res) => {
     try {
