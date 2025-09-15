@@ -31,7 +31,7 @@ import { motion } from "framer-motion";
 export default function ProjectBuilder() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading } = usePyodide();
+  const { pyodide, isLoading: pyodideLoading, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
 
   // Project state
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -312,48 +312,103 @@ print(f"Assets available for pygame.image.load(): {__available_assets__}")
         throw new Error("No active file selected");
       }
 
-      let capturedOutput = "";
-      let capturedError = "";
+      // Use enhanced error reporting if available, fallback to basic execution
+      if (isEnhancedReady && executeWithEnhancedErrors) {
+        // Create comprehensive code by concatenating all files with imports
+        const allFilesCode = files.map(file => `
+# === File: ${file.path} ===
+${file.content}
+`).join('\n\n');
 
-      // Execute the main file with proper output capture
-      pyodide.runPython(`
+        // Create files map for accurate multi-file error context
+        const filesMap: { [path: string]: string } = {};
+        files.forEach(file => {
+          filesMap[file.path] = file.content;
+        });
+
+        // Prepare enhanced error context for project execution with files map
+        const context = {
+          code: allFilesCode,
+          fileName: currentProject?.name ? `${currentProject.name}/${mainFile.path}` : mainFile.path,
+          isEducational: false, // Projects are more advanced than lessons
+          files: filesMap // CRITICAL: Include files map for accurate multi-file error context
+        };
+
+        // Execute main file with enhanced error reporting
+        const result = await executeWithEnhancedErrors(`
+import runpy
+import sys
+import os
+
+# Execute the main file
+try:
+    # Set working directory to project root
+    os.chdir('/project')
+    
+    # Execute the main file using runpy for proper module execution
+    runpy.run_path('${mainFile.path}', run_name='__main__')
+except SystemExit:
+    # Handle normal program exits gracefully
+    pass
+`, context);
+
+        setOutput(result.output || "");
+        
+        if (result.hasError && result.error) {
+          // Enhanced error with FULL traceback for debugging (projects need detailed info)
+          let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
+          
+          // CRITICAL: Explicitly append full Python traceback for project debugging
+          if (result.error.traceback && result.error.traceback.trim()) {
+            // Only add traceback if it's not already included in details
+            if (!result.error.details.includes(result.error.traceback)) {
+              enhancedErrorText += `\n\n🔍 Full Python Traceback:\n${result.error.traceback}`;
+            }
+          }
+          
+          setError(enhancedErrorText);
+        } else {
+          setError("");
+        }
+
+      } else {
+        // Fallback to basic execution when enhanced system not ready
+        console.warn("Enhanced error reporting not ready, using fallback execution");
+        
+        try {
+          pyodide.runPython(`
 import sys
 import io
 import runpy
 from contextlib import redirect_stdout, redirect_stderr
 
-class ProjectOutputCapture:
-    def __init__(self):
-        self.output = ""
-        self.error = ""
-    
-    def capture_execution(self, main_file_path):
-        output_buffer = io.StringIO()
-        error_buffer = io.StringIO()
-        
-        try:
-            with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
-                # Use runpy to execute the main file properly
-                runpy.run_path(main_file_path, run_name='__main__')
-        except SystemExit:
-            # Handle normal program exits gracefully
-            pass
-        except Exception as e:
-            error_buffer.write(str(e))
-        
-        self.output = output_buffer.getvalue()
-        self.error = error_buffer.getvalue()
-        return self.output, self.error
+# Capture output
+output_buffer = io.StringIO()
+error_buffer = io.StringIO()
 
-project_capture = ProjectOutputCapture()
-project_output, project_error = project_capture.capture_execution('${mainFile.path}')
+try:
+    with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
+        runpy.run_path('${mainFile.path}', run_name='__main__')
+except SystemExit:
+    pass
+except Exception as e:
+    error_buffer.write(str(e))
+
+fallback_output = output_buffer.getvalue()
+fallback_error = error_buffer.getvalue()
 `);
 
-      capturedOutput = pyodide.globals.get('project_output') || "";
-      capturedError = pyodide.globals.get('project_error') || "";
+          const capturedOutput = pyodide.globals.get('fallback_output') || "";
+          const capturedError = pyodide.globals.get('fallback_error') || "";
 
-      setOutput(capturedOutput);
-      setError(capturedError);
+          setOutput(capturedOutput);
+          setError(capturedError);
+          
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          setError(`Basic execution error: ${errorMessage}`);
+        }
+      }
 
       // Check for pygame content to enable game simulation
       const hasGameCode = files.some(file => 
@@ -374,7 +429,7 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
     } finally {
       setIsExecuting(false);
     }
-  }, [pyodide, files, activeFileIndex]);
+  }, [pyodide, files, activeFileIndex, currentProject, isEnhancedReady, executeWithEnhancedErrors]);
 
   // Handle file changes
   const updateFileContent = (content: string) => {
@@ -821,17 +876,9 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
       {/* Publish Dialog */}
       {currentProject && (
         <PublishDialog
-          open={showPublishDialog}
-          onOpenChange={setShowPublishDialog}
+          isOpen={showPublishDialog}
+          onClose={() => setShowPublishDialog(false)}
           project={currentProject}
-          files={files}
-          onPublishSuccess={() => {
-            setShowPublishDialog(false);
-            toast({
-              title: "🎉 Project Published!",
-              description: "Your amazing creation is now live in the gallery for everyone to see and play!",
-            });
-          }}
         />
       )}
     </div>

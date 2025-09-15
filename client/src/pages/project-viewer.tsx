@@ -23,7 +23,7 @@ export default function ProjectViewer() {
   const [match, params] = useRoute("/gallery/:id");
   const projectId = params?.id;
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading } = usePyodide();
+  const { pyodide, isLoading: pyodideLoading, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
 
   // Project state
   const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -132,11 +132,71 @@ os.makedirs('${assetDir.replace(/'/g, "\\'")}', exist_ok=True)
       // Find and execute main file
       const mainFile = project.files.find(f => f.path === 'main.py') || project.files[0];
       
-      // Capture output
-      let capturedOutput = "";
-      let capturedError = "";
+      // Use enhanced error reporting if available, fallback to basic execution
+      if (isEnhancedReady && executeWithEnhancedErrors) {
+        // Create comprehensive code by concatenating all files with imports
+        const allFilesCode = project.files.map(file => `
+# === File: ${file.path} ===
+${file.content}
+`).join('\n\n');
 
-      pyodide.runPython(`
+        // Create files map for accurate multi-file error context
+        const filesMap: { [path: string]: string } = {};
+        project.files.forEach(file => {
+          filesMap[file.path] = file.content;
+        });
+
+        // Prepare enhanced error context for project viewing with files map
+        const context = {
+          code: allFilesCode,
+          fileName: `${project.name}/${mainFile.path}`,
+          isEducational: false, // Public projects are more advanced than lessons
+          files: filesMap // CRITICAL: Include files map for accurate multi-file error context
+        };
+
+        // Execute main file with enhanced error reporting
+        const result = await executeWithEnhancedErrors(`
+import runpy
+import sys
+import os
+
+# Execute the main file
+try:
+    # Set working directory to project root
+    os.chdir('/project')
+    
+    # Execute the main file using runpy for proper module execution
+    runpy.run_path('${mainFile.path}', run_name='__main__')
+except SystemExit:
+    # Handle normal program exits gracefully
+    pass
+`, context);
+
+        setOutput(result.output || "Program executed successfully!");
+        
+        if (result.hasError && result.error) {
+          // Enhanced error with FULL traceback for project debugging/viewing
+          let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
+          
+          // CRITICAL: Explicitly append full Python traceback for project debugging
+          if (result.error.traceback && result.error.traceback.trim()) {
+            // Only add traceback if it's not already included in details
+            if (!result.error.details.includes(result.error.traceback)) {
+              enhancedErrorText += `\n\n🔍 Full Python Traceback:\n${result.error.traceback}`;
+            }
+          }
+          
+          setError(enhancedErrorText);
+        } else {
+          setError("");
+        }
+
+      } else {
+        // Fallback to basic execution when enhanced system not ready
+        console.warn("Enhanced error reporting not ready, using fallback execution for project viewer");
+        
+        try {
+          pyodide.runPython(`
 import sys
 from io import StringIO
 
@@ -146,27 +206,33 @@ old_stderr = sys.stderr
 sys.stdout = StringIO()
 sys.stderr = StringIO()
 
-captured_output = ""
-captured_error = ""
+fallback_output = ""
+fallback_error = ""
 
 try:
     exec(open('${mainFile.path}').read())
-    captured_output = sys.stdout.getvalue()
+    fallback_output = sys.stdout.getvalue()
 except Exception as e:
-    captured_error = str(e) + "\\n" + sys.stderr.getvalue()
+    fallback_error = str(e) + "\\n" + sys.stderr.getvalue()
 finally:
     # Restore original stdout/stderr
     sys.stdout = old_stdout
     sys.stderr = old_stderr
 `);
 
-      capturedOutput = pyodide.globals.get("captured_output");
-      capturedError = pyodide.globals.get("captured_error");
+          const capturedOutput = pyodide.globals.get("fallback_output");
+          const capturedError = pyodide.globals.get("fallback_error");
 
-      if (capturedError) {
-        setError(capturedError);
-      } else {
-        setOutput(capturedOutput || "Program executed successfully!");
+          if (capturedError) {
+            setError(capturedError);
+          } else {
+            setOutput(capturedOutput || "Program executed successfully!");
+          }
+          
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          setError(`Viewer execution error: ${errorMessage}`);
+        }
       }
 
     } catch (error) {
@@ -175,7 +241,7 @@ finally:
     } finally {
       setIsExecuting(false);
     }
-  }, [pyodide, project]);
+  }, [pyodide, project, isEnhancedReady, executeWithEnhancedErrors]);
 
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content).then(() => {

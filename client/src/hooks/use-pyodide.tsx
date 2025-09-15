@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { registerPygameShim } from "@/lib/pygame-simulation";
+import { createEnhancedErrorCapture, type FormattedError, type ErrorContext } from "@/lib/python-error-handler";
 
 declare global {
   interface Window {
@@ -9,10 +10,21 @@ declare global {
   }
 }
 
+export interface PyodideEnhanced {
+  pyodide: any;
+  executeWithEnhancedErrors: (code: string, context?: ErrorContext) => Promise<{
+    output: string;
+    error: FormattedError | null;
+    hasError: boolean;
+  }>;
+  setupErrorCapture: () => void;
+}
+
 export function usePyodide() {
   const [pyodide, setPyodide] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enhancedCapture, setEnhancedCapture] = useState<any>(null);
 
   useEffect(() => {
     const loadPyodideInstance = async () => {
@@ -35,6 +47,23 @@ export function usePyodide() {
           
           // Register the enhanced pygame shim
           registerPygameShim(pyodideInstance);
+
+          // CRITICAL: Store instance globally BEFORE setting up enhanced error capture
+          // The error capture system needs window.pyodideInstance to be available during setup
+          window.pyodideInstance = pyodideInstance;
+          setPyodide(pyodideInstance);
+
+          // Set up enhanced error capture with proper verification
+          const errorCapture = createEnhancedErrorCapture();
+          const setupSuccess = errorCapture.setupErrorCapture();
+          
+          if (setupSuccess) {
+            console.log('Enhanced error capture successfully initialized and verified');
+            setEnhancedCapture(errorCapture);
+          } else {
+            console.warn('Enhanced error capture setup failed, falling back to basic error handling');
+            setEnhancedCapture(null);
+          }
 
           // Create a synchronous queue-based input system
           pyodideInstance.runPython(`
@@ -88,9 +117,7 @@ export function usePyodide() {
             sys.modules['__main__'].set_input_values_from_js = set_input_values_from_js
           `);
           
-          // Store instance globally for reuse
-          window.pyodideInstance = pyodideInstance;
-          setPyodide(pyodideInstance);
+          // Note: pyodideInstance is already stored globally and setPyodide called above
         };
 
         // Check if loadPyodide exists but instance hasn't been created
@@ -133,5 +160,16 @@ export function usePyodide() {
     loadPyodideInstance();
   }, []);
 
-  return { pyodide, isLoading, error };
+  return { 
+    pyodide, 
+    isLoading, 
+    error,
+    executeWithEnhancedErrors: enhancedCapture ? 
+      (code: string, context?: ErrorContext) => enhancedCapture.executeWithErrorCapture(code, context) : 
+      async () => ({ output: '', error: null, hasError: false }),
+    setupErrorCapture: enhancedCapture ? 
+      () => enhancedCapture.setupErrorCapture() : 
+      () => {},
+    isEnhancedReady: !!enhancedCapture && !!pyodide && enhancedCapture.isReadyForCapture?.() === true
+  };
 }
