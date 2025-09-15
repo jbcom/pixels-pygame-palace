@@ -1264,6 +1264,7 @@ export class MemStorage implements IStorage {
 
   async createProject(projectData: InsertProject): Promise<Project> {
     const id = randomUUID();
+    const now = new Date();
     const project: Project = {
       id,
       userId: projectData.userId,
@@ -1271,6 +1272,8 @@ export class MemStorage implements IStorage {
       template: projectData.template,
       description: projectData.description || null,
       published: projectData.published || false,
+      createdAt: now,
+      publishedAt: (projectData.published || false) ? now : null,
       thumbnailDataUrl: projectData.thumbnailDataUrl || null,
       files: [...projectData.files],
       assets: projectData.assets ? projectData.assets.map((asset: any) => ({
@@ -1291,10 +1294,25 @@ export class MemStorage implements IStorage {
       throw new Error("Project not found");
     }
     
+    // Handle publishedAt timestamp automatically when published flag changes
+    const publishedChanging = 'published' in updates && existing.published !== updates.published;
+    
     const updated: Project = {
       ...existing,
       ...updates,
     };
+
+    // Automatically manage publishedAt when published state changes
+    if (publishedChanging) {
+      if (updates.published) {
+        // Publishing: set publishedAt to current time
+        updated.publishedAt = new Date();
+      } else {
+        // Unpublishing: clear publishedAt
+        updated.publishedAt = null;
+      }
+    }
+    
     this.projects.set(id, updated);
     return updated;
   }
@@ -1307,11 +1325,20 @@ export class MemStorage implements IStorage {
   async listPublishedProjects(): Promise<Project[]> {
     const publishedProjects: Project[] = [];
     for (const project of Array.from(this.projects.values())) {
+      // Include ALL published projects, regardless of publishedAt state
       if (project.published) {
         publishedProjects.push(project);
       }
     }
-    return publishedProjects;
+    // Sort by effective publication date (publishedAt fallback to createdAt), newest first
+    return publishedProjects.sort((a, b) => {
+      // Use publishedAt if available, otherwise fall back to createdAt, default to 0 for safety
+      const effectiveDateA = a.publishedAt ? new Date(a.publishedAt).getTime() 
+                           : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const effectiveDateB = b.publishedAt ? new Date(b.publishedAt).getTime() 
+                           : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return effectiveDateB - effectiveDateA; // Newest first (DESC)
+    });
   }
 
   async publishProject(id: string): Promise<Project> {
@@ -1323,6 +1350,7 @@ export class MemStorage implements IStorage {
     const updated: Project = {
       ...existing,
       published: true,
+      publishedAt: new Date(),
     };
     this.projects.set(id, updated);
     return updated;
@@ -1337,6 +1365,7 @@ export class MemStorage implements IStorage {
     const updated: Project = {
       ...existing,
       published: false,
+      publishedAt: null,
     };
     this.projects.set(id, updated);
     return updated;
