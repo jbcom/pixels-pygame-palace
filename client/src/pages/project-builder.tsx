@@ -175,6 +175,133 @@ with open('${file.path}', 'w', encoding='utf-8') as f:
 `);
       }
 
+      // Write all project assets to Pyodide filesystem
+      const assetWritingResults = [];
+      if (assets.length > 0) {
+        console.log(`Writing ${assets.length} assets to Pyodide filesystem...`);
+        
+        for (const asset of assets) {
+          try {
+            // Validate asset data
+            if (!asset.dataUrl || typeof asset.dataUrl !== 'string') {
+              const error = `Asset ${asset.name} has invalid dataUrl`;
+              console.error(error);
+              assetWritingResults.push({ asset: asset.name, success: false, error });
+              continue;
+            }
+            
+            // Decode base64 dataUrl to binary data
+            const dataUrlParts = asset.dataUrl.split(',');
+            if (dataUrlParts.length !== 2) {
+              const error = `Invalid dataUrl format for asset ${asset.name} (expected "data:type;base64,data")`;
+              console.error(error);
+              assetWritingResults.push({ asset: asset.name, success: false, error });
+              continue;
+            }
+            
+            const mimeType = dataUrlParts[0].split(';')[0].split(':')[1];
+            const base64Data = dataUrlParts[1];
+            
+            // Validate base64 data
+            if (!base64Data) {
+              const error = `Empty base64 data for asset ${asset.name}`;
+              console.error(error);
+              assetWritingResults.push({ asset: asset.name, success: false, error });
+              continue;
+            }
+            
+            // Decode base64 to binary
+            let binaryString;
+            try {
+              binaryString = atob(base64Data);
+            } catch (decodeError) {
+              const error = `Failed to decode base64 data for asset ${asset.name}: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`;
+              console.error(error);
+              assetWritingResults.push({ asset: asset.name, success: false, error });
+              continue;
+            }
+            
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            // Create directory structure for the asset path
+            const assetPathParts = asset.path.split('/');
+            const assetDir = assetPathParts.slice(0, -1).join('/');
+            
+            if (assetDir) {
+              try {
+                pyodide.runPython(`
+import os
+asset_dir = '${assetDir.replace(/'/g, "\\'")}' 
+if asset_dir:
+    os.makedirs(asset_dir, exist_ok=True)
+    print(f"Created directory: {asset_dir}")
+`);
+              } catch (dirError) {
+                const error = `Failed to create directory ${assetDir} for asset ${asset.name}: ${dirError instanceof Error ? dirError.message : String(dirError)}`;
+                console.error(error);
+                assetWritingResults.push({ asset: asset.name, success: false, error });
+                continue;
+              }
+            }
+            
+            // Write binary data to Pyodide filesystem
+            try {
+              pyodide.FS.writeFile(asset.path, bytes);
+              
+              // Verify file was written
+              const fileStats = pyodide.FS.stat(asset.path);
+              const fileSizeKB = Math.round(fileStats.size / 1024 * 100) / 100;
+              
+              console.log(`✓ Successfully wrote asset: ${asset.name} (${asset.path}, ${fileSizeKB}KB)`);
+              assetWritingResults.push({ 
+                asset: asset.name, 
+                success: true, 
+                path: asset.path,
+                size: fileSizeKB,
+                type: mimeType 
+              });
+              
+            } catch (writeError) {
+              const error = `Failed to write file ${asset.path}: ${writeError instanceof Error ? writeError.message : String(writeError)}`;
+              console.error(error);
+              assetWritingResults.push({ asset: asset.name, success: false, error });
+            }
+            
+          } catch (error) {
+            const errorMsg = `Unexpected error processing asset ${asset.name}: ${error instanceof Error ? error.message : String(error)}`;
+            console.error(errorMsg);
+            assetWritingResults.push({ asset: asset.name, success: false, error: errorMsg });
+          }
+        }
+        
+        // Log summary
+        const successCount = assetWritingResults.filter(r => r.success).length;
+        const failureCount = assetWritingResults.length - successCount;
+        
+        if (successCount > 0) {
+          console.log(`✓ Asset writing completed: ${successCount} successful, ${failureCount} failed`);
+        }
+        if (failureCount > 0) {
+          console.warn(`⚠ ${failureCount} assets failed to write - check console for details`);
+        }
+        
+        // Add asset paths to Python for debugging
+        const successfulAssets = assetWritingResults
+          .filter(r => r.success)
+          .map(r => r.path);
+          
+        if (successfulAssets.length > 0) {
+          pyodide.runPython(`
+# Debug info: Available assets for pygame
+__available_assets__ = ${JSON.stringify(successfulAssets)}
+print(f"Assets available for pygame.image.load(): {__available_assets__}")
+`);
+        }
+      }
+
       // Determine main file to execute (current active file)
       const mainFile = files[activeFileIndex];
       if (!mainFile) {
