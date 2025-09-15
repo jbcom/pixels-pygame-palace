@@ -10,6 +10,8 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import LessonPage from "@/pages/lesson";
 import ProjectBuilder from "@/pages/project-builder";
+import Gallery from "@/pages/gallery";
+import ProjectViewer from "@/pages/project-viewer";
 
 function Router() {
   return (
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/lesson/:lessonId" component={LessonPage} />
       <Route path="/project-builder" component={ProjectBuilder} />
+      <Route path="/gallery" component={Gallery} />
+      <Route path="/gallery/:id" component={ProjectViewer} />
       <Route component={NotFound} />
     </Switch>
   );

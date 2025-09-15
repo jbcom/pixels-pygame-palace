@@ -16,12 +16,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   Play, Save, FolderPlus, FileText, Plus, Trash2, ArrowLeft, Settings,
-  Gamepad2, Code2, Image, Volume2, Upload, Download, Copy, Palette
+  Gamepad2, Code2, Image, Volume2, Upload, Download, Copy, Palette, Share
 } from "lucide-react";
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
 import AssetManager from "@/components/asset-manager";
 import ExportDialog from "@/components/export-dialog";
+import PublishDialog from "@/components/publish-dialog";
 import { usePyodide } from "@/hooks/use-pyodide";
 import { gameTemplates, getTemplateOptions } from "@/lib/game-templates";
 import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
@@ -43,6 +44,7 @@ export default function ProjectBuilder() {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showOpenProjectDialog, setShowOpenProjectDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("blank");
   
@@ -617,6 +619,17 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
                     <Download className="h-4 w-4 mr-1" />
                     Export Game
                   </Button>
+                  
+                  <Button
+                    size="sm"
+                    onClick={() => setShowPublishDialog(true)}
+                    disabled={files.length === 0 || !currentProject}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                    data-testid="button-publish-gallery"
+                  >
+                    <Share className="h-4 w-4 mr-1" />
+                    Publish to Gallery
+                  </Button>
                 </>
               )}
             </motion.div>
@@ -802,6 +815,23 @@ project_output, project_error = project_capture.capture_execution('${mainFile.pa
           files={files}
           assets={assets}
           template={currentProject.template}
+        />
+      )}
+
+      {/* Publish Dialog */}
+      {currentProject && (
+        <PublishDialog
+          open={showPublishDialog}
+          onOpenChange={setShowPublishDialog}
+          project={currentProject}
+          files={files}
+          onPublishSuccess={() => {
+            setShowPublishDialog(false);
+            toast({
+              title: "🎉 Project Published!",
+              description: "Your amazing creation is now live in the gallery for everyone to see and play!",
+            });
+          }}
         />
       )}
     </div>
