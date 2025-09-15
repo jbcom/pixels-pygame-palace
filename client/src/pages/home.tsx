@@ -416,6 +416,232 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Featured Projects Gallery Section */}
+      <FeaturedProjectsSection />
     </div>
+  );
+}
+
+// Featured Projects Section Component
+function FeaturedProjectsSection() {
+  const { data: featuredProjects, isLoading } = useQuery<Project[]>({
+    queryKey: ["/api/gallery"],
+    select: (projects) => projects?.slice(0, 3) // Show first 3 featured projects
+  });
+
+  if (isLoading) return null; // Don't show loading state for this optional section
+
+  return (
+    <section className="bg-gradient-to-r from-primary/5 via-purple-50/50 to-secondary/5 dark:from-primary/5 dark:via-purple-950/50 dark:to-secondary/5 py-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-secondary/10 backdrop-blur-sm rounded-full px-4 py-2 mb-4">
+              <Trophy className="h-4 w-4 text-primary animate-pulse" />
+              <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Student Gallery
+              </span>
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-primary via-purple-600 to-secondary bg-clip-text text-transparent">
+                Amazing Student Creations
+              </span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              See what incredible games students like you have built! Get inspired, learn from their code, 
+              and publish your own creations to join the community.
+            </p>
+          </motion.div>
+
+          {featuredProjects && featuredProjects.length > 0 ? (
+            <>
+              {/* Featured Projects Grid */}
+              <div className="grid md:grid-cols-3 gap-6 mb-10">
+                {featuredProjects.map((project, index) => {
+                  const getTemplateIcon = (template: string) => {
+                    switch (template) {
+                      case "pong": return "🏓";
+                      case "snake": return "🐍";
+                      case "platformer": return "🏃‍♂️";
+                      case "shooter": return "🚀";
+                      case "puzzle": return "🧩";
+                      case "rpg": return "⚔️";
+                      default: return "🎮";
+                    }
+                  };
+
+                  const getTemplateDisplayName = (template: string) => {
+                    const templates: Record<string, string> = {
+                      "pong": "Pong Game",
+                      "snake": "Snake Game", 
+                      "platformer": "Platformer",
+                      "shooter": "Space Shooter",
+                      "puzzle": "Puzzle Game",
+                      "rpg": "RPG Adventure",
+                      "blank": "Custom Project"
+                    };
+                    return templates[template] || template;
+                  };
+
+                  return (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      whileHover={{ y: -8 }}
+                      className="group"
+                    >
+                      <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-border/50 hover:border-primary/30 h-full">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+                        
+                        {/* Project Thumbnail */}
+                        <div className="relative overflow-hidden h-40 bg-gradient-to-br from-primary/5 to-secondary/5">
+                          {project.thumbnailDataUrl ? (
+                            <img 
+                              src={project.thumbnailDataUrl} 
+                              alt={project.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              data-testid={`featured-thumbnail-${project.id}`}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                              <div className="text-center space-y-2">
+                                <div className="text-3xl">{getTemplateIcon(project.template)}</div>
+                                <div className="text-xs font-medium text-muted-foreground">
+                                  {getTemplateDisplayName(project.template)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="absolute top-3 right-3">
+                            <Badge variant="secondary" className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-xs">
+                              {getTemplateIcon(project.template)} {getTemplateDisplayName(project.template)}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <CardHeader className="pb-2 relative z-10">
+                          <CardTitle className="text-base font-bold group-hover:text-primary transition-colors">
+                            {project.name}
+                          </CardTitle>
+                          <CardDescription className="text-sm line-clamp-2">
+                            {project.description || "An amazing Python game creation!"}
+                          </CardDescription>
+                        </CardHeader>
+                        
+                        <CardContent className="pt-0 relative z-10">
+                          <div className="flex items-center space-x-3 text-xs text-muted-foreground mb-3">
+                            <div className="flex items-center space-x-1">
+                              <User className="h-3 w-3" />
+                              <span>Student</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Code2 className="h-3 w-3" />
+                              <span>{project.files.length} files</span>
+                            </div>
+                          </div>
+                          
+                          <Link href={`/gallery/${project.id}`}>
+                            <Button 
+                              size="sm" 
+                              className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-all duration-300 group"
+                              data-testid={`view-featured-${project.id}`}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View & Play
+                              <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Gallery Call to Action */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center"
+              >
+                <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-border/50 p-8 shadow-lg">
+                  <div className="text-3xl mb-4">🌟</div>
+                  <h3 className="text-xl font-bold mb-2">Ready to Share Your Creation?</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Join our amazing community of student developers! Showcase your games and inspire others.
+                  </p>
+                  <div className="flex justify-center space-x-4">
+                    <Link href="/gallery">
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="bg-white/80 dark:bg-gray-800/80 hover:shadow-lg transition-all duration-300"
+                        data-testid="explore-gallery"
+                      >
+                        <Trophy className="h-5 w-5 mr-2" />
+                        Explore Gallery
+                      </Button>
+                    </Link>
+                    <Link href="/project-builder">
+                      <Button 
+                        size="lg" 
+                        className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-xl transition-all duration-300 group"
+                        data-testid="publish-project"
+                      >
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Publish Your Game
+                        <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            // No projects yet - encourage creation
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-border/50 p-12 shadow-lg">
+                <div className="text-4xl mb-6">🚀</div>
+                <h3 className="text-2xl font-bold mb-4">Be the First to Publish!</h3>
+                <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
+                  The gallery is waiting for amazing creations like yours. Start building and be the first to inspire others!
+                </p>
+                <Link href="/project-builder">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-xl transition-all duration-300 group"
+                    data-testid="start-building"
+                  >
+                    <Code2 className="h-5 w-5 mr-2" />
+                    Start Building
+                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
