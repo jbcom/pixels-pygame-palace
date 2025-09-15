@@ -14,6 +14,193 @@ export interface GameTemplate {
 
 export const gameTemplates: GameTemplate[] = [
   {
+    id: 'asset-test',
+    name: 'Asset Loading Test',
+    description: 'Test template for verifying asset loading works correctly',
+    difficulty: 'Beginner',
+    files: [
+      {
+        path: 'main.py',
+        content: `# Asset Loading Test - Verify pygame can load uploaded assets
+# Upload an image asset and test if it loads correctly
+
+import pygame
+import os
+
+# Initialize Pygame
+pygame.init()
+
+# Game settings
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+class AssetTester:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Asset Loading Test")
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.font = pygame.font.Font(None, 24)
+        
+        # Test asset loading
+        self.test_results = []
+        self.loaded_images = []
+        self.loaded_sounds = []
+        
+        # Test common asset paths
+        self.test_asset_loading()
+        
+    def test_asset_loading(self):
+        # Test file system access
+        try:
+            current_dir = os.getcwd()
+            self.test_results.append(f"✓ Current directory: {current_dir}")
+            
+            # List project contents
+            if os.path.exists('.'):
+                files = os.listdir('.')
+                self.test_results.append(f"✓ Project files: {files}")
+            
+            # Check for assets directory
+            if os.path.exists('assets'):
+                assets = os.listdir('assets')
+                self.test_results.append(f"✓ Assets directory found: {assets}")
+                
+                # Check sprites subdirectory
+                if os.path.exists('assets/sprites'):
+                    sprites = os.listdir('assets/sprites')
+                    self.test_results.append(f"✓ Sprites found: {sprites}")
+                    
+                    # Try to load first sprite
+                    for sprite_name in sprites:
+                        if sprite_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                            try:
+                                img_path = f'assets/sprites/{sprite_name}'
+                                image = pygame.image.load(img_path)
+                                self.loaded_images.append((sprite_name, image))
+                                self.test_results.append(f"✓ Successfully loaded: {sprite_name}")
+                            except Exception as e:
+                                self.test_results.append(f"✗ Failed to load {sprite_name}: {e}")
+                
+                # Check sounds subdirectory  
+                if os.path.exists('assets/sounds'):
+                    sounds = os.listdir('assets/sounds')
+                    self.test_results.append(f"✓ Sounds found: {sounds}")
+                    
+                    # Try to load first sound
+                    for sound_name in sounds:
+                        if sound_name.lower().endswith(('.wav', '.ogg', '.mp3')):
+                            try:
+                                sound_path = f'assets/sounds/{sound_name}'
+                                sound = pygame.mixer.Sound(sound_path)
+                                self.loaded_sounds.append((sound_name, sound))
+                                self.test_results.append(f"✓ Successfully loaded: {sound_name}")
+                            except Exception as e:
+                                self.test_results.append(f"✗ Failed to load {sound_name}: {e}")
+            else:
+                self.test_results.append("! No assets directory found - upload some assets first")
+                
+        except Exception as e:
+            self.test_results.append(f"✗ Error during asset testing: {e}")
+    
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    # Refresh asset test
+                    self.test_results = []
+                    self.loaded_images = []
+                    self.loaded_sounds = []
+                    self.test_asset_loading()
+                elif event.key == pygame.K_s and self.loaded_sounds:
+                    # Play first loaded sound
+                    try:
+                        self.loaded_sounds[0][1].play()
+                        self.test_results.append("♪ Played sound effect")
+                    except Exception as e:
+                        self.test_results.append(f"✗ Sound play error: {e}")
+    
+    def draw(self):
+        self.screen.fill(BLACK)
+        
+        # Draw title
+        title = self.font.render("Asset Loading Test", True, WHITE)
+        self.screen.blit(title, (10, 10))
+        
+        # Draw test results
+        y_offset = 40
+        for i, result in enumerate(self.test_results[-20:]):  # Show last 20 results
+            color = GREEN if result.startswith('✓') else RED if result.startswith('✗') else WHITE
+            text = self.font.render(result, True, color)
+            self.screen.blit(text, (10, y_offset + i * 25))
+        
+        # Draw loaded images if any
+        if self.loaded_images:
+            x_offset = 400
+            y_offset = 40
+            
+            label = self.font.render("Loaded Images:", True, WHITE)
+            self.screen.blit(label, (x_offset, y_offset))
+            y_offset += 30
+            
+            for i, (name, image) in enumerate(self.loaded_images[:5]):
+                # Scale image to fit display
+                img_rect = image.get_rect()
+                if img_rect.width > 100 or img_rect.height > 100:
+                    scale_factor = min(100/img_rect.width, 100/img_rect.height)
+                    scaled_size = (int(img_rect.width * scale_factor), int(img_rect.height * scale_factor))
+                    scaled_image = pygame.transform.scale(image, scaled_size)
+                else:
+                    scaled_image = image
+                
+                self.screen.blit(scaled_image, (x_offset, y_offset + i * 110))
+                name_text = self.font.render(name, True, WHITE)
+                self.screen.blit(name_text, (x_offset, y_offset + i * 110 + scaled_image.get_height() + 5))
+        
+        # Instructions
+        instructions = [
+            "Instructions:",
+            "1. Upload assets using the Asset Manager", 
+            "2. Press R to refresh asset test",
+            "3. Press S to play first loaded sound",
+            "4. Check console for detailed logs"
+        ]
+        
+        y_offset = SCREEN_HEIGHT - 140
+        for instruction in instructions:
+            color = WHITE if instruction == "Instructions:" else (200, 200, 200)
+            text = self.font.render(instruction, True, color)
+            self.screen.blit(text, (10, y_offset))
+            y_offset += 25
+        
+        pygame.display.flip()
+    
+    def run(self):
+        while self.running:
+            self.handle_events()
+            self.draw()
+            self.clock.tick(FPS)
+        
+        pygame.quit()
+
+# Start the test
+if __name__ == "__main__":
+    tester = AssetTester()
+    tester.run()
+`
+      }
+    ]
+  },
+  {
     id: 'blank',
     name: 'Blank Canvas',
     description: 'Start from scratch with a basic PyGame window',
