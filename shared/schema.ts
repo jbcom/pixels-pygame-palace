@@ -101,3 +101,66 @@ export type InsertUser = Omit<User, 'id'>;
 export type InsertLesson = Omit<Lesson, 'id'>;
 export type InsertUserProgress = Omit<UserProgress, 'id'>;
 export type InsertProject = Omit<Project, 'id' | 'createdAt' | 'publishedAt'>;
+
+// Visual Game Builder Types
+export interface GameConfig {
+  id: string;
+  name: string;
+  version: number;
+  scenes: Scene[];
+  componentChoices: ComponentChoice[];
+  assets: AssetRef[];
+  settings: GameSettings;
+}
+
+export interface Scene {
+  id: string;
+  name: string;
+  entities: Entity[];
+  backgroundColor?: string;
+  width: number;
+  height: number;
+  gridSize?: number;
+  isMainScene?: boolean;
+}
+
+export interface Entity {
+  id: string;
+  type: 'player' | 'enemy' | 'collectible' | 'platform' | 'decoration' | 'trigger' | 'custom';
+  name: string;
+  position: { x: number; y: number };
+  size?: { width: number; height: number };
+  sprite?: string;
+  properties: Record<string, any>;
+  behaviors?: EntityBehavior[];
+  layer?: number;
+}
+
+export interface EntityBehavior {
+  type: 'patrol' | 'follow' | 'rotate' | 'bounce' | 'custom';
+  parameters: Record<string, any>;
+}
+
+export interface ComponentChoice {
+  component: string;
+  choice: 'A' | 'B';
+  customParameters?: Record<string, any>;
+}
+
+export interface AssetRef {
+  id: string;
+  assetId: string;
+  position?: { x: number; y: number };
+  scale?: number;
+  rotation?: number;
+  layer?: number;
+  properties?: Record<string, any>;
+}
+
+export interface GameSettings {
+  fps?: number;
+  showGrid?: boolean;
+  gridSnap?: boolean;
+  physicsEnabled?: boolean;
+  debugMode?: boolean;
+}
