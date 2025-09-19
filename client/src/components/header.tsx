@@ -27,10 +27,10 @@ export default function Header({ lesson, progress, onBack }: HeaderProps) {
               whileTap={{ scale: 0.95 }}
             >
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={onBack}
-                className="mr-2 hover:bg-primary/10 transition-all"
+                className="mr-2 bg-primary/90 text-white hover:bg-primary transition-all"
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
