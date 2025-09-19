@@ -1275,7 +1275,7 @@ export class MemStorage implements IStorage {
       createdAt: now,
       publishedAt: (projectData.published || false) ? now : null,
       thumbnailDataUrl: projectData.thumbnailDataUrl || null,
-      files: [...projectData.files],
+      files: projectData.files ? [...projectData.files] : [],
       assets: projectData.assets ? projectData.assets.map((asset: any) => ({
         id: asset.id,
         name: asset.name,
