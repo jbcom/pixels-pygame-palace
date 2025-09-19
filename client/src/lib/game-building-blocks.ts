@@ -49,17 +49,16 @@ class CombatSystem:
         }
         self.enemies.append(enemy)
         
-    def check_collision_damage(self, player_rect, player):
-        """Check if player touches enemy"""
+    def check_collision_damage(self, player_rect):
+        """Check if player touches enemy and return damage amount"""
         if self.damage_cooldown <= 0:
             for enemy in self.enemies:
                 if player_rect.colliderect(enemy['rect']):
-                    player.health -= enemy['damage']
                     self.damage_cooldown = 60  # 1 second at 60 FPS
-                    return True
+                    return enemy['damage']  # Return damage to be applied
         else:
             self.damage_cooldown -= 1
-        return False
+        return 0  # No damage this frame
     
     def fire_projectile(self, x, y, direction):
         """Create a projectile for ranged attacks"""
@@ -97,8 +96,8 @@ class CombatSystem:
         # Remove defeated enemies
         self.enemies = [e for e in self.enemies if e['health'] > 0]
         
-        # Check collision damage
-        self.check_collision_damage(player_rect, player)
+        # Check collision damage (damage is handled elsewhere)
+        # Note: Collision detection only, damage applied in main game loop
     
     def draw_combat(self, screen):
         # Draw enemies with health bars
@@ -213,10 +212,42 @@ class CombatSystem:
             
         return None
     
-    def draw_combat_ui(self, screen, font):
+    def update_combat(self, player_rect):
+        """Update turn-based combat system"""
+        if not self.combat_active:
+            # Check if should start combat (example: player near enemy)
+            for enemy in self.enemies:
+                enemy_rect = pygame.Rect(enemy.get('x', 0), enemy.get('y', 0), 40, 40)
+                if player_rect.colliderect(enemy_rect):
+                    # Mock player data for turn-based combat
+                    player = {
+                        'name': 'Player',
+                        'health': 100,
+                        'max_health': 100,
+                        'speed': 10,
+                        'attack': 25,
+                        'defense': 10,
+                        'is_player': True
+                    }
+                    self.start_combat(player)
+                    break
+        else:
+            # Handle ongoing combat
+            current = self.get_current_unit()
+            if current and not current.get('is_player', True):
+                # AI turn - automatically execute
+                player = next((u for u in self.turn_order if u.get('is_player', True)), None)
+                if player:
+                    self.enemy_turn(current, player)
+                    self.next_turn()
+    
+    def draw_combat(self, screen):
         """Draw turn-based combat interface"""
         if not self.combat_active:
             return
+            
+        # Create font for drawing
+        font = pygame.font.Font(None, 24)
             
         # Draw turn order
         y_offset = 20
@@ -848,8 +879,12 @@ class MovementSystem:
         self.move_from = (self.grid_x, self.grid_y)
         self.move_to = (target_x, target_y)
     
-    def update_movement(self):
-        """Update smooth movement between tiles"""
+    def update_position(self, platforms=None):
+        """Update smooth movement between tiles
+        
+        Args:
+            platforms: List of platform rectangles (unused in grid movement)
+        """
         if self.move_cooldown > 0:
             self.move_cooldown -= 1
         
@@ -2179,6 +2214,9 @@ export function generateGameTemplate(
 ): string {
   const choices = componentChoices || getUserComponentChoices();
   
+  // Track which systems are selected
+  const selectedSystems = new Set<string>();
+  
   // Start with base template
   let template = `# PyGame Academy - ${gameType} Game
 # Generated with your custom component choices
@@ -2200,6 +2238,8 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GRAY = (128, 128, 128)
 
 `;
 
@@ -2207,10 +2247,38 @@ BLUE = (0, 0, 255)
   for (const choice of choices) {
     const component = gameComponents.find(c => c.id === choice.component);
     if (component) {
+      selectedSystems.add(component.id);
       const selectedOption = choice.choice === 'A' ? component.optionA : component.optionB;
       template += `\n# ${component.title} - ${selectedOption.title}\n`;
       template += selectedOption.pythonCode + '\n';
     }
+  }
+
+  // Add default movement if no movement system selected
+  if (!selectedSystems.has('movement')) {
+    template += `\n# Default Movement (no movement system selected)\n`;
+    template += `class BasicMovement:
+    def __init__(self, entity):
+        self.entity = entity
+        self.speed = 5
+        
+    def handle_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.entity.x -= self.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.entity.x += self.speed
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.entity.y -= self.speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.entity.y += self.speed
+            
+        # Keep player on screen
+        self.entity.x = max(0, min(SCREEN_WIDTH - self.entity.width, self.entity.x))
+        self.entity.y = max(0, min(SCREEN_HEIGHT - self.entity.height, self.entity.y))
+    
+    def update_position(self, platforms=[]):
+        pass  # Basic movement doesn't need platform collision\n`;
   }
 
   // Add main game class that uses the components
@@ -2225,26 +2293,63 @@ class Game:
         
         # Initialize player
         self.player = type('Player', (), {
-            'x': 100, 'y': 300,
+            'x': SCREEN_WIDTH // 2, 'y': SCREEN_HEIGHT // 2,
             'width': 30, 'height': 40,
             'health': 100, 'max_health': 100,
             'damage': 10, 'defense': 5,
             'speed': 5,
-            'is_player': True
+            'mana': 50, 'max_mana': 50,
+            'is_player': True,
+            'damage_multiplier': 1.0,
+            'regen_rate': 0
         })()
         
-        # Initialize systems based on your choices
-        self.combat_system = CombatSystem()
-        self.inventory_system = InventorySystem()
-        self.movement_system = MovementSystem(self.player)
-        self.progression_system = ProgressionSystem(self.player)
-        self.map_system = MapGenerationSystem()
+        # Initialize only selected systems`;
         
-        # Generate initial map
-        self.map_system.generate_dungeon()
+  // Add system initialization based on what was selected
+  if (selectedSystems.has('combat')) {
+    template += `\n        self.combat_system = CombatSystem()\n        # Add some initial enemies\n        self.combat_system.add_enemy(400, 300, 50)`;
+  }
+  
+  if (selectedSystems.has('inventory')) {
+    template += `\n        self.inventory_system = InventorySystem()\n        # Add some starter items\n        self.inventory_system.add_item({'id': 'potion', 'name': 'Health Potion', 'icon': '♥', 'stackable': True})`;
+  }
+  
+  if (selectedSystems.has('movement')) {
+    template += `\n        self.movement_system = MovementSystem(self.player)`;
+  } else {
+    template += `\n        self.movement_system = BasicMovement(self.player)  # Default movement`;
+  }
+  
+  if (selectedSystems.has('progression')) {
+    template += `\n        self.progression_system = ProgressionSystem(self.player)`;
+  }
+  
+  if (selectedSystems.has('mapgen')) {
+    template += `\n        self.map_system = MapGenerationSystem()\n        self.map_system.generate_dungeon()`;
+  }
+  
+  template += `
         
         # Game state
         self.font = pygame.font.Font(None, 24)
+        self.platforms = []  # For movement collision
+        self.show_inventory = False  # Track inventory UI visibility
+        `;
+  
+  // Only add platform creation if no map system
+  if (!selectedSystems.has('mapgen')) {
+    template += `
+        # Create default platforms since no map system selected
+        # Ground platform
+        self.platforms.append(pygame.Rect(0, SCREEN_HEIGHT - 40, SCREEN_WIDTH, 40))
+        # Some floating platforms
+        self.platforms.append(pygame.Rect(200, 400, 150, 20))
+        self.platforms.append(pygame.Rect(450, 300, 150, 20))
+        self.platforms.append(pygame.Rect(100, 200, 150, 20))`;
+  }
+  
+  template += `
     
     def handle_events(self):
         for event in pygame.event.get():
@@ -2253,39 +2358,85 @@ class Game:
             
             # Handle other events based on systems
             elif event.type == pygame.KEYDOWN:
-                # Quick slot items (1-5 keys)
-                if pygame.K_1 <= event.key <= pygame.K_5:
-                    slot_index = event.key - pygame.K_1
-                    item = self.inventory_system.use_quick_slot(slot_index)
-                    if item:
-                        print(f"Used {item['name']}")
+                # ESC to quit
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+                
+                # Inventory controls - only if inventory system exists
+                if hasattr(self, 'inventory_system'):
+                    # Toggle inventory visibility with I
+                    if event.key == pygame.K_i:
+                        self.show_inventory = not self.show_inventory
+                    
+                    # Quick slot items (1-5 keys)
+                    if pygame.K_1 <= event.key <= pygame.K_5:
+                        slot_index = event.key - pygame.K_1
+                        item = self.inventory_system.use_quick_slot(slot_index)
+                        if item:
+                            print(f"Used {item['name']}")
+                
+                # Combat controls - only if combat system exists
+                if hasattr(self, 'combat_system') and event.key == pygame.K_SPACE:
+                    # Fire projectile in direction player is facing
+                    direction = (1, 0)  # Default right
+                    self.combat_system.fire_projectile(self.player.x + self.player.width, 
+                                                      self.player.y + self.player.height // 2, 
+                                                      direction)
     
     def update(self):
-        # Update movement
+        # Update movement (always present - either custom or basic)
         self.movement_system.handle_input()
-        self.movement_system.update_position()
+        self.movement_system.update_position(self.platforms)
         
-        # Update combat
-        player_rect = pygame.Rect(self.player.x, self.player.y,
-                                self.player.width, self.player.height)
-        self.combat_system.update_combat(player_rect)
+        # Update combat if present
+        if hasattr(self, 'combat_system'):
+            player_rect = pygame.Rect(self.player.x, self.player.y,
+                                    self.player.width, self.player.height)
+            self.combat_system.update_combat(player_rect)
         
-        # Update progression
-        self.progression_system.update_buffs()
+        # Update progression if present
+        if hasattr(self, 'progression_system'):
+            self.progression_system.update_buffs()
+        
+        # Basic health regeneration if no progression system
+        if not hasattr(self, 'progression_system'):
+            # Slowly regenerate health
+            if self.player.health < self.player.max_health:
+                self.player.health = min(self.player.max_health, 
+                                        self.player.health + 0.01)
     
     def draw(self):
-        self.screen.fill(BLACK)
+        # Draw background
+        if hasattr(self, 'map_system'):
+            # Dark background for dungeon feel
+            self.screen.fill(BLACK)
+            # Draw minimap if map system exists
+            self.map_system.draw_minimap(self.screen, 600, 20, 2)
+        else:
+            # Simple gradient background if no map system
+            self.screen.fill((50, 50, 80))  # Dark blue
+            # Draw platforms
+            for platform in self.platforms:
+                pygame.draw.rect(self.screen, GRAY, platform)
+                pygame.draw.rect(self.screen, WHITE, platform, 2)
         
-        # Draw map
-        self.map_system.draw_minimap(self.screen, 600, 20, 2)
-        
-        # Draw player
+        # Draw player (always visible)
         pygame.draw.rect(self.screen, RED,
                        (self.player.x, self.player.y,
                         self.player.width, self.player.height))
+        # Player outline
+        pygame.draw.rect(self.screen, WHITE,
+                       (self.player.x, self.player.y,
+                        self.player.width, self.player.height), 2)
         
-        # Draw combat elements
-        self.combat_system.draw_combat(self.screen)
+        # Draw combat elements if present
+        if hasattr(self, 'combat_system'):
+            self.combat_system.draw_combat(self.screen)
+        
+        # Draw inventory if present and open
+        if hasattr(self, 'inventory_system') and hasattr(self, 'show_inventory'):
+            if self.show_inventory:
+                self.inventory_system.draw_inventory(self.screen, 250, 150)
         
         # Draw UI elements
         self.draw_ui()
@@ -2293,23 +2444,49 @@ class Game:
         pygame.display.flip()
     
     def draw_ui(self):
-        # Health bar
+        # Always draw health bar
         bar_width = 200
         bar_height = 20
-        health_percent = self.player.health / self.player.max_health
+        health_percent = max(0, self.player.health / self.player.max_health)
         
+        # Health bar background
         pygame.draw.rect(self.screen, (100, 0, 0), (10, 10, bar_width, bar_height))
+        # Health bar fill
         pygame.draw.rect(self.screen, (0, 255, 0),
                        (10, 10, int(bar_width * health_percent), bar_height))
+        # Health bar border
         pygame.draw.rect(self.screen, WHITE, (10, 10, bar_width, bar_height), 2)
+        # Health text
+        health_text = self.font.render(f"HP: {int(self.player.health)}/{self.player.max_health}",
+                                      True, WHITE)
+        self.screen.blit(health_text, (15, 12))
         
-        # Draw progression UI
-        self.progression_system.draw_level_ui(self.screen, 10, 40)
+        # Draw progression UI if present
+        if hasattr(self, 'progression_system'):
+            self.progression_system.draw_level_ui(self.screen, 10, 40)
         
-        # Draw inventory hint
-        hint_text = self.font.render("Press 1-5 for quick items, I for inventory",
-                                    True, WHITE)
-        self.screen.blit(hint_text, (10, SCREEN_HEIGHT - 30))
+        # Draw control hints based on available systems
+        hints = []
+        hints.append("Arrow Keys/WASD: Move")
+        
+        if hasattr(self, 'combat_system'):
+            hints.append("Space: Attack")
+        
+        if hasattr(self, 'inventory_system'):
+            hints.append("I: Inventory")
+            hints.append("1-5: Quick items")
+        
+        hints.append("ESC: Quit")
+        
+        # Draw hints at bottom
+        hint_y = SCREEN_HEIGHT - 30
+        hint_text = self.font.render(" | ".join(hints), True, WHITE)
+        self.screen.blit(hint_text, (10, hint_y))
+        
+        # Draw game title at top right
+        title_text = self.font.render("${gameType} Adventure", True, YELLOW)
+        title_rect = title_text.get_rect(right=SCREEN_WIDTH - 10, top=10)
+        self.screen.blit(title_text, title_rect)
     
     def run(self):
         while self.running:
