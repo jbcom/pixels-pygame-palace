@@ -85,7 +85,7 @@ export default function PublishDialog({ isOpen, onClose, project }: PublishDialo
       let gameCanvas = null;
       
       // Look for pygame canvas or any visible canvas
-      for (const canvas of canvases) {
+      for (const canvas of Array.from(canvases)) {
         if (canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
           gameCanvas = canvas;
           break;
