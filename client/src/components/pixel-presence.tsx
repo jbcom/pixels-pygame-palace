@@ -113,9 +113,20 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
     } else if (currentPath?.includes('/lesson')) {
       setState('waiting-corner');
       setShowContent(true);
-    } else if (currentPath === '/project-builder') {
+      setPixelImage(pixelTeaching);
+    } else if (currentPath === '/project-builder' || currentPath === '/projects') {
       setState('waiting-corner');
       setShowContent(true);
+      setPixelImage(pixelGaming);
+    } else if (currentPath === '/gallery' || currentPath?.includes('/gallery')) {
+      setState('waiting-corner');
+      setShowContent(true);
+      setPixelImage(pixelHappy);
+    } else {
+      // Default for all other pages
+      setState('waiting-corner');
+      setShowContent(true);
+      setPixelImage(pixelWelcoming);
     }
   }, [currentPath]);
 
@@ -257,6 +268,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                       alt="Pixel" 
                       className="w-full h-full object-cover"
                       style={{ imageRendering: 'crisp-edges' }}
+                      data-testid="pixel-avatar"
                     />
                   </div>
                   <motion.div
@@ -289,7 +301,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                         size="lg"
                         variant={index === 0 ? "default" : "outline"}
                         className="w-full justify-start text-left h-auto py-4 px-6"
-                        data-testid={`choice-${choice.id}`}
+                        data-testid={index === 0 ? "pixel-choice-a" : "pixel-choice-b"}
                       >
                         <div className="flex items-center space-x-3">
                           <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-2 text-white">
@@ -316,7 +328,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
               }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              data-testid="pixel-corner-button"
+              data-testid="pixel-expand"
             >
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 shadow-lg">
                 <img 
@@ -324,6 +336,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                   alt="Pixel" 
                   className="w-full h-full object-cover"
                   style={{ imageRendering: 'crisp-edges' }}
+                  data-testid="pixel-avatar"
                 />
               </div>
               {/* Breathing animation overlay */}
@@ -349,6 +362,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                       alt="Pixel" 
                       className="w-full h-full object-cover"
                       style={{ imageRendering: 'crisp-edges' }}
+                      data-testid="pixel-avatar"
                     />
                   </div>
                   <div className="flex-1">
@@ -375,7 +389,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                       size="sm"
                       variant={index === 0 ? "default" : "outline"}
                       className="w-full justify-start"
-                      data-testid={`expanded-choice-${choice.id}`}
+                      data-testid={index === 0 ? "pixel-choice-a" : "pixel-choice-b"}
                     >
                       {choice.icon && <choice.icon className="w-4 h-4 mr-2" />}
                       <span>{choice.label}</span>
