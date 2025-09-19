@@ -1,15 +1,195 @@
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useSwipeable } from "react-swipeable";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Play, Gamepad2, Trophy, Sparkles, ArrowRight, BookOpen, Code2, Zap, Star, Users, Clock, User, Eye } from "lucide-react";
+import { 
+  Gamepad2, 
+  Trophy, 
+  BookOpen, 
+  Sparkles, 
+  ChevronLeft, 
+  ChevronRight,
+  Puzzle,
+  Car,
+  Mountain,
+  Swords,
+  Globe,
+  Zap,
+  Shield,
+  Backpack,
+  Users,
+  Map,
+  Palette,
+  Play,
+  CheckCircle,
+  Clock,
+  Star,
+  ArrowRight,
+  Code2,
+  Rocket
+} from "lucide-react";
 import type { Lesson, UserProgress } from "@shared/schema";
-import heroIllustration from "@assets/generated_images/Python_education_hero_illustration_f78e9d61.png";
-import { motion } from "framer-motion";
+
+interface GameType {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+}
+
+interface BuildingBlock {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  optionA: {
+    title: string;
+    description: string;
+  };
+  optionB: {
+    title: string;
+    description: string;
+  };
+}
+
+const gameTypes: GameType[] = [
+  {
+    id: "platformer",
+    title: "Platformer",
+    description: "Jump and run through exciting levels!",
+    icon: <Mountain className="h-12 w-12" />,
+    color: "from-green-400 to-green-600",
+    difficulty: "Beginner"
+  },
+  {
+    id: "racing",
+    title: "Racing Game",
+    description: "Speed through tracks and beat the clock!",
+    icon: <Car className="h-12 w-12" />,
+    color: "from-red-400 to-red-600",
+    difficulty: "Intermediate"
+  },
+  {
+    id: "puzzle",
+    title: "Puzzle Game",
+    description: "Solve challenging brain teasers!",
+    icon: <Puzzle className="h-12 w-12" />,
+    color: "from-purple-400 to-purple-600",
+    difficulty: "Beginner"
+  },
+  {
+    id: "adventure",
+    title: "Adventure",
+    description: "Explore vast worlds and discover secrets!",
+    icon: <Globe className="h-12 w-12" />,
+    color: "from-blue-400 to-blue-600",
+    difficulty: "Advanced"
+  },
+  {
+    id: "action",
+    title: "Action Game",
+    description: "Fast-paced combat and exciting battles!",
+    icon: <Swords className="h-12 w-12" />,
+    color: "from-orange-400 to-orange-600",
+    difficulty: "Intermediate"
+  },
+  {
+    id: "space",
+    title: "Space Shooter",
+    description: "Defend Earth from alien invaders!",
+    icon: <Rocket className="h-12 w-12" />,
+    color: "from-indigo-400 to-indigo-600",
+    difficulty: "Intermediate"
+  }
+];
+
+const buildingBlocks: BuildingBlock[] = [
+  {
+    id: "combat",
+    title: "Combat System",
+    icon: <Swords className="h-8 w-8" />,
+    optionA: {
+      title: "Real-time Combat",
+      description: "Fast-paced action with instant reactions"
+    },
+    optionB: {
+      title: "Turn-based Combat",
+      description: "Strategic battles with planned moves"
+    }
+  },
+  {
+    id: "inventory",
+    title: "Inventory System",
+    icon: <Backpack className="h-8 w-8" />,
+    optionA: {
+      title: "Grid-based",
+      description: "Tetris-style item management"
+    },
+    optionB: {
+      title: "List-based",
+      description: "Simple scrollable item list"
+    }
+  },
+  {
+    id: "player",
+    title: "Player Classes",
+    icon: <Users className="h-8 w-8" />,
+    optionA: {
+      title: "Predefined Classes",
+      description: "Choose from warrior, mage, archer"
+    },
+    optionB: {
+      title: "Custom Creation",
+      description: "Build your own unique character"
+    }
+  },
+  {
+    id: "map",
+    title: "Map Generation",
+    icon: <Map className="h-8 w-8" />,
+    optionA: {
+      title: "Procedural",
+      description: "Random worlds every playthrough"
+    },
+    optionB: {
+      title: "Designed",
+      description: "Hand-crafted levels with secrets"
+    }
+  },
+  {
+    id: "art",
+    title: "Character Art",
+    icon: <Palette className="h-8 w-8" />,
+    optionA: {
+      title: "Pixel Art",
+      description: "Classic retro style graphics"
+    },
+    optionB: {
+      title: "Vector Art",
+      description: "Smooth modern graphics"
+    }
+  }
+];
 
 export default function Home() {
+  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
+  const [gamePageIndex, setGamePageIndex] = useState(0);
+  const [blockPageIndex, setBlockPageIndex] = useState(0);
+  const [selectedBlock, setSelectedBlock] = useState<{[key: string]: 'A' | 'B'}>({});
+  const [expandedAccordions, setExpandedAccordions] = useState<string[]>(["games"]);
+  const lastClickTime = useRef<{[key: string]: number}>({});
+
   const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
     queryKey: ["/api/lessons"],
   });
@@ -18,626 +198,514 @@ export default function Home() {
     queryKey: ["/api/progress"],
   });
 
-  if (lessonsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-950 dark:to-purple-950">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-[60vh]">
-            <div className="text-center">
-              <motion.div 
-                className="relative w-16 h-16 mx-auto mb-4"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-lg opacity-75"></div>
-                <div className="relative bg-white dark:bg-gray-900 rounded-full w-16 h-16 flex items-center justify-center">
-                  <Gamepad2 className="h-8 w-8 text-primary" />
-                </div>
-              </motion.div>
-              <p className="text-muted-foreground font-medium">Loading your learning journey...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const { data: gallery } = useQuery<any[]>({
+    queryKey: ["/api/gallery"],
+  });
+
+  const itemsPerPage = 5;
+  const totalGamePages = Math.ceil(gameTypes.length / itemsPerPage);
+  const totalBlockPages = Math.ceil(buildingBlocks.length / itemsPerPage);
+
+  const gameSwipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (gamePageIndex < totalGamePages - 1) {
+        setGamePageIndex(gamePageIndex + 1);
+      }
+    },
+    onSwipedRight: () => {
+      if (gamePageIndex > 0) {
+        setGamePageIndex(gamePageIndex - 1);
+      }
+    },
+    trackMouse: false
+  });
+
+  const blockSwipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (blockPageIndex < totalBlockPages - 1) {
+        setBlockPageIndex(blockPageIndex + 1);
+      }
+    },
+    onSwipedRight: () => {
+      if (blockPageIndex > 0) {
+        setBlockPageIndex(blockPageIndex - 1);
+      }
+    },
+    trackMouse: false
+  });
+
+  const handleLessonClick = (lessonId: string) => {
+    const now = Date.now();
+    const lastClick = lastClickTime.current[lessonId] || 0;
+    
+    if (now - lastClick < 500) {
+      // Double click detected - navigate
+      window.location.href = `/lesson/${lessonId}`;
+    } else {
+      // Single click - highlight
+      setSelectedLesson(lessonId);
+    }
+    
+    lastClickTime.current[lessonId] = now;
+  };
 
   const getProgressForLesson = (lessonId: string) => {
     return progress?.find(p => p.lessonId === lessonId);
   };
 
-  const calculateOverallProgress = () => {
-    if (!lessons || !progress) return 0;
-    const completedLessons = progress.filter(p => p.completed).length;
-    return Math.round((completedLessons / lessons.length) * 100);
-  };
+  const visibleGames = gameTypes.slice(
+    gamePageIndex * itemsPerPage,
+    (gamePageIndex + 1) * itemsPerPage
+  );
 
-  const overallProgress = calculateOverallProgress();
+  const visibleBlocks = buildingBlocks.slice(
+    blockPageIndex * itemsPerPage,
+    (blockPageIndex + 1) * itemsPerPage
+  );
+
+  if (lessonsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+        <div className="flex items-center justify-center h-screen">
+          <motion.div 
+            className="text-center"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Gamepad2 className="h-16 w-16 text-primary mx-auto mb-4" />
+            <p className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Loading Amazing Games...
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-950 dark:to-purple-950">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-900 border-b border-border sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+      {/* Simplified Header */}
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <motion.div 
               className="flex items-center space-x-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
             >
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-75"></div>
-                  <div className="relative bg-white dark:bg-gray-900 rounded-lg p-1.5">
-                    <Gamepad2 className="text-primary h-6 w-6" />
-                  </div>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur-lg opacity-75 animate-pulse"></div>
+                <div className="relative bg-white dark:bg-gray-900 rounded-xl p-2">
+                  <Gamepad2 className="text-purple-600 h-8 w-8" />
                 </div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">PyGame Academy</h1>
               </div>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Game Creator Hub
+              </h1>
             </motion.div>
             
-            <motion.div 
-              className="flex items-center space-x-4"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <div className="hidden md:flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm">
-                <Trophy className="h-4 w-4 text-secondary" />
-                <span className="text-sm text-muted-foreground">Progress</span>
-                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-primary to-secondary rounded-full" 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${overallProgress}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-                <span className="text-sm font-semibold">{overallProgress}%</span>
-              </div>
-              
-            </motion.div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="hidden md:flex items-center space-x-2 px-3 py-1">
+                <Sparkles className="h-3 w-3" />
+                <span>Build Games!</span>
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-90"></div>
-        
-        <div className="container mx-auto px-4 py-8 md:py-12">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <motion.div 
-              className="space-y-6 z-10 relative"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+      {/* Main Content with Accordions */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <Accordion 
+          type="multiple" 
+          value={expandedAccordions}
+          onValueChange={setExpandedAccordions}
+          className="space-y-4"
+        >
+          {/* Create Your Game Section (Default Open) */}
+          <AccordionItem value="games" className="border rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+            <AccordionTrigger 
+              className="px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:no-underline"
+              data-testid="accordion-create-game"
             >
-              <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-gray-800 rounded-full px-4 py-2">
-                <Zap className="h-4 w-4 text-primary animate-pulse" />
-                <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Interactive Python Learning
-                </span>
+              <div className="flex items-center space-x-3">
+                <Gamepad2 className="h-6 w-6" />
+                <span className="text-xl font-bold">Create Your Game!</span>
+                <Badge variant="secondary" className="ml-2">
+                  {gameTypes.length} Game Types
+                </Badge>
               </div>
-              
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                  <span className="bg-gradient-to-r from-primary via-purple-600 to-secondary bg-clip-text text-transparent">
-                    Master Python
-                  </span>
-                  <br />
-                  <span className="text-foreground">
-                    Through Games
-                  </span>
-                </h1>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  Build real games while learning Python fundamentals. From variables to PyGame, 
-                  embark on an exciting coding adventure designed for beginners.
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap gap-4">
-                <motion.div 
-                  className="flex items-center space-x-2"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-xl transition-all duration-300 group"
-                    onClick={() => document.getElementById('lessons-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    data-testid="button-start-learning"
+            </AccordionTrigger>
+            <AccordionContent className="p-6">
+              <div {...gameSwipeHandlers}>
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={gamePageIndex}
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
                   >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Start Learning
-                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </motion.div>
+                    {visibleGames.map((game) => (
+                      <Link key={game.id} href="/project-builder">
+                        <motion.div
+                          whileHover={{ scale: 1.05, rotate: 1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="cursor-pointer"
+                          data-testid={`game-card-${game.id}`}
+                        >
+                          <Card className={`h-full border-2 border-transparent hover:border-primary overflow-hidden group`}>
+                            <div className={`h-32 bg-gradient-to-br ${game.color} flex items-center justify-center relative overflow-hidden`}>
+                              <div className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                              <div className="text-white relative z-10">
+                                {game.icon}
+                              </div>
+                              <Badge 
+                                className="absolute top-2 right-2 bg-white/90 text-gray-800"
+                                variant="secondary"
+                              >
+                                {game.difficulty}
+                              </Badge>
+                            </div>
+                            <CardContent className="p-4">
+                              <h3 className="font-bold text-lg mb-2">{game.title}</h3>
+                              <p className="text-sm text-muted-foreground">{game.description}</p>
+                              <Button 
+                                className="mt-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                                size="sm"
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Start Building
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      </Link>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
                 
-                <motion.div 
-                  className="flex items-center space-x-2"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Link href="/project-builder">
-                    <Button 
-                      size="lg" 
+                {/* Pagination Controls */}
+                {totalGamePages > 1 && (
+                  <div className="flex items-center justify-center space-x-4 mt-6">
+                    <Button
                       variant="outline"
-                      className="bg-white dark:bg-gray-800 border-2 hover:shadow-xl transition-all duration-300 group hover:bg-primary hover:text-white hover:border-primary"
-                      data-testid="button-create-game"
+                      size="sm"
+                      onClick={() => setGamePageIndex(Math.max(0, gamePageIndex - 1))}
+                      disabled={gamePageIndex === 0}
+                      data-testid="game-prev-button"
                     >
-                      <Gamepad2 className="h-5 w-5 mr-2" />
-                      Create Your Game
-                      <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
                     </Button>
-                  </Link>
-                </motion.div>
-                
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-2">
-                    <Code2 className="h-4 w-4 text-primary" />
-                    <span>{lessons?.length || 0} Lessons</span>
+                    <div className="flex space-x-2">
+                      {Array.from({ length: totalGamePages }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-2 w-2 rounded-full transition-all ${
+                            i === gamePageIndex ? 'bg-primary w-8' : 'bg-muted'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setGamePageIndex(Math.min(totalGamePages - 1, gamePageIndex + 1))}
+                      disabled={gamePageIndex === totalGamePages - 1}
+                      data-testid="game-next-button"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="h-4 w-4 text-secondary" />
-                    <span>Interactive</span>
-                  </div>
-                </div>
+                )}
               </div>
+            </AccordionContent>
+          </AccordionItem>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 pt-4">
-                <motion.div 
-                  className="text-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <div className="flex items-center justify-center mb-1">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">10K+</div>
-                  <div className="text-xs text-muted-foreground">Active Learners</div>
-                </motion.div>
-                <motion.div 
-                  className="text-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <div className="flex items-center justify-center mb-1">
-                    <Star className="h-5 w-5 text-secondary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">4.9</div>
-                  <div className="text-xs text-muted-foreground">Rating</div>
-                </motion.div>
-                <motion.div 
-                  className="text-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex items-center justify-center mb-1">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">5h</div>
-                  <div className="text-xs text-muted-foreground">To Complete</div>
-                </motion.div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="relative"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+          {/* Game Building Blocks Section */}
+          <AccordionItem value="blocks" className="border rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+            <AccordionTrigger 
+              className="px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:no-underline"
+              data-testid="accordion-building-blocks"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl"></div>
-              <img 
-                src={heroIllustration} 
-                alt="Python Education" 
-                className="relative z-10 w-full h-auto rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-500"
-                data-testid="hero-illustration"
-              />
-              
-              {/* Floating badges */}
-              <motion.div 
-                className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 shadow-lg"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium">Live Coding</span>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="absolute bottom-4 left-4 bg-gradient-to-r from-primary to-secondary text-white rounded-lg px-3 py-2 shadow-lg"
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              >
-                <div className="flex items-center space-x-2">
-                  <Gamepad2 className="h-4 w-4" />
-                  <span className="text-xs font-medium">Game-Based Learning</span>
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Lessons Section */}
-      <div id="lessons-section" className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <motion.div 
-            className="mb-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Your Learning Path
-            </h2>
-            <p className="text-muted-foreground">
-              Progress through carefully crafted lessons, each building on the last
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {lessons?.map((lesson, index) => {
-              const lessonProgress = getProgressForLesson(lesson.id);
-              const isCompleted = lessonProgress?.completed || false;
-              const currentStep = lessonProgress?.currentStep || 0;
-              const totalSteps = lesson.content.steps.length;
-              const stepProgress = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
-
-              return (
-                <motion.div
-                  key={lesson.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className="group"
-                >
-                  <Card className="relative overflow-hidden hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800 border-border hover:border-primary">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
-                    
-                    <CardHeader className="pb-3 pt-4 px-5 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                            <div className="relative bg-white dark:bg-gray-800 rounded-xl p-2.5">
-                              {isCompleted ? (
-                                <CheckCircle className="h-5 w-5 text-success" data-testid={`icon-completed-${lesson.id}`} />
-                              ) : (
-                                <Play className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" data-testid={`icon-available-${lesson.id}`} />
+              <div className="flex items-center space-x-3">
+                <Puzzle className="h-6 w-6" />
+                <span className="text-xl font-bold">Game Building Blocks</span>
+                <Badge variant="secondary" className="ml-2">
+                  Modular Components
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-6">
+              <div {...blockSwipeHandlers}>
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={blockPageIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4"
+                  >
+                    {visibleBlocks.map((block) => (
+                      <motion.div
+                        key={block.id}
+                        whileHover={{ x: 5 }}
+                        className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-lg p-4 border-2 border-border"
+                        data-testid={`block-${block.id}`}
+                      >
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="p-3 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg text-white">
+                            {block.icon}
+                          </div>
+                          <h3 className="text-lg font-bold">{block.title}</h3>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => setSelectedBlock({...selectedBlock, [block.id]: 'A'})}
+                            className={`p-4 rounded-lg border-2 transition-all text-left ${
+                              selectedBlock[block.id] === 'A'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            data-testid={`block-${block.id}-optionA`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold">{block.optionA.title}</span>
+                              {selectedBlock[block.id] === 'A' && (
+                                <CheckCircle className="h-5 w-5 text-primary" />
                               )}
                             </div>
+                            <p className="text-sm text-muted-foreground">
+                              {block.optionA.description}
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => setSelectedBlock({...selectedBlock, [block.id]: 'B'})}
+                            className={`p-4 rounded-lg border-2 transition-all text-left ${
+                              selectedBlock[block.id] === 'B'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            data-testid={`block-${block.id}-optionB`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold">{block.optionB.title}</span>
+                              {selectedBlock[block.id] === 'B' && (
+                                <CheckCircle className="h-5 w-5 text-primary" />
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {block.optionB.description}
+                            </p>
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+                
+                {/* Pagination Controls */}
+                {totalBlockPages > 1 && (
+                  <div className="flex items-center justify-center space-x-4 mt-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBlockPageIndex(Math.max(0, blockPageIndex - 1))}
+                      disabled={blockPageIndex === 0}
+                      data-testid="block-prev-button"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <div className="flex space-x-2">
+                      {Array.from({ length: totalBlockPages }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-2 w-2 rounded-full transition-all ${
+                            i === blockPageIndex ? 'bg-primary w-8' : 'bg-muted'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBlockPageIndex(Math.min(totalBlockPages - 1, blockPageIndex + 1))}
+                      disabled={blockPageIndex === totalBlockPages - 1}
+                      data-testid="block-next-button"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Need to Learn Python First? Section */}
+          <AccordionItem value="python" className="border rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+            <AccordionTrigger 
+              className="px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:no-underline"
+              data-testid="accordion-learn-python"
+            >
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-6 w-6" />
+                <span className="text-xl font-bold">Need to Learn Python First?</span>
+                <Badge variant="secondary" className="ml-2">
+                  {lessons?.length || 0} Lessons
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-6">
+              <p className="text-muted-foreground mb-4">
+                Master the basics of Python before diving into game creation. Click to highlight, double-click to start!
+              </p>
+              <div className="space-y-2">
+                {lessons?.map((lesson, index) => {
+                  const lessonProgress = getProgressForLesson(lesson.id);
+                  const isCompleted = lessonProgress?.completed || false;
+                  const currentStep = lessonProgress?.currentStep || 0;
+                  const totalSteps = lesson.content.steps.length;
+                  
+                  return (
+                    <motion.div
+                      key={lesson.id}
+                      whileHover={{ x: 5 }}
+                      onClick={() => handleLessonClick(lesson.id)}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedLesson === lesson.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      } ${isCompleted ? 'bg-green-50 dark:bg-green-950' : ''}`}
+                      data-testid={`lesson-${lesson.id}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            isCompleted 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-gray-200 dark:bg-gray-700'
+                          }`}>
+                            {isCompleted ? (
+                              <CheckCircle className="h-5 w-5" />
+                            ) : (
+                              <span className="text-sm font-bold">{index + 1}</span>
+                            )}
                           </div>
                           <div>
-                            <CardTitle className="text-base font-bold group-hover:text-primary transition-colors">{lesson.title}</CardTitle>
-                            <CardDescription className="text-sm mt-0.5">{lesson.description}</CardDescription>
+                            <h4 className="font-semibold">{lesson.title}</h4>
+                            <p className="text-sm text-muted-foreground">{lesson.description}</p>
                           </div>
                         </div>
-                        
                         <div className="flex items-center space-x-2">
-                          {isCompleted && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500 }}
-                            >
-                              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs py-0.5 px-2.5 font-semibold">
-                                <Trophy className="h-3 w-3 mr-1" />
-                                Complete
-                              </Badge>
-                            </motion.div>
-                          )}
-                          {lessonProgress && !isCompleted && (
-                            <Badge variant="outline" className="text-xs py-0.5 px-2.5 border-primary/30 text-primary font-medium">
+                          {!isCompleted && currentStep > 0 && (
+                            <Badge variant="outline">
                               {currentStep}/{totalSteps} steps
                             </Badge>
                           )}
+                          <Badge variant={lesson.difficulty === "beginner" ? "secondary" : lesson.difficulty === "intermediate" ? "default" : "destructive"}>
+                            {lesson.difficulty}
+                          </Badge>
+                          <div className="flex items-center space-x-1 text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span className="text-sm">{lesson.estimatedTime}m</span>
+                          </div>
                         </div>
                       </div>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0 pb-4 px-5">
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                          {lesson.content.introduction}
-                        </p>
-                        
-                        {lessonProgress && !isCompleted && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>Progress</span>
-                              <span className="font-medium">{stepProgress}%</span>
-                            </div>
-                            <div className="relative">
-                              <Progress value={stepProgress} className="w-full h-2 bg-muted/50" />
-                              <motion.div 
-                                className="absolute top-0 left-0 h-2 bg-gradient-to-r from-primary to-secondary rounded-full"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${stepProgress}%` }}
-                                transition={{ duration: 0.5 }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-                            <div className="flex items-center space-x-1">
-                              <BookOpen className="h-3.5 w-3.5" />
-                              <span>{totalSteps} {totalSteps === 1 ? 'step' : 'steps'}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Zap className="h-3.5 w-3.5 text-secondary" />
-                              <span>Interactive</span>
-                            </div>
-                          </div>
-                          
-                          <Link href={`/lesson/${lesson.id}`}>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button 
-                                size="sm"
-                                className={`
-                                  ${isCompleted 
-                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600" 
-                                    : "bg-gradient-to-r from-primary to-secondary hover:shadow-lg"
-                                  } 
-                                  text-white transition-all duration-300 group
-                                `}
-                                data-testid={`button-start-${lesson.id}`}
-                              >
-                                {isCompleted ? "Review" : lessonProgress ? "Continue" : "Start"}
-                                <ArrowRight className="h-3.5 w-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
-                              </Button>
-                            </motion.div>
-                          </Link>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Featured Projects Gallery Section */}
-      <FeaturedProjectsSection />
-    </div>
-  );
-}
-
-// Featured Projects Section Component
-function FeaturedProjectsSection() {
-  const { data: featuredProjects, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/gallery"],
-    select: (projects) => projects?.slice(0, 3) // Show first 3 featured projects
-  });
-
-  if (isLoading) return null; // Don't show loading state for this optional section
-
-  return (
-    <section className="bg-gradient-to-r from-primary/5 via-purple-50/50 to-secondary/5 dark:from-primary/5 dark:via-purple-950/50 dark:to-secondary/5 py-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          <motion.div 
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-gray-800 rounded-full px-4 py-2 mb-4">
-              <Trophy className="h-4 w-4 text-primary animate-pulse" />
-              <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Student Gallery
-              </span>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-primary via-purple-600 to-secondary bg-clip-text text-transparent">
-                Amazing Student Creations
-              </span>
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              See what incredible games students like you have built! Get inspired, learn from their code, 
-              and publish your own creations to join the community.
-            </p>
-          </motion.div>
-
-          {featuredProjects && featuredProjects.length > 0 ? (
-            <>
-              {/* Featured Projects Grid */}
-              <div className="grid md:grid-cols-3 gap-6 mb-10">
-                {featuredProjects.map((project, index) => {
-                  const getTemplateIcon = (template: string) => {
-                    switch (template) {
-                      case "pong": return "🏓";
-                      case "snake": return "🐍";
-                      case "platformer": return "🏃‍♂️";
-                      case "shooter": return "🚀";
-                      case "puzzle": return "🧩";
-                      case "rpg": return "⚔️";
-                      default: return "🎮";
-                    }
-                  };
-
-                  const getTemplateDisplayName = (template: string) => {
-                    const templates: Record<string, string> = {
-                      "pong": "Pong Game",
-                      "snake": "Snake Game", 
-                      "platformer": "Platformer",
-                      "shooter": "Space Shooter",
-                      "puzzle": "Puzzle Game",
-                      "rpg": "RPG Adventure",
-                      "blank": "Custom Project"
-                    };
-                    return templates[template] || template;
-                  };
-
-                  return (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      whileHover={{ y: -8 }}
-                      className="group"
-                    >
-                      <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800 border-border hover:border-primary h-full">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
-                        
-                        {/* Project Thumbnail */}
-                        <div className="relative overflow-hidden h-40 bg-gradient-to-br from-primary/5 to-secondary/5">
-                          {project.thumbnailDataUrl ? (
-                            <img 
-                              src={project.thumbnailDataUrl} 
-                              alt={project.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              data-testid={`featured-thumbnail-${project.id}`}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-                              <div className="text-center space-y-2">
-                                <div className="text-3xl">{getTemplateIcon(project.template)}</div>
-                                <div className="text-xs font-medium text-muted-foreground">
-                                  {getTemplateDisplayName(project.template)}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="absolute top-3 right-3">
-                            <Badge variant="secondary" className="bg-white dark:bg-gray-800 text-xs">
-                              {getTemplateIcon(project.template)} {getTemplateDisplayName(project.template)}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        <CardHeader className="pb-2 relative z-10">
-                          <CardTitle className="text-base font-bold group-hover:text-primary transition-colors">
-                            {project.name}
-                          </CardTitle>
-                          <CardDescription className="text-sm line-clamp-2">
-                            {project.description || "An amazing Python game creation!"}
-                          </CardDescription>
-                        </CardHeader>
-                        
-                        <CardContent className="pt-0 relative z-10">
-                          <div className="flex items-center space-x-3 text-xs text-muted-foreground mb-3">
-                            <div className="flex items-center space-x-1">
-                              <User className="h-3 w-3" />
-                              <span>Student</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Code2 className="h-3 w-3" />
-                              <span>{project.files.length} files</span>
-                            </div>
-                          </div>
-                          
-                          <Link href={`/gallery/${project.id}`}>
-                            <Button 
-                              size="sm" 
-                              className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-all duration-300 group"
-                              data-testid={`view-featured-${project.id}`}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View & Play
-                              <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                          </Link>
-                        </CardContent>
-                      </Card>
                     </motion.div>
                   );
                 })}
               </div>
+            </AccordionContent>
+          </AccordionItem>
 
-              {/* Gallery Call to Action */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-center"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border p-8 shadow-lg">
-                  <div className="text-3xl mb-4">🌟</div>
-                  <h3 className="text-xl font-bold mb-2">Ready to Share Your Creation?</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Join our amazing community of student developers! Showcase your games and inspire others.
-                  </p>
-                  <div className="flex justify-center space-x-4">
-                    <Link href="/gallery">
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-300"
-                        data-testid="explore-gallery"
-                      >
-                        <Trophy className="h-5 w-5 mr-2" />
-                        Explore Gallery
-                      </Button>
-                    </Link>
-                    <Link href="/project-builder">
-                      <Button 
-                        size="lg" 
-                        className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-xl transition-all duration-300 group"
-                        data-testid="publish-project"
-                      >
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Publish Your Game
-                        <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            </>
-          ) : (
-            // No projects yet - encourage creation
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
+          {/* Community Creations Section */}
+          <AccordionItem value="community" className="border rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+            <AccordionTrigger 
+              className="px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:no-underline"
+              data-testid="accordion-community"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border p-12 shadow-lg">
-                <div className="text-4xl mb-6">🚀</div>
-                <h3 className="text-2xl font-bold mb-4">Be the First to Publish!</h3>
-                <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-                  The gallery is waiting for amazing creations like yours. Start building and be the first to inspire others!
-                </p>
-                <Link href="/project-builder">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-xl transition-all duration-300 group"
-                    data-testid="start-building"
-                  >
-                    <Code2 className="h-5 w-5 mr-2" />
-                    Start Building
-                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+              <div className="flex items-center space-x-3">
+                <Trophy className="h-6 w-6" />
+                <span className="text-xl font-bold">Community Creations</span>
+                <Badge variant="secondary" className="ml-2">
+                  {gallery?.length || 0} Games
+                </Badge>
               </div>
-            </motion.div>
-          )}
-        </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-6">
+              {gallery && gallery.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {gallery.slice(0, 6).map((item, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.05 }}
+                      className="cursor-pointer"
+                    >
+                      <Card className="overflow-hidden">
+                        <div className="h-32 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                          <Trophy className="h-12 w-12 text-white" />
+                        </div>
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold mb-1">{item.title || `Game #${index + 1}`}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">{item.description || "Amazing community creation!"}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-1">
+                              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                              <span className="text-sm">4.8</span>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              <Play className="h-3 w-3 mr-1" />
+                              Play
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Creations Yet!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Be the first to share your amazing game with the community!
+                  </p>
+                  <Link href="/project-builder">
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+                      <Gamepad2 className="h-4 w-4 mr-2" />
+                      Create Your First Game
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Floating Action Button for Mobile */}
+        <motion.div
+          className="fixed bottom-6 right-6 md:hidden"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+        >
+          <Link href="/project-builder">
+            <Button
+              size="lg"
+              className="rounded-full h-14 w-14 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+              data-testid="mobile-create-button"
+            >
+              <Gamepad2 className="h-6 w-6" />
+            </Button>
+          </Link>
+        </motion.div>
       </div>
-    </section>
+    </div>
   );
 }
