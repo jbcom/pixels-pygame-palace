@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -7,92 +9,225 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Play, Save, FolderPlus, FileText, Plus, Trash2, ArrowLeft, Settings,
-  Gamepad2, Code2, Image, Volume2, Upload, Download, Copy, Palette, Share, Star
+  Save, FolderPlus, Plus, ArrowLeft, Download, Share,
+  Gamepad2, Settings, FileCode, FolderOpen
 } from "lucide-react";
-import CodeEditor from "@/components/code-editor";
-import GameCanvas from "@/components/game-canvas";
-import AssetManager from "@/components/asset-manager";
-import AssetBrowser from "@/components/asset-browser";
+import InteractiveGameCanvas from "@/components/interactive-game-canvas";
+import ComponentSwitcher from "@/components/component-switcher";
+import DraggableAssetLibrary from "@/components/draggable-asset-library";
 import ExportDialog from "@/components/export-dialog";
 import PublishDialog from "@/components/publish-dialog";
 import { usePyodide } from "@/hooks/use-pyodide";
 import { gameTemplates } from "@/lib/game-templates";
-import { generateGameTemplate, getUserComponentChoices } from "@/lib/game-building-blocks";
-import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
+import { generateGameTemplate, gameComponents } from "@/lib/game-building-blocks";
+import type { 
+  Project, ProjectAsset, ProjectFile, 
+  GameConfig, Scene, ComponentChoice 
+} from "@shared/schema";
 import { motion } from "framer-motion";
 
-// Helper function to get template options for the dropdown
-function getTemplateOptions() {
-  return gameTemplates.map(template => ({
-    id: template.id,
-    name: template.name,
-    description: template.description
-  }));
+// Helper to generate Python code from visual config
+function generatePythonFromConfig(gameConfig: GameConfig): string {
+  const componentCode = gameConfig.componentChoices
+    .map(choice => {
+      const component = gameComponents.find(c => c.id === choice.component);
+      if (!component) return '';
+      const option = choice.choice === 'A' ? component.optionA : component.optionB;
+      return option.pythonCode;
+    })
+    .join('\n\n');
+
+  // Generate entity placement code
+  const mainScene = gameConfig.scenes.find(s => s.isMainScene) || gameConfig.scenes[0];
+  const entityCode = mainScene?.entities.map(entity => {
+    return `
+# Create ${entity.name}
+${entity.id} = GameObject(
+    x=${entity.position.x}, 
+    y=${entity.position.y},
+    width=${entity.size?.width || 40},
+    height=${entity.size?.height || 40},
+    type="${entity.type}",
+    properties=${JSON.stringify(entity.properties)}
+)
+game_objects.append(${entity.id})`;
+  }).join('\n') || '';
+
+  return `import pygame
+import sys
+import json
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Game Configuration
+SCREEN_WIDTH = ${mainScene?.width || 800}
+SCREEN_HEIGHT = ${mainScene?.height || 600}
+FPS = ${gameConfig.settings.fps || 60}
+BACKGROUND_COLOR = "${mainScene?.backgroundColor || '#000000'}"
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("${gameConfig.name}")
+clock = pygame.time.Clock()
+
+# Game Objects
+class GameObject:
+    def __init__(self, x, y, width, height, type, properties=None):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.type = type
+        self.properties = properties or {}
+        self.rect = pygame.Rect(x, y, width, height)
+    
+    def update(self):
+        self.rect.x = self.x
+        self.rect.y = self.y
+    
+    def draw(self, screen):
+        color = self.properties.get('color', (255, 255, 255))
+        pygame.draw.rect(screen, color, self.rect)
+
+game_objects = []
+
+# Component Systems
+${componentCode}
+
+# Entity Placement
+${entityCode}
+
+# Main Game Loop
+running = True
+while running:
+    dt = clock.tick(FPS) / 1000.0
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+    
+    # Update game objects
+    for obj in game_objects:
+        obj.update()
+    
+    # Draw everything
+    screen.fill(pygame.Color(BACKGROUND_COLOR))
+    
+    for obj in game_objects:
+        obj.draw(screen)
+    
+    pygame.display.flip()
+
+pygame.quit()
+sys.exit()`;
+}
+
+// Create default game config
+function createDefaultGameConfig(projectName: string): GameConfig {
+  return {
+    id: `game-${Date.now()}`,
+    name: projectName,
+    version: 1,
+    scenes: [{
+      id: 'main',
+      name: 'Main Scene',
+      entities: [],
+      backgroundColor: '#1a1a2e',
+      width: 800,
+      height: 600,
+      gridSize: 20,
+      isMainScene: true
+    }],
+    componentChoices: [],
+    assets: [],
+    settings: {
+      fps: 60,
+      showGrid: true,
+      gridSnap: true,
+      physicsEnabled: false,
+      debugMode: false
+    }
+  };
 }
 
 export default function ProjectBuilder() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
+  const { pyodide, isLoading: pyodideLoading } = usePyodide();
 
   // Project state
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
-  const [activeFileIndex, setActiveFileIndex] = useState(0);
-  const [files, setFiles] = useState<ProjectFile[]>([]);
-  const [assets, setAssets] = useState<ProjectAsset[]>([]);
-
+  const [gameConfig, setGameConfig] = useState<GameConfig>(createDefaultGameConfig('New Game'));
+  
   // UI state
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showOpenProjectDialog, setShowOpenProjectDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState("blank");
-  
-  // Code execution state
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("visual");
 
   // Load user projects
   const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
+  // Load game config from localStorage
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('visual-game-config');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        setGameConfig(config);
+      } catch (e) {
+        console.error('Failed to load saved config:', e);
+      }
+    }
+  }, []);
+
+  // Save game config to localStorage
+  useEffect(() => {
+    if (gameConfig) {
+      localStorage.setItem('visual-game-config', JSON.stringify(gameConfig));
+      setUnsavedChanges(true);
+    }
+  }, [gameConfig]);
+
+  // Handle component choice changes
+  const handleComponentChoiceChange = (componentId: string, choice: 'A' | 'B') => {
+    const newChoices = [...gameConfig.componentChoices];
+    const existingIndex = newChoices.findIndex(c => c.component === componentId);
+    
+    if (existingIndex >= 0) {
+      newChoices[existingIndex] = { component: componentId, choice };
+    } else {
+      newChoices.push({ component: componentId, choice });
+    }
+    
+    setGameConfig({
+      ...gameConfig,
+      componentChoices: newChoices
+    });
+  };
+
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: async (data: { name: string; template: string }) => {
-      const template = gameTemplates.find(t => t.id === data.template);
-      if (!template) throw new Error("Template not found");
-
-      // Generate custom component code if needed
-      let files = template.files;
-      if (template.useComponents) {
-        const componentChoices = getUserComponentChoices();
-        const generatedCode = generateGameTemplate(data.name, componentChoices);
-        files = [
-          {
-            path: 'main.py',
-            content: generatedCode
-          }
-        ];
-      }
-
+      const pythonCode = generatePythonFromConfig(gameConfig);
+      
       const response = await apiRequest("POST", "/api/projects", {
         name: data.name,
-        template: data.template,
-        files: files,
+        template: 'visual',
+        files: [{ path: 'main.py', content: pythonCode }],
         assets: []
       });
       return await response.json();
@@ -100,9 +235,7 @@ export default function ProjectBuilder() {
     onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       setCurrentProject(project);
-      setFiles(project.files);
-      setAssets(project.assets);
-      setActiveFileIndex(0);
+      setGameConfig({ ...gameConfig, name: project.name });
       setUnsavedChanges(false);
       setShowNewProjectDialog(false);
       toast({
@@ -119,14 +252,16 @@ export default function ProjectBuilder() {
     }
   });
 
-  // Save project mutation
+  // Save project mutation  
   const saveProjectMutation = useMutation({
     mutationFn: async () => {
       if (!currentProject) throw new Error("No project to save");
       
+      const pythonCode = generatePythonFromConfig(gameConfig);
+      
       const response = await apiRequest("PUT", `/api/projects/${currentProject.id}`, {
-        files,
-        assets
+        files: [{ path: 'main.py', content: pythonCode }],
+        assets: []
       });
       return await response.json();
     },
@@ -134,7 +269,7 @@ export default function ProjectBuilder() {
       setUnsavedChanges(false);
       toast({
         title: "Project Saved",
-        description: "Your changes have been saved successfully",
+        description: "Your visual game configuration has been saved",
       });
     },
     onError: (error) => {
@@ -146,786 +281,281 @@ export default function ProjectBuilder() {
     }
   });
 
-  // Execute code
-  const executeCode = useCallback(async (inputValues = "", runAutoGrading = false) => {
-    if (!pyodide || files.length === 0) return;
-
-    setIsExecuting(true);
-    setError("");
-    setOutput("");
-
-    try {
-      // Set up input values if provided
-      if (inputValues && inputValues.trim()) {
-        pyodide.globals.get('set_input_values_from_js')(inputValues);
-      } else {
-        pyodide.globals.get('set_input_values_from_js')('');
-      }
-
-      // Clear previous output
-      pyodide.runPython("import sys; sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__");
-
-      // Write all files to Pyodide filesystem
-      pyodide.runPython(`
-import os
-import sys
-
-# Create project directory structure
-project_dir = '/project'
-assets_dir = '/project/assets'
-if os.path.exists(project_dir):
-    import shutil
-    shutil.rmtree(project_dir)
-os.makedirs(project_dir, exist_ok=True)
-os.makedirs(assets_dir, exist_ok=True)
-
-# Change to project directory
-os.chdir(project_dir)
-
-# Add project directory to Python path
-if project_dir not in sys.path:
-    sys.path.insert(0, project_dir)
-`);
-
-      // Write each file to the filesystem
-      for (const file of files) {
-        // Escape the content properly for Python string literal
-        const escapedContent = file.content
-          .replace(/\\/g, '\\\\')
-          .replace(/'/g, "\\'")
-          .replace(/\n/g, '\\n')
-          .replace(/\r/g, '\\r')
-          .replace(/\t/g, '\\t');
-        
-        pyodide.runPython(`
-with open('${file.path}', 'w', encoding='utf-8') as f:
-    f.write('${escapedContent}')
-`);
-      }
-
-      // Write all project assets to Pyodide filesystem
-      const assetWritingResults = [];
-      if (assets.length > 0) {
-        console.log(`Writing ${assets.length} assets to Pyodide filesystem...`);
-        
-        for (const asset of assets) {
-          try {
-            // Validate asset data
-            if (!asset.dataUrl || typeof asset.dataUrl !== 'string') {
-              const error = `Asset ${asset.name} has invalid dataUrl`;
-              console.error(error);
-              assetWritingResults.push({ asset: asset.name, success: false, error });
-              continue;
-            }
-            
-            // Decode base64 dataUrl to binary data
-            const dataUrlParts = asset.dataUrl.split(',');
-            if (dataUrlParts.length !== 2) {
-              const error = `Invalid dataUrl format for asset ${asset.name} (expected "data:type;base64,data")`;
-              console.error(error);
-              assetWritingResults.push({ asset: asset.name, success: false, error });
-              continue;
-            }
-            
-            const mimeType = dataUrlParts[0].split(';')[0].split(':')[1];
-            const base64Data = dataUrlParts[1];
-            
-            // Validate base64 data
-            if (!base64Data) {
-              const error = `Empty base64 data for asset ${asset.name}`;
-              console.error(error);
-              assetWritingResults.push({ asset: asset.name, success: false, error });
-              continue;
-            }
-            
-            // Decode base64 to binary
-            let binaryString;
-            try {
-              binaryString = atob(base64Data);
-            } catch (decodeError) {
-              const error = `Failed to decode base64 data for asset ${asset.name}: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`;
-              console.error(error);
-              assetWritingResults.push({ asset: asset.name, success: false, error });
-              continue;
-            }
-            
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            // Create directory structure for the asset path
-            const assetPathParts = asset.path.split('/');
-            const assetDir = assetPathParts.slice(0, -1).join('/');
-            
-            if (assetDir) {
-              try {
-                pyodide.runPython(`
-import os
-asset_dir = '${assetDir.replace(/'/g, "\\'")}' 
-if asset_dir:
-    os.makedirs(asset_dir, exist_ok=True)
-    print(f"Created directory: {asset_dir}")
-`);
-              } catch (dirError) {
-                const error = `Failed to create directory ${assetDir} for asset ${asset.name}: ${dirError instanceof Error ? dirError.message : String(dirError)}`;
-                console.error(error);
-                assetWritingResults.push({ asset: asset.name, success: false, error });
-                continue;
-              }
-            }
-            
-            // Write binary data to Pyodide filesystem
-            try {
-              pyodide.FS.writeFile(asset.path, bytes);
-              
-              // Verify file was written
-              const fileStats = pyodide.FS.stat(asset.path);
-              const fileSizeKB = Math.round(fileStats.size / 1024 * 100) / 100;
-              
-              console.log(`✓ Successfully wrote asset: ${asset.name} (${asset.path}, ${fileSizeKB}KB)`);
-              assetWritingResults.push({ 
-                asset: asset.name, 
-                success: true, 
-                path: asset.path,
-                size: fileSizeKB,
-                type: mimeType 
-              });
-              
-            } catch (writeError) {
-              const error = `Failed to write file ${asset.path}: ${writeError instanceof Error ? writeError.message : String(writeError)}`;
-              console.error(error);
-              assetWritingResults.push({ asset: asset.name, success: false, error });
-            }
-            
-          } catch (error) {
-            const errorMsg = `Unexpected error processing asset ${asset.name}: ${error instanceof Error ? error.message : String(error)}`;
-            console.error(errorMsg);
-            assetWritingResults.push({ asset: asset.name, success: false, error: errorMsg });
-          }
-        }
-        
-        // Log summary
-        const successCount = assetWritingResults.filter(r => r.success).length;
-        const failureCount = assetWritingResults.length - successCount;
-        
-        if (successCount > 0) {
-          console.log(`✓ Asset writing completed: ${successCount} successful, ${failureCount} failed`);
-        }
-        if (failureCount > 0) {
-          console.warn(`⚠ ${failureCount} assets failed to write - check console for details`);
-        }
-        
-        // Add asset paths to Python for debugging
-        const successfulAssets = assetWritingResults
-          .filter(r => r.success)
-          .map(r => r.path);
-          
-        if (successfulAssets.length > 0) {
-          pyodide.runPython(`
-# Debug info: Available assets for pygame
-__available_assets__ = ${JSON.stringify(successfulAssets)}
-print(f"Assets available for pygame.image.load(): {__available_assets__}")
-`);
-        }
-      }
-
-      // Determine main file to execute (current active file)
-      const mainFile = files[activeFileIndex];
-      if (!mainFile) {
-        throw new Error("No active file selected");
-      }
-
-      // Use enhanced error reporting if available, fallback to basic execution
-      if (isEnhancedReady && executeWithEnhancedErrors) {
-        // Create comprehensive code by concatenating all files with imports
-        const allFilesCode = files.map(file => `
-# === File: ${file.path} ===
-${file.content}
-`).join('\n\n');
-
-        // Create files map for accurate multi-file error context
-        const filesMap: { [path: string]: string } = {};
-        files.forEach(file => {
-          filesMap[file.path] = file.content;
-        });
-
-        // Prepare enhanced error context for project execution with files map
-        const context = {
-          code: allFilesCode,
-          fileName: currentProject?.name ? `${currentProject.name}/${mainFile.path}` : mainFile.path,
-          isEducational: false, // Projects are more advanced than lessons
-          files: filesMap // CRITICAL: Include files map for accurate multi-file error context
-        };
-
-        // Execute main file with enhanced error reporting
-        const result = await executeWithEnhancedErrors(`
-import runpy
-import sys
-import os
-
-# Execute the main file
-try:
-    # Set working directory to project root
-    os.chdir('/project')
-    
-    # Execute the main file using runpy for proper module execution
-    runpy.run_path('${mainFile.path}', run_name='__main__')
-except SystemExit:
-    # Handle normal program exits gracefully
-    pass
-`, context);
-
-        setOutput(result.output || "");
-        
-        if (result.hasError && result.error) {
-          // Enhanced error with FULL traceback for debugging (projects need detailed info)
-          let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
-          
-          // CRITICAL: Explicitly append full Python traceback for project debugging
-          if (result.error.traceback && result.error.traceback.trim()) {
-            // Only add traceback if it's not already included in details
-            if (!result.error.details.includes(result.error.traceback)) {
-              enhancedErrorText += `\n\n🔍 Full Python Traceback:\n${result.error.traceback}`;
-            }
-          }
-          
-          setError(enhancedErrorText);
-        } else {
-          setError("");
-        }
-
-      } else {
-        // Fallback to basic execution when enhanced system not ready
-        console.warn("Enhanced error reporting not ready, using fallback execution");
-        
-        try {
-          pyodide.runPython(`
-import sys
-import io
-import runpy
-from contextlib import redirect_stdout, redirect_stderr
-
-# Capture output
-output_buffer = io.StringIO()
-error_buffer = io.StringIO()
-
-try:
-    with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
-        runpy.run_path('${mainFile.path}', run_name='__main__')
-except SystemExit:
-    pass
-except Exception as e:
-    error_buffer.write(str(e))
-
-fallback_output = output_buffer.getvalue()
-fallback_error = error_buffer.getvalue()
-`);
-
-          const capturedOutput = pyodide.globals.get('fallback_output') || "";
-          const capturedError = pyodide.globals.get('fallback_error') || "";
-
-          setOutput(capturedOutput);
-          setError(capturedError);
-          
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          setError(`Basic execution error: ${errorMessage}`);
-        }
-      }
-
-      // Check for pygame content to enable game simulation
-      const hasGameCode = files.some(file => 
-        file.content.includes("pygame") || 
-        file.content.includes("import pygame") ||
-        file.content.includes("from pygame")
-      );
-
-      if (hasGameCode) {
-        setIsRunning(true);
-        // Auto-stop after 5 seconds for demo purposes
-        setTimeout(() => setIsRunning(false), 5000);
-      }
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(errorMessage);
-    } finally {
-      setIsExecuting(false);
-    }
-  }, [pyodide, files, activeFileIndex, currentProject, isEnhancedReady, executeWithEnhancedErrors]);
-
-  // Handle file changes
-  const updateFileContent = (content: string) => {
-    if (activeFileIndex >= 0 && activeFileIndex < files.length) {
-      const updatedFiles = [...files];
-      updatedFiles[activeFileIndex] = { ...updatedFiles[activeFileIndex], content };
-      setFiles(updatedFiles);
-      setUnsavedChanges(true);
-    }
+  // Export project as Python file
+  const handleExport = () => {
+    const pythonCode = generatePythonFromConfig(gameConfig);
+    const blob = new Blob([pythonCode], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${gameConfig.name.replace(/\s+/g, '_')}.py`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // Add new file
-  const addNewFile = () => {
-    const fileName = `new_file_${files.length + 1}.py`;
-    const newFile: ProjectFile = {
-      path: fileName,
-      content: "# New Python file\n\n"
-    };
-    setFiles([...files, newFile]);
-    setActiveFileIndex(files.length);
-    setUnsavedChanges(true);
-  };
-
-  // Remove file
-  const removeFile = (index: number) => {
-    if (files.length <= 1) {
-      toast({
-        title: "Cannot Remove File",
-        description: "Projects must have at least one file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedFiles = files.filter((_, i) => i !== index);
-    setFiles(updatedFiles);
-    
-    if (activeFileIndex >= updatedFiles.length) {
-      setActiveFileIndex(Math.max(0, updatedFiles.length - 1));
-    }
-    setUnsavedChanges(true);
-  };
-
-  // Load project
-  const loadProject = (project: Project) => {
+  // Open existing project
+  const handleOpenProject = (project: Project) => {
     setCurrentProject(project);
-    setFiles(project.files);
-    setAssets(project.assets);
-    setActiveFileIndex(0);
-    setUnsavedChanges(false);
-    setShowOpenProjectDialog(false);
-    toast({
-      title: "Project Loaded",
-      description: `Opened ${project.name}`,
-    });
-  };
-
-  // Handle template selection for new project
-  const handleCreateProject = () => {
-    if (!newProjectName.trim()) {
-      toast({
-        title: "Project Name Required",
-        description: "Please enter a name for your project",
-        variant: "destructive",
-      });
-      return;
+    // Try to load visual config from project metadata or create new
+    const configFromProject = project.files.find(f => f.path === '.gameconfig.json');
+    if (configFromProject) {
+      try {
+        const config = JSON.parse(configFromProject.content);
+        setGameConfig(config);
+      } catch (e) {
+        console.error('Failed to load project config:', e);
+        setGameConfig(createDefaultGameConfig(project.name));
+      }
+    } else {
+      setGameConfig(createDefaultGameConfig(project.name));
     }
-
-    createProjectMutation.mutate({
-      name: newProjectName.trim(),
-      template: selectedTemplate
-    });
+    setShowOpenProjectDialog(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-950 dark:to-indigo-950">
-      {/* Header */}
-      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-border sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <motion.div 
-              className="flex items-center space-x-4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+    <DndProvider backend={HTML5Backend}>
+      <div className="h-screen flex flex-col bg-background">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setLocation("/")}
+              data-testid="button-back"
             >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/")}
-                className="text-muted-foreground hover:text-foreground"
-                data-testid="button-back-home"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center space-x-2">
-                <Gamepad2 className="h-5 w-5 text-primary" />
-                <h1 className="text-lg font-semibold">
-                  {currentProject ? currentProject.name : "Project Builder"}
-                </h1>
-                {unsavedChanges && (
-                  <Badge variant="secondary" className="text-xs">
-                    Unsaved
-                  </Badge>
-                )}
-              </div>
-            </motion.div>
-
-            <motion.div 
-              className="flex items-center space-x-2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-                <DialogTrigger asChild>
-                  <Button size="sm" data-testid="button-new-project">
-                    <FolderPlus className="h-4 w-4 mr-1" />
-                    New
-                  </Button>
-                </DialogTrigger>
-                <DialogContent data-testid="dialog-new-project">
-                  <DialogHeader>
-                    <DialogTitle>Create New Project</DialogTitle>
-                    <DialogDescription>
-                      Choose a template to get started with your game project.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Project Name</label>
-                      <Input
-                        value={newProjectName}
-                        onChange={(e) => setNewProjectName(e.target.value)}
-                        placeholder="My Awesome Game"
-                        data-testid="input-project-name"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Game Template</label>
-                      <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                        <SelectTrigger data-testid="select-template">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getTemplateOptions().map((template) => (
-                            <SelectItem key={template.id} value={template.id}>
-                              <div>
-                                <div className="font-medium">{template.name}</div>
-                                <div className="text-xs text-muted-foreground">{template.description}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button
-                      onClick={handleCreateProject}
-                      disabled={createProjectMutation.isPending}
-                      data-testid="button-create-project"
-                    >
-                      {createProjectMutation.isPending ? "Creating..." : "Create Project"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={showOpenProjectDialog} onOpenChange={setShowOpenProjectDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" data-testid="button-open-project">
-                    <FileText className="h-4 w-4 mr-1" />
-                    Open
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl" data-testid="dialog-open-project">
-                  <DialogHeader>
-                    <DialogTitle>Open Project</DialogTitle>
-                    <DialogDescription>
-                      Select a project to continue working on.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <ScrollArea className="max-h-96">
-                    {projectsLoading ? (
-                      <div className="text-center py-8">Loading projects...</div>
-                    ) : projects && projects.length > 0 ? (
-                      <div className="space-y-2">
-                        {projects.map((project) => (
-                          <Card
-                            key={project.id}
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => loadProject(project)}
-                            data-testid={`project-card-${project.id}`}
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="text-base">{project.name}</CardTitle>
-                                <Badge variant="outline" className="text-xs">
-                                  {project.template}
-                                </Badge>
-                              </div>
-                              <CardDescription>
-                                {project.files.length} files • Template: {project.template}
-                              </CardDescription>
-                            </CardHeader>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No projects found. Create your first project!
-                      </div>
-                    )}
-                  </ScrollArea>
-                </DialogContent>
-              </Dialog>
-
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+            
+            <Separator orientation="vertical" className="h-6" />
+            
+            <div className="flex items-center gap-2">
+              <Gamepad2 className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Visual Game Builder</span>
               {currentProject && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => saveProjectMutation.mutate()}
-                    disabled={!unsavedChanges || saveProjectMutation.isPending}
-                    data-testid="button-save-project"
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    {saveProjectMutation.isPending ? "Saving..." : "Save"}
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => setShowExportDialog(true)}
-                    disabled={files.length === 0}
-                    data-testid="button-export-game"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Export Game
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => setShowPublishDialog(true)}
-                    disabled={files.length === 0 || !currentProject}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
-                    data-testid="button-publish-gallery"
-                  >
-                    <Share className="h-4 w-4 mr-1" />
-                    Publish to Gallery
-                  </Button>
+                  <Separator orientation="vertical" className="h-6 mx-2" />
+                  <Badge variant="outline">{currentProject.name}</Badge>
                 </>
               )}
-            </motion.div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {unsavedChanges && (
+              <Badge variant="secondary">Unsaved Changes</Badge>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowNewProjectDialog(true)}
+              data-testid="button-new-project"
+            >
+              <FolderPlus className="h-4 w-4 mr-1" />
+              New
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowOpenProjectDialog(true)}
+              disabled={projectsLoading}
+              data-testid="button-open-project"
+            >
+              <FolderOpen className="h-4 w-4 mr-1" />
+              Open
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => currentProject ? saveProjectMutation.mutate() : setShowNewProjectDialog(true)}
+              disabled={saveProjectMutation.isPending}
+              data-testid="button-save"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              Save
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleExport}
+              data-testid="button-export"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowPublishDialog(true)}
+              disabled={!currentProject}
+              data-testid="button-publish"
+            >
+              <Share className="h-4 w-4 mr-1" />
+              Publish
+            </Button>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Left Panel - Files & Assets */}
-        <div className="w-80 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-r border-border flex flex-col">
-          <Tabs defaultValue="files" className="flex flex-col h-full">
-            <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
-              <TabsTrigger value="files" data-testid="tab-files">
-                <Code2 className="h-4 w-4 mr-1" />
-                Files
-              </TabsTrigger>
-              <TabsTrigger value="assets" data-testid="tab-assets">
-                <Image className="h-4 w-4 mr-1" />
-                Assets
-              </TabsTrigger>
-              <TabsTrigger value="library" data-testid="tab-library">
-                <Star className="h-4 w-4 mr-1" />
-                Library
-              </TabsTrigger>
-            </TabsList>
+        {/* Main Layout */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Center: Interactive Game Canvas */}
+          <div className="flex-1 flex flex-col">
+            <InteractiveGameCanvas
+              gameConfig={gameConfig}
+              onConfigChange={setGameConfig}
+              className="flex-1"
+              currentScene="main"
+            />
+          </div>
 
-            <TabsContent value="files" className="flex-1 m-4 mt-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">Project Files</h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={addNewFile}
-                  disabled={!currentProject}
-                  data-testid="button-add-file"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <ScrollArea className="flex-1">
-                {files.length > 0 ? (
-                  <div className="space-y-1">
-                    {files.map((file, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                          index === activeFileIndex 
-                            ? "bg-primary text-primary-foreground" 
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => setActiveFileIndex(index)}
-                        data-testid={`file-item-${index}`}
-                      >
-                        <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <span className="text-sm truncate">{file.path}</span>
-                        </div>
-                        {files.length > 1 && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFile(index);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                            data-testid={`button-remove-file-${index}`}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    Create a new project to start coding
-                  </div>
-                )}
-              </ScrollArea>
-            </TabsContent>
-
-            <TabsContent value="assets" className="flex-1 mt-2">
-              <AssetManager
-                assets={assets}
-                onAssetsChange={(newAssets) => {
-                  setAssets(newAssets);
-                  setUnsavedChanges(true);
-                }}
-                disabled={!currentProject}
-              />
-            </TabsContent>
-
-            <TabsContent value="library" className="flex-1 m-0">
-              <AssetBrowser 
-                onAssetSelect={(assetCode) => {
-                  if (files.length > 0) {
-                    // Add asset code to current file
-                    const currentFile = files[activeFileIndex];
-                    const newContent = currentFile.content + '\n\n' + assetCode;
-                    updateFileContent(newContent);
-                    toast({
-                      title: "Asset Code Added",
-                      description: "Asset loading code has been added to your file",
-                    });
-                  }
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* Right Side: Component Switcher */}
+          <div className="w-80 border-l">
+            <ComponentSwitcher
+              selectedChoices={gameConfig.componentChoices}
+              onChoiceChange={handleComponentChoiceChange}
+              gameType={selectedTemplate}
+            />
+          </div>
         </div>
 
-        {/* Center Panel - Code Editor */}
-        <div className="flex-1 flex flex-col">
-          {currentProject && files.length > 0 ? (
-            <div className="h-full flex flex-col">
-              {/* File tabs */}
-              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-border p-2">
-                <div className="flex items-center space-x-1">
-                  {files.map((file, index) => (
-                    <button
-                      key={index}
-                      className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                        index === activeFileIndex
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      }`}
-                      onClick={() => setActiveFileIndex(index)}
-                      data-testid={`tab-file-${index}`}
-                    >
-                      {file.path}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Bottom: Asset Library */}
+        <div className="h-64 border-t">
+          <DraggableAssetLibrary
+            onAssetSelect={(asset) => {
+              console.log('Asset selected:', asset);
+            }}
+            className="h-full"
+          />
+        </div>
 
-              {/* Code Editor */}
-              <div className="flex-1">
-                <CodeEditor
-                  code={files[activeFileIndex]?.content || ""}
-                  onChange={updateFileContent}
-                  onExecute={executeCode}
-                  output={output}
-                  error={error}
-                  isExecuting={isExecuting}
+        {/* New Project Dialog */}
+        <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Visual Game</DialogTitle>
+              <DialogDescription>
+                Start building your game visually by dragging and dropping components
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div>
+                <label htmlFor="project-name" className="text-sm font-medium">
+                  Project Name
+                </label>
+                <Input
+                  id="project-name"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="My Awesome Game"
+                  data-testid="input-project-name"
                 />
               </div>
+              
+              <div>
+                <label htmlFor="game-type" className="text-sm font-medium">
+                  Game Type
+                </label>
+                <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                  <SelectTrigger id="game-type" data-testid="select-game-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="visual">Visual Builder</SelectItem>
+                    <SelectItem value="platformer">Platformer</SelectItem>
+                    <SelectItem value="shooter">Shooter</SelectItem>
+                    <SelectItem value="puzzle">Puzzle</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-muted/20">
-              <div className="text-center">
-                <Gamepad2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h2 className="text-xl font-semibold mb-2">Welcome to Project Builder</h2>
-                <p className="text-muted-foreground mb-6">
-                  Create a new project or open an existing one to start building your game!
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <Button onClick={() => setShowNewProjectDialog(true)} data-testid="welcome-new-project">
-                    <FolderPlus className="h-4 w-4 mr-2" />
-                    New Project
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowOpenProjectDialog(true)}
-                    data-testid="welcome-open-project"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Open Project
-                  </Button>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewProjectDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  setGameConfig(createDefaultGameConfig(newProjectName));
+                  createProjectMutation.mutate({
+                    name: newProjectName,
+                    template: selectedTemplate
+                  });
+                }}
+                disabled={!newProjectName || createProjectMutation.isPending}
+                data-testid="button-create-project"
+              >
+                Create Project
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Open Project Dialog */}
+        <Dialog open={showOpenProjectDialog} onOpenChange={setShowOpenProjectDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Open Project</DialogTitle>
+              <DialogDescription>
+                Select a project to open in the visual builder
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-2 gap-4 py-4">
+              {projects?.map(project => (
+                <Card 
+                  key={project.id}
+                  className="cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => handleOpenProject(project)}
+                >
+                  <CardHeader>
+                    <CardTitle className="text-base">{project.name}</CardTitle>
+                    <CardDescription className="text-xs">
+                      Created: {new Date(project.createdAt).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+              
+              {(!projects || projects.length === 0) && (
+                <div className="col-span-2 text-center py-8 text-muted-foreground">
+                  No projects found
                 </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
+          </DialogContent>
+        </Dialog>
 
-        {/* Right Panel - Game Preview */}
-        <div className="w-96">
-          {currentProject && files.length > 0 ? (
-            <GameCanvas
-              code={files[activeFileIndex]?.content || ""}
-              pyodide={pyodide}
-              isRunning={isRunning}
-            />
-          ) : (
-            <div className="h-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-l border-border flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <Play className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>Game preview will appear here</p>
-                <p className="text-xs mt-1">Create a project and run your code to see the magic!</p>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Export Dialog */}
+        {showExportDialog && currentProject && (
+          <ExportDialog
+            open={showExportDialog}
+            onOpenChange={setShowExportDialog}
+            projectName={currentProject.name}
+            files={[{ 
+              path: 'main.py', 
+              content: generatePythonFromConfig(gameConfig) 
+            }]}
+            assets={currentProject.assets}
+            template={currentProject.template}
+          />
+        )}
+
+        {/* Publish Dialog */}
+        {showPublishDialog && currentProject && (
+          <PublishDialog
+            isOpen={showPublishDialog}
+            onClose={() => setShowPublishDialog(false)}
+            project={currentProject}
+          />
+        )}
       </div>
-
-      {/* Export Dialog */}
-      {currentProject && (
-        <ExportDialog
-          open={showExportDialog}
-          onOpenChange={setShowExportDialog}
-          projectName={currentProject.name}
-          files={files}
-          assets={assets}
-          template={currentProject.template}
-        />
-      )}
-
-      {/* Publish Dialog */}
-      {currentProject && (
-        <PublishDialog
-          isOpen={showPublishDialog}
-          onClose={() => setShowPublishDialog(false)}
-          project={currentProject}
-        />
-      )}
-    </div>
+    </DndProvider>
   );
 }
