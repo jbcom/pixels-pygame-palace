@@ -56,32 +56,34 @@
   --spacing: 0.25rem;
 }
 
-.dark {
-  --background: hsl(240, 10%, 11%);
-  --foreground: hsl(30, 10%, 92%);
-  --card: hsl(240, 10%, 13%);
-  --card-foreground: hsl(30, 10%, 92%);
-  --popover: hsl(240, 10%, 13%);
-  --popover-foreground: hsl(30, 10%, 92%);
-  --primary: hsl(221, 70%, 60%);
-  --primary-foreground: hsl(240, 10%, 11%);
-  --secondary: hsl(47, 85%, 58%);
-  --secondary-foreground: hsl(240, 10%, 11%);
-  --muted: hsl(240, 5%, 18%);
-  --muted-foreground: hsl(240, 5%, 65%);
-  --accent: hsl(240, 5%, 18%);
-  --accent-foreground: hsl(30, 10%, 92%);
-  --destructive: hsl(0, 65%, 60%);
-  --destructive-foreground: hsl(30, 10%, 92%);
-  --success: hsl(142, 65%, 52%);
-  --success-foreground: hsl(240, 10%, 11%);
-  --border: hsl(240, 5%, 22%);
-  --input: hsl(240, 5%, 22%);
-  --ring: hsl(221, 70%, 60%);
-  --lesson-bg: hsl(240, 10%, 9%);
-  --lesson-sidebar-bg: hsl(240, 10%, 11%);
-  --code-editor-header-bg: hsl(221, 70%, 25%);
-  --console-header-bg: hsl(240, 10%, 14%);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: hsl(240, 10%, 11%);
+    --foreground: hsl(30, 10%, 92%);
+    --card: hsl(240, 10%, 13%);
+    --card-foreground: hsl(30, 10%, 92%);
+    --popover: hsl(240, 10%, 13%);
+    --popover-foreground: hsl(30, 10%, 92%);
+    --primary: hsl(221, 70%, 60%);
+    --primary-foreground: hsl(240, 10%, 11%);
+    --secondary: hsl(47, 85%, 58%);
+    --secondary-foreground: hsl(240, 10%, 11%);
+    --muted: hsl(240, 5%, 18%);
+    --muted-foreground: hsl(240, 5%, 65%);
+    --accent: hsl(240, 5%, 18%);
+    --accent-foreground: hsl(30, 10%, 92%);
+    --destructive: hsl(0, 65%, 60%);
+    --destructive-foreground: hsl(30, 10%, 92%);
+    --success: hsl(142, 65%, 52%);
+    --success-foreground: hsl(240, 10%, 11%);
+    --border: hsl(240, 5%, 22%);
+    --input: hsl(240, 5%, 22%);
+    --ring: hsl(221, 70%, 60%);
+    --lesson-bg: hsl(240, 10%, 9%);
+    --lesson-sidebar-bg: hsl(240, 10%, 11%);
+    --code-editor-header-bg: hsl(221, 70%, 25%);
+    --console-header-bg: hsl(240, 10%, 14%);
+  }
 }
 
 @layer base {
@@ -102,8 +104,10 @@
     color: hsl(240, 10%, 20%);
   }
   
-  .dark body {
-    color: hsl(30, 10%, 88%);
+  @media (prefers-color-scheme: dark) {
+    body {
+      color: hsl(30, 10%, 88%);
+    }
   }
   
   h1 {
