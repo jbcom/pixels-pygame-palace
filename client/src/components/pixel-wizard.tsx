@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-version https://git-lfs.github.com/spec/v1
-oid sha256:8bba4e2cf9e8374007ff02857c09e0658d1fc856075e0d968354e165d7c9f9c4
-size 18028
-=======
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -615,4 +610,3 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
     </AnimatePresence>
   );
 }
->>>>>>> Stashed changes

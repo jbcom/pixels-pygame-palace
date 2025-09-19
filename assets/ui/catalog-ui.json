@@ -1,0 +1,331 @@
+{
+  "ui_assets": {
+    "buttons": {
+      "description": "Collection of button assets in various styles and states",
+      "total_count": 58,
+      "categories": [
+        {
+          "name": "Long Buttons",
+          "files": [
+            "buttons/buttonLong_beige.png",
+            "buttons/buttonLong_beige_pressed.png",
+            "buttons/buttonLong_blue.png",
+            "buttons/buttonLong_blue_pressed.png",
+            "buttons/buttonLong_brown.png",
+            "buttons/buttonLong_brown_pressed.png",
+            "buttons/buttonLong_grey.png",
+            "buttons/buttonLong_grey_pressed.png"
+          ],
+          "usage": "Wide buttons for main actions, menu items, dialog options",
+          "states": ["normal", "pressed"],
+          "colors": ["beige", "blue", "brown", "grey"]
+        },
+        {
+          "name": "Rectangle Buttons",
+          "files": [
+            "buttons/button_rectangle_border.png",
+            "buttons/button_rectangle_depth_border.png",
+            "buttons/button_rectangle_depth_flat.png",
+            "buttons/button_rectangle_depth_gloss.png",
+            "buttons/button_rectangle_depth_gradient.png",
+            "buttons/button_rectangle_depth_line.png",
+            "buttons/button_rectangle_flat.png",
+            "buttons/button_rectangle_gloss.png",
+            "buttons/button_rectangle_gradient.png",
+            "buttons/button_rectangle_line.png"
+          ],
+          "usage": "Standard rectangular buttons for general UI actions",
+          "styles": ["border", "flat", "gloss", "gradient", "line", "depth"]
+        },
+        {
+          "name": "Round Buttons",
+          "files": [
+            "buttons/button_round_border.png",
+            "buttons/button_round_depth_border.png",
+            "buttons/button_round_depth_flat.png",
+            "buttons/button_round_depth_gloss.png",
+            "buttons/button_round_depth_gradient.png",
+            "buttons/button_round_depth_line.png",
+            "buttons/button_round_flat.png",
+            "buttons/button_round_gloss.png",
+            "buttons/button_round_gradient.png",
+            "buttons/button_round_line.png"
+          ],
+          "usage": "Circular buttons for special actions, floating buttons, icons",
+          "styles": ["border", "flat", "gloss", "gradient", "line", "depth"]
+        },
+        {
+          "name": "Square Buttons",
+          "files": [
+            "buttons/button_square_border.png",
+            "buttons/button_square_depth_border.png",
+            "buttons/button_square_depth_flat.png",
+            "buttons/button_square_depth_gloss.png",
+            "buttons/button_square_depth_gradient.png",
+            "buttons/button_square_depth_line.png",
+            "buttons/button_square_flat.png",
+            "buttons/button_square_gloss.png",
+            "buttons/button_square_gradient.png",
+            "buttons/button_square_line.png"
+          ],
+          "usage": "Square buttons for toolbar items, grid layouts, icon buttons",
+          "styles": ["border", "flat", "gloss", "gradient", "line", "depth"]
+        }
+      ]
+    },
+    "panels": {
+      "description": "Panel backgrounds for UI containers, dialogs, and windows",
+      "total_count": 24,
+      "categories": [
+        {
+          "name": "Solid Panels",
+          "files": [
+            "panels/panel_beige.png",
+            "panels/panel_beigeLight.png",
+            "panels/panel_blue.png",
+            "panels/panel_brown.png"
+          ],
+          "usage": "Basic panels for windows, dialogs, containers",
+          "colors": ["beige", "beigeLight", "blue", "brown"]
+        },
+        {
+          "name": "Glass Panels",
+          "files": [
+            "panels/panel_glass.png",
+            "panels/panel_glass_cornerTL.png",
+            "panels/panel_glass_cornerTR.png",
+            "panels/panel_glass_corners.png",
+            "panels/panel_glass_notch_bl.png",
+            "panels/panel_glass_notch_br.png",
+            "panels/panel_glass_notches.png",
+            "panels/panel_glass_notches_top.png",
+            "panels/panel_glass_notch_tl.png",
+            "panels/panel_glass_notch_tr.png",
+            "panels/panel_glass_projection.png",
+            "panels/panel_glass_tab.png"
+          ],
+          "usage": "Transparent panels for overlays, HUD elements, modern interfaces",
+          "features": ["transparency", "corners", "notches", "tabs"]
+        },
+        {
+          "name": "Wood Panels",
+          "files": [
+            "panels/panel_wood.png",
+            "panels/panel_woodDetail.png",
+            "panels/panel_woodWear.png"
+          ],
+          "usage": "Wooden texture panels for rustic, medieval, or natural themes",
+          "styles": ["plain", "detailed", "worn"]
+        }
+      ]
+    },
+    "icons": {
+      "description": "Game icons for items, actions, and UI elements",
+      "total_count": 190,
+      "categories": [
+        {
+          "name": "Game Icons",
+          "sample_files": [
+            "icons/arrowDown.png",
+            "icons/arrowUp.png",
+            "icons/arrowRight.png",
+            "icons/arrowLeft.png",
+            "icons/audioOn.png",
+            "icons/audioOff.png",
+            "icons/barsHorizontal.png",
+            "icons/barsVertical.png",
+            "icons/checkmark.png",
+            "icons/contrast.png",
+            "icons/cross.png",
+            "icons/home.png",
+            "icons/information.png",
+            "icons/leaderboardsComplex.png",
+            "icons/leaderboardsSimple.png",
+            "icons/locked.png",
+            "icons/unlocked.png",
+            "icons/musicOn.png",
+            "icons/musicOff.png",
+            "icons/pause.png",
+            "icons/power.png",
+            "icons/return.png",
+            "icons/save.png",
+            "icons/settings.png",
+            "icons/star.png"
+          ],
+          "usage": "Common game UI icons for navigation, settings, audio, achievements",
+          "themes": ["navigation", "audio", "settings", "gameplay", "social", "system"],
+          "colors": ["black", "white"],
+          "note": "190 total icons available in black and white variants"
+        }
+      ]
+    },
+    "cursors": {
+      "description": "Mouse cursor graphics for different states and actions",
+      "total_count": 42,
+      "categories": [
+        {
+          "name": "Arrow Cursors",
+          "files": [
+            "cursors/arrow_e.png",
+            "cursors/arrow_ne.png",
+            "cursors/arrow_n.png",
+            "cursors/arrow_nw.png",
+            "cursors/arrow_se.png",
+            "cursors/arrow_s.png",
+            "cursors/arrow_sw.png",
+            "cursors/arrow_w.png"
+          ],
+          "usage": "Directional arrows for resize operations, movement indicators",
+          "directions": ["east", "northeast", "north", "northwest", "southeast", "south", "southwest", "west"]
+        },
+        {
+          "name": "Hand Cursors",
+          "files": [
+            "cursors/hand_small_point.png",
+            "cursors/hand_point.png",
+            "cursors/hand_small_closed.png",
+            "cursors/hand_closed.png",
+            "cursors/hand_small_open.png",
+            "cursors/hand_open.png",
+            "cursors/hand_small.png",
+            "cursors/hand.png"
+          ],
+          "usage": "Interactive hand cursors for clickable elements, drag operations",
+          "states": ["point", "closed", "open", "default"],
+          "sizes": ["normal", "small"]
+        },
+        {
+          "name": "System Cursors",
+          "files": [
+            "cursors/cursor.png",
+            "cursors/cursor_old.png",
+            "cursors/cross.png",
+            "cursors/cross_large.png",
+            "cursors/cross_small.png",
+            "cursors/cross_square.png",
+            "cursors/cross_square_shadowed.png",
+            "cursors/diag_left_right.png",
+            "cursors/diag_right_left.png",
+            "cursors/expand.png",
+            "cursors/horizontal.png",
+            "cursors/plus.png",
+            "cursors/target.png",
+            "cursors/vertical.png",
+            "cursors/zoom.png"
+          ],
+          "usage": "System and tool cursors for selection, targeting, zooming",
+          "types": ["default", "crosshair", "resize", "zoom", "target", "plus"]
+        },
+        {
+          "name": "Special Cursors",
+          "files": [
+            "cursors/boot.png",
+            "cursors/gauntlet.png",
+            "cursors/gauntlet_small.png",
+            "cursors/bracket_a_horizontal.png",
+            "cursors/bracket_a_vertical.png",
+            "cursors/bracket_b_horizontal.png",
+            "cursors/bracket_b_vertical.png",
+            "cursors/load_a.png",
+            "cursors/load_b.png",
+            "cursors/load_c.png",
+            "cursors/load_d.png",
+            "cursors/load_e.png",
+            "cursors/load_f.png",
+            "cursors/load_g.png",
+            "cursors/load_h.png"
+          ],
+          "usage": "Themed cursors for games, loading states, special interactions",
+          "types": ["boot", "gauntlet", "brackets", "loading"]
+        }
+      ]
+    },
+    "progress": {
+      "description": "Progress bars and sliders for UI feedback",
+      "total_count": 42,
+      "categories": [
+        {
+          "name": "Bar Backgrounds",
+          "files": [
+            "progress/barBack_horizontalLeft.png",
+            "progress/barBack_horizontalMid.png",
+            "progress/barBack_horizontalRight.png",
+            "progress/barBack_verticalBottom.png",
+            "progress/barBack_verticalMid.png",
+            "progress/barBack_verticalTop.png"
+          ],
+          "usage": "Background elements for horizontal and vertical progress bars",
+          "orientations": ["horizontal", "vertical"],
+          "parts": ["left", "mid", "right", "top", "bottom"]
+        },
+        {
+          "name": "Colored Bars",
+          "files": [
+            "progress/barBlue_horizontalBlue.png",
+            "progress/barBlue_horizontalLeft.png",
+            "progress/barBlue_horizontalRight.png",
+            "progress/barBlue_verticalBottom.png",
+            "progress/barBlue_verticalMid.png",
+            "progress/barBlue_verticalTop.png",
+            "progress/barGreen_horizontalLeft.png",
+            "progress/barGreen_horizontalMid.png",
+            "progress/barGreen_horizontalRight.png",
+            "progress/barGreen_verticalBottom.png",
+            "progress/barGreen_verticalMid.png",
+            "progress/barGreen_verticalTop.png",
+            "progress/barRed_horizontalLeft.png",
+            "progress/barRed_horizontalMid.png",
+            "progress/barRed_horizontalRight.png",
+            "progress/barRed_verticalBottom.png",
+            "progress/barRed_verticalMid.png",
+            "progress/barRed_verticalTop.png",
+            "progress/barYellow_horizontalLeft.png",
+            "progress/barYellow_horizontalMid.png",
+            "progress/barYellow_horizontalRight.png",
+            "progress/barYellow_verticalBottom.png",
+            "progress/barYellow_verticalMid.png",
+            "progress/barYellow_verticalTop.png"
+          ],
+          "usage": "Colored fill elements for progress bars - health, mana, experience, loading",
+          "colors": ["blue", "green", "red", "yellow"],
+          "orientations": ["horizontal", "vertical"]
+        },
+        {
+          "name": "Slider Components",
+          "files": [
+            "progress/sliderDown.png",
+            "progress/sliderEnd_down.png",
+            "progress/sliderEnd_up.png",
+            "progress/sliderHorizontal.png",
+            "progress/sliderLeft.png",
+            "progress/sliderRight.png",
+            "progress/sliderUp.png",
+            "progress/sliderVertical.png"
+          ],
+          "usage": "Slider handles and tracks for value adjustment controls",
+          "orientations": ["horizontal", "vertical"],
+          "components": ["handle", "track", "ends"]
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "total_assets": 356,
+    "source": "Kenney Game Assets",
+    "license": "Free for personal and commercial use",
+    "version": "1.0.0",
+    "created": "2024-09-19",
+    "usage_tips": {
+      "buttons": "Use normal and pressed states for interactive feedback. Mix styles for visual hierarchy.",
+      "panels": "Layer panels with transparency for depth. Use glass panels for modern UIs, wood for rustic themes.",
+      "icons": "Available in black and white - tint programmatically to match your color scheme.",
+      "cursors": "Set hotspot coordinates appropriately for precise interaction.",
+      "progress": "Combine left, mid, right pieces to create scalable progress bars of any length."
+    },
+    "recommended_usage": {
+      "game_genres": ["casual", "puzzle", "rpg", "strategy", "platformer", "mobile"],
+      "ui_styles": ["modern", "clean", "minimalist", "playful", "professional"],
+      "platforms": ["desktop", "mobile", "web", "console"]
+    }
+  }
+}
