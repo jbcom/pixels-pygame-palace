@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import Header from "@/components/header";
 import LessonSidebar from "@/components/lesson-sidebar";
@@ -10,6 +10,7 @@ import FloatingFeedback from "@/components/floating-feedback";
 import LessonIntroModal from "@/components/lesson-intro-modal";
 import type { Lesson, UserProgress } from "@shared/schema";
 import { usePyodide } from "@/hooks/use-pyodide";
+import { createPythonRunner, type PythonRunner } from "@/lib/python/runner";
 
 export default function LessonPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -28,6 +29,15 @@ export default function LessonPage() {
   } | null>(null);
 
   const { pyodide, isLoading: pyodideLoading, error: pyodideError, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
+  
+  // Create PythonRunner instance when pyodide is ready
+  const pythonRunner = useMemo(() => {
+    if (!pyodide) return null;
+    return createPythonRunner(pyodide, {
+      executeWithEnhancedErrors,
+      isEnhancedReady
+    });
+  }, [pyodide, executeWithEnhancedErrors, isEnhancedReady]);
 
   // Rule-based grading engine
   const runRuleBasedGrading = async (test: any, actualOutput: string): Promise<{
@@ -533,7 +543,7 @@ result
   };
 
   const executeCode = async (inputValues?: string, runAutoGrading = false) => {
-    if (!pyodide || !code.trim()) return;
+    if (!pythonRunner || !code.trim()) return;
 
     setError("");
     setOutput("");
@@ -542,54 +552,27 @@ result
     // Temporarily disable auto-grading to fix syntax issues - will be re-enabled after modularization
     const enableAutoGrading = false; // TODO: Re-enable after extracting grading logic
 
-    // Check if enhanced error reporting is available
-    if (!isEnhancedReady || !executeWithEnhancedErrors) {
-      console.warn("Enhanced error reporting not ready, falling back to basic execution");
-      return executeCodeBasic(inputValues, enableAutoGrading);
-    }
-
     try {
-      // Set up input values for the queue system if provided
-      if (inputValues && inputValues.trim()) {
-        pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
-      } else {
-        pyodide.runPython(`set_input_values_from_js("")`);
-      }
+      // Use PythonRunner for execution
+      const result = await pythonRunner.runSnippet({ 
+        code, 
+        input: inputValues 
+      });
 
-      // Use enhanced error capture for better educational feedback
-      const context = {
-        code: code,
-        fileName: currentStep?.id ? `step_${currentStep.id}.py` : 'lesson.py',
-        isEducational: true
-      };
-
-      const result = await executeWithEnhancedErrors(code, context);
-
-      if (result.hasError && result.error) {
-        // Enhanced error reporting with educational context
-        let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
-        
-        if (result.error.traceback && result.error.traceback.trim()) {
-          if (!result.error.details.includes(result.error.traceback)) {
-            enhancedErrorText += `\n\n🔍 Full Python Traceback (for learning):\n${result.error.traceback}`;
-          }
-        }
-        
-        setError(enhancedErrorText);
-        
+      if (result.error) {
+        setError(result.error);
         if (enableAutoGrading && runAutoGrading) {
           setGradingResult({
             passed: false,
-            feedback: `🐛 ${result.error.title}\n\n${result.error.message}\n\n💡 Tips to fix this:\n${result.error.suggestions.map((s: any) => `• ${s}`).join('\n')}`,
-            actualOutput: result.error.traceback || enhancedErrorText
+            feedback: "Your code has an error. Please fix it before checking.",
+            actualOutput: result.error
           });
         }
         return;
       }
 
       // Success case - code executed without errors
-      const actualOutput = result.output || "Code executed successfully!";
-      setOutput(actualOutput);
+      setOutput(result.output);
         
       // TODO: Auto-grading temporarily disabled - will be re-enabled after modularization
       if (enableAutoGrading && runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
@@ -599,7 +582,7 @@ result
         updateProgressMutation.mutate({ code });
       }
     } catch (err) {
-      console.error("Enhanced Python execution error:", err);
+      console.error("Python execution error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while executing the code.";
       setError(errorMessage);
       if (enableAutoGrading && runAutoGrading) {
