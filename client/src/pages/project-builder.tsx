@@ -29,6 +29,15 @@ import { generateGameTemplate, getUserComponentChoices } from "@/lib/game-buildi
 import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
 import { motion } from "framer-motion";
 
+// Helper function to get template options for the dropdown
+function getTemplateOptions() {
+  return gameTemplates.map(template => ({
+    id: template.id,
+    name: template.name,
+    description: template.description
+  }));
+}
+
 export default function ProjectBuilder() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
