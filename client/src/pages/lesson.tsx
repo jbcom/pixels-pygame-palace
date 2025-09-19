@@ -539,11 +539,13 @@ result
     setOutput("");
     setGradingResult(null);
 
+    // Temporarily disable auto-grading to fix syntax issues - will be re-enabled after modularization
+    const enableAutoGrading = false; // TODO: Re-enable after extracting grading logic
+
     // Check if enhanced error reporting is available
     if (!isEnhancedReady || !executeWithEnhancedErrors) {
       console.warn("Enhanced error reporting not ready, falling back to basic execution");
-      // Fall back to basic execution if enhanced system isn't ready
-      return executeCodeBasic(inputValues, runAutoGrading);
+      return executeCodeBasic(inputValues, enableAutoGrading);
     }
 
     try {
@@ -564,12 +566,10 @@ result
       const result = await executeWithEnhancedErrors(code, context);
 
       if (result.hasError && result.error) {
-        // Enhanced error reporting with educational context and FULL traceback for learning
+        // Enhanced error reporting with educational context
         let enhancedErrorText = `${result.error.title}\n\n${result.error.message}\n\n${result.error.details}`;
         
-        // CRITICAL: Explicitly append full Python traceback for educational purposes
         if (result.error.traceback && result.error.traceback.trim()) {
-          // Only add traceback if it's not already included in details
           if (!result.error.details.includes(result.error.traceback)) {
             enhancedErrorText += `\n\n🔍 Full Python Traceback (for learning):\n${result.error.traceback}`;
           }
@@ -577,7 +577,7 @@ result
         
         setError(enhancedErrorText);
         
-        if (runAutoGrading) {
+        if (enableAutoGrading && runAutoGrading) {
           setGradingResult({
             passed: false,
             feedback: `🐛 ${result.error.title}\n\n${result.error.message}\n\n💡 Tips to fix this:\n${result.error.suggestions.map((s: any) => `• ${s}`).join('\n')}`,
@@ -591,153 +591,18 @@ result
       const actualOutput = result.output || "Code executed successfully!";
       setOutput(actualOutput);
         
-      // Run auto-grading if requested
-      if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
-          // Run all tests and collect results
-          const testResults: Array<{
-            testIndex: number;
-            passed: boolean;
-            expectedOutput: string;
-            actualOutput: string;
-            input?: string;
-          }> = [];
-          
-          let allTestsPassed = true;
-          
-          for (let i = 0; i < currentStep.tests.length; i++) {
-            const test = currentStep.tests[i];
-            
-            try {
-              // Reset IO streams for clean output capture with proper restoration
-              pyodide.runPython(`
-                import sys
-                import io
-                # Capture original streams for restoration
-                original_stdout = sys.stdout
-                original_stderr = sys.stderr
-                # Redirect to StringIO for capture
-                sys.stdout = io.StringIO()
-                sys.stderr = io.StringIO()
-              `);
-              
-              let testStdout = '';
-              let testStderr = '';
-              
-              try {
-                // Set up test inputs if provided
-                if (test.input && test.input.trim()) {
-                  pyodide.runPython(`set_input_values_from_js("${test.input.replace(/"/g, '\\"')}")`);
-                } else {
-                  pyodide.runPython(`set_input_values_from_js("")`);
-                }
-                
-                // Execute code again for this test
-                pyodide.runPython(code);
-                
-                // Get clean output
-                testStdout = pyodide.runPython("sys.stdout.getvalue()");
-                testStderr = pyodide.runPython("sys.stderr.getvalue()");
-                
-              } finally {
-                // CRITICAL: Always restore original streams to prevent pollution
-                pyodide.runPython(`
-                  sys.stdout = original_stdout
-                  sys.stderr = original_stderr
-                `);
-              }
-              
-              if (testStderr) {
-                // Code has error for this test
-                testResults.push({
-                  testIndex: i,
-                  passed: false,
-                  expectedOutput: test.expectedOutput,
-                  actualOutput: testStderr,
-                  input: test.input
-                });
-                allTestsPassed = false;
-              } else {
-                let testPassed = false;
-                let feedback = "";
-                
-                // Check if this test uses rule-based grading or traditional output matching
-                if (test.mode === 'rules' && (test.astRules || test.runtimeRules)) {
-                  // Use new rule-based grading system
-                  const ruleResult = await runRuleBasedGrading(test, testStdout || "");
-                  testPassed = ruleResult.passed;
-                  feedback = ruleResult.feedback;
-                } else {
-                  // Use traditional exact output matching for backward compatibility
-                  const expectedNormalized = test.expectedOutput.trim().replace(/\s+/g, ' ');
-                  const actualNormalized = (testStdout || "").trim().replace(/\s+/g, ' ');
-                  testPassed = actualNormalized === expectedNormalized;
-                  feedback = testPassed ? "Perfect match!" : `Expected: "${test.expectedOutput}" but got: "${testStdout || ""}"`;
-                }
-                
-                testResults.push({
-                  testIndex: i,
-                  passed: testPassed,
-                  expectedOutput: test.expectedOutput,
-                  actualOutput: testStdout || "",
-                  input: test.input
-                });
-                
-                if (!testPassed) {
-                  allTestsPassed = false;
-                }
-              }
-            } catch (testErr) {
-              testResults.push({
-                testIndex: i,
-                passed: false,
-                expectedOutput: test.expectedOutput,
-                actualOutput: `Test execution error: ${testErr}`,
-                input: test.input
-              });
-              allTestsPassed = false;
-            }
-          }
-          
-          // Provide detailed feedback based on test results
-          let feedback = "";
-          if (allTestsPassed) {
-            feedback = "✅ Perfect! Your code passes all tests.";
-          } else {
-            const failedTests = testResults.filter(t => !t.passed);
-            if (failedTests.length === 1) {
-              feedback = `❌ Test failed. Expected: "${failedTests[0].expectedOutput}" but got: "${failedTests[0].actualOutput}"`;
-            } else {
-              feedback = `❌ ${failedTests.length} out of ${testResults.length} tests failed. Check the expected output carefully.`;
-            }
-          }
-          
-          setGradingResult({
-            passed: allTestsPassed,
-            feedback,
-            expectedOutput: currentStep.tests[0].expectedOutput, // Show first test for reference
-            actualOutput: testResults[0]?.actualOutput || ""
-          });
-          
-          // If all tests pass, advance to next step automatically
-          if (allTestsPassed) {
-            updateProgressMutation.mutate({ 
-              code,
-              currentStep: Math.max(currentStepIndex + 1, (progress?.currentStep || 0))
-            });
-          } else {
-            // Still save the code even if tests fail
-            updateProgressMutation.mutate({ code });
-          }
-        } else {
-          // Update progress with current code (regular run without grading)
-          updateProgressMutation.mutate({ code });
-        }
-      } // end if (runAutoGrading && ...)
+      // TODO: Auto-grading temporarily disabled - will be re-enabled after modularization
+      if (enableAutoGrading && runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
+        console.log("Auto-grading temporarily disabled during modularization");
+      } else {
+        // Update progress with current code (regular run without grading)
+        updateProgressMutation.mutate({ code });
+      }
     } catch (err) {
       console.error("Enhanced Python execution error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while executing the code.";
       setError(errorMessage);
-      if (runAutoGrading) {
+      if (enableAutoGrading && runAutoGrading) {
         setGradingResult({
           passed: false,
           feedback: "Your code has an error. Please fix it before checking.",
