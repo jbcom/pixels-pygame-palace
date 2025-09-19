@@ -1,0 +1,127 @@
+[
+  {
+    "id": "lesson-1",
+    "title": "Python Basics",
+    "description": "Variables, data types, print, and input",
+    "order": 1,
+    "intro": "🐍 Welcome to Python programming! In this lesson, you'll learn the fundamental building blocks: variables, data types, and how to interact with users. These are the core concepts that every programmer needs to master.",
+    "learningObjectives": [
+      "Create and use variables to store different types of data",
+      "Work with strings, numbers, and booleans",
+      "Use print() to display messages and information",
+      "Get user input with input() function",
+      "Convert between different data types"
+    ],
+    "goalDescription": "Master the basics of Python by creating an interactive program that collects and displays user information!",
+    "previewCode": "name = input('Enter your name: ')\\nage = int(input('Enter your age: '))\\nprint(f'Hello {name}, you are {age} years old!')",
+    "content": {
+      "introduction": "Python is a powerful and beginner-friendly programming language. Let's start with the fundamentals that every Python programmer needs to know!",
+      "steps": [
+        {
+          "id": "step-1",
+          "title": "Your First Python Message",
+          "description": "Let's start by displaying messages on screen. The print() function is used to show text output. Write any friendly greeting messages!",
+          "initialCode": "# Use the print() function to display at least 2 messages\\n# You can write any greeting or welcome messages you like!\\n",
+          "solution": "print('Hello, World!')\\nprint('Welcome to Python programming!')",
+          "hints": ["Use print() function to display text", "Put text inside quotes", "You can write any messages you want", "Try using at least 2 print statements"],
+          "tests": [
+            {
+              "mode": "rules",
+              "expectedOutput": "Any greeting messages (this is just for reference)",
+              "description": "Should use print() function to display messages",
+              "astRules": {
+                "requiredFunctions": ["print"],
+                "requiredConstructs": [
+                  { "type": "function_call", "name": "print", "minCount": 2 },
+                  { "type": "string_literal", "minCount": 2 }
+                ]
+              },
+              "runtimeRules": {
+                "outputContains": []
+              }
+            }
+          ]
+        },
+        {
+          "id": "step-2", 
+          "title": "Creating Variables",
+          "description": "Variables store data that your program can use later. Create variables to store different types of information, then display them!",
+          "initialCode": "# Create at least 3 variables with different data types:\\n# - A string (text in quotes)\\n# - A number (integer or decimal)\\n# - A boolean (True or False)\\n# Then print each variable to see their values\\n",
+          "solution": "name = 'Python'\\nversion = 3.12\\nis_fun = True\\n\\nprint(name)\\nprint(version)\\nprint(is_fun)",
+          "hints": ["Variables store values using =", "Strings use quotes like 'text' or \"text\"", "Numbers don't need quotes", "Boolean values are True or False", "Use print() to display variables"],
+          "tests": [
+            {
+              "mode": "rules",
+              "expectedOutput": "Any variable values (this is just for reference)",
+              "description": "Should create variables of different types and print them",
+              "astRules": {
+                "requiredFunctions": ["print"],
+                "requiredConstructs": [
+                  { "type": "variable_assignment", "minCount": 3 },
+                  { "type": "function_call", "name": "print", "minCount": 3 },
+                  { "type": "string_literal", "minCount": 1 }
+                ]
+              },
+              "runtimeRules": {
+                "outputContains": []
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prerequisites": [],
+    "difficulty": "Beginner",
+    "estimatedTime": 25
+  },
+  {
+    "id": "lesson-2",
+    "title": "Control Flow",
+    "description": "if/else statements and comparison operators",
+    "order": 2,
+    "intro": "🔀 Time to make your programs smart! Control flow lets your code make decisions and respond differently based on conditions. You'll learn if/else statements and comparison operators.",
+    "learningObjectives": [
+      "Use if statements to make decisions in code",
+      "Compare values with ==, !=, <, >, <=, >=",
+      "Combine conditions with and, or, not",
+      "Handle multiple conditions with elif",
+      "Create programs that respond to user input"
+    ],
+    "goalDescription": "Build intelligent programs that can make decisions and respond differently based on user input and conditions!",
+    "previewCode": "age = int(input('Enter age: '))\\nif age >= 18:\\n    print('You can vote!')\\nelse:\\n    print('Not old enough to vote yet')",
+    "content": {
+      "introduction": "Control flow allows your programs to make decisions. Instead of running the same code every time, you can create programs that respond intelligently to different situations!",
+      "steps": [
+        {
+          "id": "step-1",
+          "title": "Your First if Statement",
+          "description": "Use an if statement to check a condition and only run code when the condition is true.",
+          "initialCode": "# Create a variable called score and set it to 85\\n# Use an if statement to check if score is greater than 80\\n# If true, print 'Great job!'\\n",
+          "solution": "score = 85\\nif score > 80:\\n    print('Great job!')",
+          "hints": ["Use if followed by a condition and colon :", "Indent the code inside the if block", "Use > to check if one number is greater than another"],
+          "tests": [
+            {
+              "mode": "rules",
+              "expectedOutput": "Great job!",
+              "description": "Should print congratulations for high score",
+              "astRules": {
+                "requiredFunctions": ["print"],
+                "requiredConstructs": [
+                  { "type": "variable_assignment", "minCount": 1 },
+                  { "type": "function_call", "name": "print", "minCount": 1 },
+                  { "type": "string_literal", "minCount": 1 }
+                ]
+              },
+              "runtimeRules": {
+                "outputContains": ["Great job!"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prerequisites": ["lesson-1"],
+    "difficulty": "Beginner",
+    "estimatedTime": 30
+  }
+]
