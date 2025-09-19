@@ -1001,7 +1001,21 @@ class PygameFont:
         return True
     
     def Font(self, fontname=None, size=36):
-        return PygameFont(fontname, size)
+        # Create a PygameFont instance - this is a separate class defined above
+        # that accepts fontname and size parameters
+        class FontInstance:
+            def __init__(self, fontname=None, size=36):
+                self.size = size
+                self.fontname = fontname or 'Arial'
+            
+            def render(self, text, antialias=True, color=(255, 255, 255)):
+                # Calculate approximate text dimensions
+                text_width = int(len(text) * self.size * 0.6)
+                text_height = int(self.size * 1.2)
+                # Return a placeholder surface with appropriate dimensions
+                return RenderingSurface(text_width, text_height)
+        
+        return FontInstance(fontname, size)
     
     def get_default_font(self):
         return 'Arial'
@@ -1019,7 +1033,8 @@ class PygameEvent:
 
 class PygameKey:
     def get_pressed(self):
-        return []
+        # Return array of 512 False values to prevent IndexError
+        return [False] * 512
     
     def get_focused(self):
         return True
