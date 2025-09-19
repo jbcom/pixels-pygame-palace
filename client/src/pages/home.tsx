@@ -36,15 +36,26 @@ import {
   Star,
   ArrowRight,
   Code2,
-  Rocket
+  Rocket,
+  Music,
+  Blocks
 } from "lucide-react";
 import type { Lesson, UserProgress } from "@shared/schema";
+
+// Import generated game images
+import platformerImage from "@assets/generated_images/Platformer_game_illustration_16ef54bb.png";
+import racingImage from "@assets/generated_images/Racing_game_illustration_87b520a2.png";
+import puzzleImage from "@assets/generated_images/Puzzle_game_illustration_0c89723b.png";
+import adventureImage from "@assets/generated_images/Adventure_game_illustration_0255e101.png";
+import musicImage from "@assets/generated_images/Music_game_illustration_9a39961e.png";
+import sandboxImage from "@assets/generated_images/Creative_sandbox_illustration_a88bd612.png";
 
 interface GameType {
   id: string;
   title: string;
   description: string;
   icon: React.ReactNode;
+  image: string;
   color: string;
   difficulty: "Beginner" | "Intermediate" | "Advanced";
 }
@@ -69,6 +80,7 @@ const gameTypes: GameType[] = [
     title: "Platformer",
     description: "Jump and run through exciting levels!",
     icon: <Mountain className="h-12 w-12" />,
+    image: platformerImage,
     color: "from-green-400 to-green-600",
     difficulty: "Beginner"
   },
@@ -77,6 +89,7 @@ const gameTypes: GameType[] = [
     title: "Racing Game",
     description: "Speed through tracks and beat the clock!",
     icon: <Car className="h-12 w-12" />,
+    image: racingImage,
     color: "from-red-400 to-red-600",
     difficulty: "Intermediate"
   },
@@ -85,6 +98,7 @@ const gameTypes: GameType[] = [
     title: "Puzzle Game",
     description: "Solve challenging brain teasers!",
     icon: <Puzzle className="h-12 w-12" />,
+    image: puzzleImage,
     color: "from-purple-400 to-purple-600",
     difficulty: "Beginner"
   },
@@ -93,24 +107,27 @@ const gameTypes: GameType[] = [
     title: "Adventure",
     description: "Explore vast worlds and discover secrets!",
     icon: <Globe className="h-12 w-12" />,
+    image: adventureImage,
     color: "from-blue-400 to-blue-600",
     difficulty: "Advanced"
   },
   {
-    id: "action",
-    title: "Action Game",
-    description: "Fast-paced combat and exciting battles!",
-    icon: <Swords className="h-12 w-12" />,
-    color: "from-orange-400 to-orange-600",
+    id: "music",
+    title: "Music Game",
+    description: "Create amazing beats and melodies!",
+    icon: <Music className="h-12 w-12" />,
+    image: musicImage,
+    color: "from-pink-400 to-pink-600",
     difficulty: "Intermediate"
   },
   {
-    id: "space",
-    title: "Space Shooter",
-    description: "Defend Earth from alien invaders!",
-    icon: <Rocket className="h-12 w-12" />,
-    color: "from-indigo-400 to-indigo-600",
-    difficulty: "Intermediate"
+    id: "sandbox",
+    title: "Creative Sandbox",
+    description: "Build anything you can imagine!",
+    icon: <Blocks className="h-12 w-12" />,
+    image: sandboxImage,
+    color: "from-indigo-400 to-purple-600",
+    difficulty: "Beginner"
   }
 ];
 
@@ -355,24 +372,30 @@ export default function Home() {
                           className="cursor-pointer"
                           data-testid={`game-card-${game.id}`}
                         >
-                          <Card className={`h-full border-2 border-transparent hover:border-primary overflow-hidden group`}>
-                            <div className={`h-32 bg-gradient-to-br ${game.color} flex items-center justify-center relative overflow-hidden`}>
-                              <div className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                              <div className="text-white relative z-10">
-                                {game.icon}
-                              </div>
+                          <Card className={`h-full border-2 border-transparent hover:border-primary overflow-hidden group transition-all duration-300`}>
+                            <div className="relative h-48 overflow-hidden">
+                              <img 
+                                src={game.image} 
+                                alt={game.title}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-20 mix-blend-overlay`}></div>
                               <Badge 
-                                className="absolute top-2 right-2 bg-white/90 text-gray-800"
+                                className="absolute top-2 right-2 bg-white/95 text-gray-800 shadow-lg"
                                 variant="secondary"
                               >
                                 {game.difficulty}
                               </Badge>
+                              <div className="absolute bottom-2 left-2 text-white drop-shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                {game.icon}
+                              </div>
                             </div>
                             <CardContent className="p-4">
                               <h3 className="font-bold text-lg mb-2">{game.title}</h3>
                               <p className="text-sm text-muted-foreground">{game.description}</p>
                               <Button 
-                                className="mt-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                                className="mt-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-md hover:shadow-lg"
                                 size="sm"
                               >
                                 <Play className="h-4 w-4 mr-2" />
