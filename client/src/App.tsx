@@ -34,6 +34,11 @@ function Router() {
           <ProjectBuilder />
         </PageErrorBoundary>
       )} />
+      <Route path="/projects" component={() => (
+        <PageErrorBoundary context="Project Builder">
+          <ProjectBuilder />
+        </PageErrorBoundary>
+      )} />
       <Route path="/gallery" component={() => (
         <PageErrorBoundary context="Gallery">
           <Gallery />

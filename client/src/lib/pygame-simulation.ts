@@ -486,8 +486,9 @@ export const pygameShim = {
   // Key module
   key: {
     get_pressed() { 
-      // Return empty key state - real key handling would need browser integration
-      return [];
+      // Return array of 512 False values to simulate no keys pressed
+      // This prevents IndexError when accessing key indices like pygame.K_LEFT (276)
+      return new Array(512).fill(false);
     },
     get_focused() {
       return true; // Assume window has focus
