@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { InsertProject } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all lessons
@@ -114,10 +115,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", async (req, res) => {
     try {
       const userId = "mock-user-id"; // In a real app, this would come from authentication
-      const projectData = insertProjectSchema.parse({
+      const projectData: InsertProject = {
         ...req.body,
         userId,
-      });
+      };
       
       const project = await storage.createProject(projectData);
       res.status(201).json(project);
