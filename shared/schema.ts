@@ -118,10 +118,14 @@ export interface Scene {
   name: string;
   entities: Entity[];
   backgroundColor?: string;
+  backgroundImage?: string;
   width: number;
   height: number;
   gridSize?: number;
   isMainScene?: boolean;
+  music?: string;
+  transition?: SceneTransition;
+  camera?: CameraSettings;
 }
 
 export interface Entity {
@@ -130,15 +134,56 @@ export interface Entity {
   name: string;
   position: { x: number; y: number };
   size?: { width: number; height: number };
+  rotation?: number;
+  scale?: { x: number; y: number };
   sprite?: string;
+  assetPath?: string;
   properties: Record<string, any>;
   behaviors?: EntityBehavior[];
   layer?: number;
+  locked?: boolean;
+  visible?: boolean;
+  collisionShape?: CollisionShape;
+  physics?: PhysicsProperties;
 }
 
 export interface EntityBehavior {
-  type: 'patrol' | 'follow' | 'rotate' | 'bounce' | 'custom';
+  id: string;
+  type: 'move' | 'patrol' | 'follow' | 'rotate' | 'bounce' | 'jump' | 'shoot' | 'collect' | 'spawn' | 'destroy' | 'custom';
   parameters: Record<string, any>;
+  trigger?: BehaviorTrigger;
+  enabled?: boolean;
+}
+
+export interface BehaviorTrigger {
+  type: 'always' | 'onClick' | 'onCollision' | 'onKeyPress' | 'onTimer' | 'onEvent';
+  params?: Record<string, any>;
+}
+
+export interface CollisionShape {
+  type: 'rect' | 'circle' | 'polygon' | 'auto';
+  data?: any;
+}
+
+export interface PhysicsProperties {
+  enabled: boolean;
+  mass?: number;
+  friction?: number;
+  bounce?: number;
+  gravity?: boolean;
+  static?: boolean;
+}
+
+export interface SceneTransition {
+  type: 'none' | 'fade' | 'slide' | 'zoom' | 'pixelate';
+  duration?: number;
+  easing?: string;
+}
+
+export interface CameraSettings {
+  followEntity?: string;
+  zoom?: number;
+  bounds?: { x: number; y: number; width: number; height: number };
 }
 
 export interface ComponentChoice {
@@ -161,8 +206,48 @@ export interface GameSettings {
   fps?: number;
   showGrid?: boolean;
   gridSnap?: boolean;
+  gridSize?: number;
+  showRulers?: boolean;
+  showGuides?: boolean;
   physicsEnabled?: boolean;
   debugMode?: boolean;
+  autoSave?: boolean;
+  theme?: 'light' | 'dark';
+}
+
+export interface EditorState {
+  selectedEntities: string[];
+  selectedTool: EditorTool;
+  clipboard?: Entity[];
+  history: HistoryEntry[];
+  historyIndex: number;
+  zoom: number;
+  panOffset: { x: number; y: number };
+  showLayers?: boolean;
+  lockedLayers?: number[];
+}
+
+export type EditorTool = 'select' | 'move' | 'rotate' | 'scale' | 'duplicate' | 'delete' | 'pan' | 'zoom';
+
+export interface HistoryEntry {
+  type: 'add' | 'delete' | 'modify' | 'batch';
+  entities: Entity[];
+  previousState?: Entity[];
+  timestamp: number;
+}
+
+export interface AssetMetadata {
+  id: string;
+  name: string;
+  path: string;
+  type: 'sprite' | 'model' | 'sound' | 'music' | 'font';
+  category: string;
+  tags: string[];
+  thumbnail?: string;
+  dimensions?: { width: number; height: number };
+  format?: string;
+  size?: number;
+  favorite?: boolean;
 }
 
 // Mascot-Driven Experience Types
