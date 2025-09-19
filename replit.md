@@ -1,8 +1,8 @@
-# PyGame Academy
+# Pixel's PyGame Palace
 
 ## Overview
 
-PyGame Academy is an interactive Python programming learning platform that teaches Python fundamentals through game development. The platform features a revolutionary flexible auto-grading system that validates programming concepts rather than exact text matching, allowing students to learn creatively while maintaining educational standards. With its polished visual design, ungated lesson access, and real-time Pyodide execution, it provides an engaging, accessible learning experience for beginners.
+Pixel's PyGame Palace is an interactive Python programming learning platform that teaches Python fundamentals through game development. The platform features a revolutionary flexible auto-grading system that validates programming concepts rather than exact text matching, allowing students to learn creatively while maintaining educational standards. With its polished visual design, ungated lesson access, and real-time Pyodide execution, it provides an engaging, accessible learning experience for beginners.
 
 ## User Preferences
 

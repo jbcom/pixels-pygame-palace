@@ -1,4 +1,4 @@
-// Simple TypeScript types for PyGame Academy - no database dependencies!
+// Simple TypeScript types for Pixel's PyGame Palace - no database dependencies!
 
 export interface User {
   id: string;

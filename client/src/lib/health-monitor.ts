@@ -1,5 +1,5 @@
 /**
- * Health Monitoring System for PyGame Academy
+ * Health Monitoring System for Pixel's PyGame Palace
  * Monitors critical platform components and provides health status
  */
 

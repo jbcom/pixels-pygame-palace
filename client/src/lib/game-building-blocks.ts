@@ -2218,7 +2218,7 @@ export function generateGameTemplate(
   const selectedSystems = new Set<string>();
   
   // Start with base template
-  let template = `# PyGame Academy - ${gameType} Game
+  let template = `# Pixel's PyGame Palace - ${gameType} Game
 # Generated with your custom component choices
 import pygame
 import random

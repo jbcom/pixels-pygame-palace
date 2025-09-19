@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16", "python-3.11"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["git-lfs"]
+packages = ["freetype", "git-lfs", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "unzip", "wget", "zlib", "vim-full"]
 
 [deployment]
 deploymentTarget = "autoscale"

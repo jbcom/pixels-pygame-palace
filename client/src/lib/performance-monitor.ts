@@ -1,5 +1,5 @@
 /**
- * Performance Monitoring System for PyGame Academy
+ * Performance Monitoring System for Pixel's PyGame Palace
  * Tracks code execution, API calls, component rendering, and system performance
  */
 
@@ -107,8 +107,9 @@ class PerformanceMonitor {
           statusText: response.statusText
         });
         return response;
-      } catch (error) {
-        this.endMetric(metricId, 'failed', { error: error.message });
+      } catch (error: unknown) {
+        const err = error as Error;
+        this.endMetric(metricId, 'failed', { error: err.message });
         throw error;
       }
     };
@@ -186,8 +187,9 @@ class PerformanceMonitor {
     try {
       renderFn();
       return this.endMetric(metricId, 'completed');
-    } catch (error) {
-      this.endMetric(metricId, 'failed', { error: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.endMetric(metricId, 'failed', { error: err.message });
       throw error;
     }
   }
@@ -204,8 +206,9 @@ class PerformanceMonitor {
       const result = await asyncFn();
       this.endMetric(metricId, 'completed');
       return result;
-    } catch (error) {
-      this.endMetric(metricId, 'failed', { error: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.endMetric(metricId, 'failed', { error: err.message });
       throw error;
     }
   }
@@ -222,8 +225,9 @@ class PerformanceMonitor {
       const result = executeFn();
       this.endMetric(metricId, 'completed');
       return result;
-    } catch (error) {
-      this.endMetric(metricId, 'failed', { error: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.endMetric(metricId, 'failed', { error: err.message });
       throw error;
     }
   }
@@ -240,8 +244,9 @@ class PerformanceMonitor {
       const result = await executeFn();
       this.endMetric(metricId, 'completed');
       return result;
-    } catch (error) {
-      this.endMetric(metricId, 'failed', { error: error.message });
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.endMetric(metricId, 'failed', { error: err.message });
       throw error;
     }
   }
@@ -338,9 +343,9 @@ class PerformanceMonitor {
 
   // Memory monitoring
   getMemoryUsage(): { used: number; total: number; percentage: number } | null {
-    if (performance.memory) {
-      const used = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-      const total = Math.round(performance.memory.totalJSHeapSize / 1024 / 1024);
+    if ('memory' in performance && performance.memory) {
+      const used = Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024);
+      const total = Math.round((performance as any).memory.totalJSHeapSize / 1024 / 1024);
       const percentage = Math.round((used / total) * 100);
       
       return { used, total, percentage };

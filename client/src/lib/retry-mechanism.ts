@@ -1,7 +1,9 @@
 /**
- * Retry Mechanism System for PyGame Academy
+ * Retry Mechanism System for Pixel's PyGame Palace
  * Provides robust retry logic for failed operations with exponential backoff
  */
+
+import React, { useState } from 'react';
 
 export interface RetryOptions {
   /** Maximum number of retry attempts */
@@ -296,13 +298,13 @@ export function useRetry(maxRetries = 3) {
   });
 
   const retry = async <T>(operation: () => Promise<T>): Promise<T> => {
-    setState(prev => ({ ...prev, isRetrying: true }));
+    setState((prev: UseRetryState) => ({ ...prev, isRetrying: true }));
 
     try {
       const result = await retryMechanism.withRetry(operation, {
         maxAttempts: maxRetries,
         onRetry: (error, attempt) => {
-          setState(prev => ({
+          setState((prev: UseRetryState) => ({
             ...prev,
             retryCount: attempt,
             lastError: error,
@@ -310,7 +312,7 @@ export function useRetry(maxRetries = 3) {
           }));
         },
         onFinalFailure: (error, attempts) => {
-          setState(prev => ({
+          setState((prev: UseRetryState) => ({
             ...prev,
             lastError: error,
             canRetry: false,
@@ -320,7 +322,7 @@ export function useRetry(maxRetries = 3) {
       });
 
       if (result.success) {
-        setState(prev => ({
+        setState((prev: UseRetryState) => ({
           ...prev,
           isRetrying: false,
           retryCount: 0,
@@ -332,7 +334,7 @@ export function useRetry(maxRetries = 3) {
         throw result.error;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev: UseRetryState) => ({
         ...prev,
         isRetrying: false,
         lastError: error
@@ -367,7 +369,7 @@ export const educationalRetry = {
     context: string,
     onMessage?: (message: string) => void
   ): Promise<T> {
-    return retryMechanism.withRetry(operation, {
+    const result = await retryMechanism.withRetry(operation, {
       onRetry: (error, attempt) => {
         const messages = [
           `Having trouble ${context}. Trying again... (attempt ${attempt})`,
@@ -381,6 +383,12 @@ export const educationalRetry = {
         onMessage?.(`Unable to complete ${context}. Please check your connection and try again.`);
       }
     });
+    
+    if (!result.success) {
+      throw result.error;
+    }
+    
+    return result.data!;
   }
 };
 
