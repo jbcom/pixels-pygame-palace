@@ -164,3 +164,34 @@ export interface GameSettings {
   physicsEnabled?: boolean;
   debugMode?: boolean;
 }
+
+// Mascot-Driven Experience Types
+export interface UserProfile {
+  id: string;
+  name: string;
+  firstVisitAt: Date;
+  lastVisitAt: Date;
+  skillLevel: 'beginner' | 'learning' | 'confident' | 'pro';
+  interests: string[];
+  preferredGenres: string[];
+  currentProject?: string;
+  completedLessons: string[];
+  mascotName: string; // They can rename Pixel if they want
+  onboardingComplete: boolean;
+}
+
+export interface WizardState {
+  currentStep: string;
+  answers: Record<string, any>;
+  suggestedTemplates: string[];
+  selectedTemplate?: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  role: 'pixel' | 'user' | 'system';
+  content: string;
+  timestamp: Date;
+  quickReplies?: string[];
+  actionType?: 'lesson' | 'create' | 'explore';
+}
