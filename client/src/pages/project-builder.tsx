@@ -24,7 +24,8 @@ import AssetManager from "@/components/asset-manager";
 import ExportDialog from "@/components/export-dialog";
 import PublishDialog from "@/components/publish-dialog";
 import { usePyodide } from "@/hooks/use-pyodide";
-import { gameTemplates, getTemplateOptions } from "@/lib/game-templates";
+import { gameTemplates } from "@/lib/game-templates";
+import { generateGameTemplate, getUserComponentChoices } from "@/lib/game-building-blocks";
 import type { Project, ProjectAsset, ProjectFile } from "@shared/schema";
 import { motion } from "framer-motion";
 
@@ -65,10 +66,23 @@ export default function ProjectBuilder() {
       const template = gameTemplates.find(t => t.id === data.template);
       if (!template) throw new Error("Template not found");
 
+      // Generate custom component code if needed
+      let files = template.files;
+      if (template.useComponents) {
+        const componentChoices = getUserComponentChoices();
+        const generatedCode = generateGameTemplate(data.name, componentChoices);
+        files = [
+          {
+            path: 'main.py',
+            content: generatedCode
+          }
+        ];
+      }
+
       const response = await apiRequest("POST", "/api/projects", {
         name: data.name,
         template: data.template,
-        files: template.files,
+        files: files,
         assets: []
       });
       return await response.json();
