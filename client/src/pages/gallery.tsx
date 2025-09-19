@@ -124,7 +124,7 @@ export default function Gallery() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-950 dark:to-purple-950">
       {/* Header */}
-      <header className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-border sticky top-0 z-50 shadow-sm">
+      <header className="bg-white dark:bg-gray-900 border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <motion.div 
@@ -190,7 +190,7 @@ export default function Gallery() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-secondary/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-gray-800 rounded-full px-4 py-2">
               <Trophy className="h-4 w-4 text-primary animate-pulse" />
               <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Community Showcase
@@ -276,7 +276,7 @@ export default function Gallery() {
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
           <motion.div 
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 mb-8 shadow-lg"
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-border p-6 mb-8 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -377,7 +377,7 @@ export default function Gallery() {
                   whileHover={{ y: -8 }}
                   className="group"
                 >
-                  <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-border/50 hover:border-primary/30 h-full">
+                  <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800 border-border hover:border-primary h-full">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
                     
                     {/* Project Thumbnail */}
