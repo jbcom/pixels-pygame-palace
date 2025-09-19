@@ -1,0 +1,392 @@
+title: FeatureSelection
+---
+<<set $mood to "excited">>
+Pixel: Now for the fun part - let's add some cool features to make your game unique! 🎮
+<<if $selectedGenre == "platformer">>
+    <<jump PlatformerFeatures>>
+<<elseif $selectedGenre == "puzzle">>
+    <<jump PuzzleFeatures>>
+<<elseif $selectedGenre == "racing">>
+    <<jump RacingFeatures>>
+<<elseif $selectedGenre == "adventure">>
+    <<jump AdventureFeatures>>
+<<else>>
+    <<jump GeneralFeatures>>
+<<endif>>
+===
+
+title: PlatformerFeatures
+---
+<<set $mood to "enthusiastic">>
+Pixel: Let's power up your platformer! What feature sounds most exciting? 🏃
+-> Double jump! 🦘
+    <<addFeature("double-jump")>>
+    <<jump FeatureAdded>>
+-> Wall sliding 🧗
+    <<addFeature("wall-slide")>>
+    <<jump FeatureAdded>>
+-> Dash ability ⚡
+    <<addFeature("dash")>>
+    <<jump FeatureAdded>>
+-> Collectible coins 🪙
+    <<addFeature("collectibles")>>
+    <<jump FeatureAdded>>
+-> Enemy AI 👾
+    <<addFeature("enemies")>>
+    <<jump FeatureAdded>>
+-> All of them! 🌟
+    <<addFeature("platformer-complete")>>
+    <<jump AllFeaturesAdded>>
+===
+
+title: PuzzleFeatures
+---
+<<set $mood to "thoughtful">>
+Pixel: Puzzle games need that perfect mechanic! What should we add? 🧩
+-> Combo system 🔗
+    <<addFeature("combos")>>
+    <<jump FeatureAdded>>
+-> Power-ups ⚡
+    <<addFeature("powerups")>>
+    <<jump FeatureAdded>>
+-> Timer pressure ⏱️
+    <<addFeature("timer")>>
+    <<jump FeatureAdded>>
+-> Special blocks 💎
+    <<addFeature("special-blocks")>>
+    <<jump FeatureAdded>>
+-> Level progression 📈
+    <<addFeature("levels")>>
+    <<jump FeatureAdded>>
+-> Everything! 🎯
+    <<addFeature("puzzle-complete")>>
+    <<jump AllFeaturesAdded>>
+===
+
+title: RacingFeatures
+---
+<<set $mood to "speedy">>
+Pixel: Let's turbocharge your racing game! Pick your upgrade! 🏎️
+-> Nitro boost! 🚀
+    <<addFeature("nitro")>>
+    <<jump FeatureAdded>>
+-> Drifting mechanics 🏁
+    <<addFeature("drift")>>
+    <<jump FeatureAdded>>
+-> AI opponents 🤖
+    <<addFeature("ai-racers")>>
+    <<jump FeatureAdded>>
+-> Track obstacles 🚧
+    <<addFeature("obstacles")>>
+    <<jump FeatureAdded>>
+-> Lap times ⏱️
+    <<addFeature("lap-timer")>>
+    <<jump FeatureAdded>>
+-> Full package! 🏆
+    <<addFeature("racing-complete")>>
+    <<jump AllFeaturesAdded>>
+===
+
+title: AdventureFeatures
+---
+<<set $mood to "adventurous">>
+Pixel: Every adventure needs epic features! What calls to you? 🗺️
+-> Inventory system 🎒
+    <<addFeature("inventory")>>
+    <<jump FeatureAdded>>
+-> Dialog system 💬
+    <<addFeature("dialogue")>>
+    <<jump FeatureAdded>>
+-> Quest tracker 📜
+    <<addFeature("quests")>>
+    <<jump FeatureAdded>>
+-> Combat system ⚔️
+    <<addFeature("combat")>>
+    <<jump FeatureAdded>>
+-> Map system 🗺️
+    <<addFeature("minimap")>>
+    <<jump FeatureAdded>>
+-> Full RPG! 🎭
+    <<addFeature("adventure-complete")>>
+    <<jump AllFeaturesAdded>>
+===
+
+title: GeneralFeatures
+---
+<<set $mood to "creative">>
+Pixel: Let's browse all the cool features we can add! 🎨
+-> Scoring system 🏆
+    <<addFeature("scoring")>>
+    <<jump FeatureAdded>>
+-> Save/Load game 💾
+    <<addFeature("save-system")>>
+    <<jump FeatureAdded>>
+-> Particle effects ✨
+    <<addFeature("particles")>>
+    <<jump FeatureAdded>>
+-> Sound effects 🔊
+    <<addFeature("sound")>>
+    <<jump FeatureAdded>>
+-> Achievements 🏅
+    <<addFeature("achievements")>>
+    <<jump FeatureAdded>>
+-> Settings menu ⚙️
+    <<addFeature("settings")>>
+    <<jump FeatureAdded>>
+===
+
+title: FeatureAdded
+---
+<<set $mood to "proud">>
+Pixel: Feature installed! Your game just got {$lastFeature} more awesome! ✨
+<<if $skillLevel == "beginner">>
+    Pixel: I've added helpful comments explaining how this feature works!
+<<endif>>
+-> Add another feature! ➕
+    <<jump MoreFeatures>>
+-> Test it out! ▶️
+    <<testFeature($lastFeature)>>
+    <<jump TestingFeature>>
+-> Show me the code 👩‍💻
+    <<showFeatureCode($lastFeature)>>
+    <<jump CodeExplanation>>
+-> That's enough! ✅
+    <<jump FeaturesComplete>>
+===
+
+title: MoreFeatures
+---
+<<set $mood to "helpful">>
+Pixel: More features = more fun! What else should we add? 🎮
+<<if $selectedGenre == "platformer">>
+    <<jump PlatformerFeatures>>
+<<elseif $selectedGenre == "puzzle">>
+    <<jump PuzzleFeatures>>
+<<elseif $selectedGenre == "racing">>
+    <<jump RacingFeatures>>
+<<elseif $selectedGenre == "adventure">>
+    <<jump AdventureFeatures>>
+<<else>>
+    <<jump GeneralFeatures>>
+<<endif>>
+===
+
+title: TestingFeature
+---
+<<set $mood to "testing">>
+Pixel: Testing the {$lastFeature} feature... 🧪
+<<wait 1>>
+Pixel: It works perfectly! Try it yourself - {$featureTestInstructions}
+-> Awesome! Add more! 🎯
+    <<jump MoreFeatures>>
+-> Let me customize it 🔧
+    <<jump CustomizeFeature>>
+-> Continue building 🏗️
+    <<jump FeaturesComplete>>
+===
+
+title: CustomizeFeature
+---
+<<set $mood to "technical">>
+Pixel: Let's tweak the {$lastFeature} settings! What do you want to adjust?
+<<if $lastFeature == "double-jump">>
+    -> Jump height 📏
+        <<adjustSetting("jump-height")>>
+    -> Jump count 🔢
+        <<adjustSetting("jump-count")>>
+    -> Jump speed ⚡
+        <<adjustSetting("jump-speed")>>
+<<elseif $lastFeature == "enemies">>
+    -> Enemy speed 🏃
+        <<adjustSetting("enemy-speed")>>
+    -> Enemy health ❤️
+        <<adjustSetting("enemy-health")>>
+    -> Spawn rate 📊
+        <<adjustSetting("spawn-rate")>>
+<<else>>
+    -> Default settings
+        <<jump FeatureCustomized>>
+<<endif>>
+<<jump FeatureCustomized>>
+===
+
+title: FeatureCustomized
+---
+<<set $mood to "satisfied">>
+Pixel: Perfect! The {$lastFeature} is now customized exactly how you want it! 
+-> Test again ▶️
+    <<testFeature($lastFeature)>>
+    <<jump TestingFeature>>
+-> Add more features 
+    <<jump MoreFeatures>>
+-> All done! ✅
+    <<jump FeaturesComplete>>
+===
+
+title: AllFeaturesAdded
+---
+<<set $mood to "celebrating">>
+Pixel: WOW! Full feature pack activated! Your game is LOADED with awesome! 🎉
+Pixel: You've got:
+<<listAddedFeatures()>>
+Pixel: This is going to be EPIC!
+-> Let's test everything! ▶️
+    <<runGame()>>
+    <<jump GameTesting>>
+-> Show me all the code 📝
+    <<showAllCode()>>
+-> I'm ready to polish! ✨
+    <<jump FeaturesComplete>>
+===
+
+title: CodeExplanation
+---
+<<set $mood to "teaching">>
+Pixel: Here's how the {$lastFeature} code works:
+<<explainFeature($lastFeature)>>
+<<if $skillLevel == "beginner">>
+    Pixel: Don't worry if it looks complex - I'll help you understand each part!
+<<elseif $skillLevel == "pro">>
+    Pixel: Feel free to modify this however you like - the architecture is flexible!
+<<endif>>
+-> I get it! 💡
+    <<jump FeatureAdded>>
+-> Explain more 🤔
+    <<detailedExplanation($lastFeature)>>
+    <<jump DetailedCodeExplanation>>
+-> Let me modify it 🛠️
+    <<openEditor($lastFeature)>>
+===
+
+title: DetailedCodeExplanation
+---
+<<set $mood to "patient">>
+Pixel: Let me break it down step by step:
+<<stepByStepExplanation($lastFeature)>>
+Pixel: Makes sense? Remember, you learn by doing!
+-> Crystal clear! 💎
+    <<jump FeatureAdded>>
+-> One more time... 🔄
+    <<jump CodeExplanation>>
+===
+
+title: GameTesting
+---
+<<set $mood to "excited">>
+Pixel: Your game is running! How does it feel? 🎮
+-> It's amazing! 🤩
+    <<jump FeaturesComplete>>
+-> Something's not right... 🤔
+    <<jump Debugging>>
+-> I want to change... 🔧
+    <<jump QuickAdjustments>>
+===
+
+title: Debugging
+---
+<<set $mood to "helpful">>
+Pixel: No worries! Debugging is part of the process! What's happening?
+-> Game won't start ❌
+    <<debugIssue("startup")>>
+    <<jump IssueFixed>>
+-> Controls aren't working 🎮
+    <<debugIssue("controls")>>
+    <<jump IssueFixed>>
+-> Graphics are glitchy 🖼️
+    <<debugIssue("graphics")>>
+    <<jump IssueFixed>>
+-> Something else... 
+    <<jump CustomDebug>>
+===
+
+title: IssueFixed
+---
+<<set $mood to "relieved">>
+Pixel: Fixed it! The {$lastIssue} issue is resolved! Try it now!
+-> Perfect! ✅
+    <<jump FeaturesComplete>>
+-> Still having issues...
+    <<jump Debugging>>
+===
+
+title: QuickAdjustments
+---
+<<set $mood to "flexible">>
+Pixel: Quick tweaks coming up! What needs adjusting?
+-> Game speed ⚡
+    <<adjustGameSpeed()>>
+-> Difficulty 🎯
+    <<adjustDifficulty()>>
+-> Colors/theme 🎨
+    <<adjustTheme()>>
+-> Back to features
+    <<jump MoreFeatures>>
+===
+
+title: FeaturesComplete
+---
+<<set $mood to "proud">>
+Pixel: Your game is looking INCREDIBLE, {$playerName}! 🌟
+Pixel: You've successfully added {$featureCount} features!
+<<if $skillLevel == "beginner">>
+    Pixel: And you did it all yourself! You're learning so fast!
+<<endif>>
+-> Polish and finalize! ✨
+    <<jump ../export-share/ExportOptions>>
+-> Add final touches 🎨
+    <<jump FinalTouches>>
+-> Keep building! 🏗️
+    <<jump MoreFeatures>>
+===
+
+title: FinalTouches
+---
+<<set $mood to "detail-oriented">>
+Pixel: Let's add those finishing touches that make a game memorable!
+-> Title screen 🎬
+    <<addFeature("title-screen")>>
+    <<jump FeatureAdded>>
+-> Game over screen 💀
+    <<addFeature("game-over")>>
+    <<jump FeatureAdded>>
+-> Background music 🎵
+    <<addFeature("music")>>
+    <<jump FeatureAdded>>
+-> Credits page 📜
+    <<addFeature("credits")>>
+    <<jump FeatureAdded>>
+-> All polished! ✨
+    <<jump ../export-share/ExportOptions>>
+===
+
+title: CustomDebug
+---
+<<set $mood to "investigative">>
+Pixel: Describe the issue and I'll help track it down! 🔍
+-> Enter description
+    <<set $issueDescription to "{input}">>
+    <<analyzeIssue($issueDescription)>>
+    <<jump IssueAnalysis>>
+===
+
+title: IssueAnalysis
+---
+<<set $mood to "solving">>
+Pixel: Based on your description, I think the problem is: {$analyzedIssue}
+Pixel: Here's the fix:
+<<showFix($analyzedIssue)>>
+-> That worked! ✅
+    <<jump FeaturesComplete>>
+-> Still not working...
+    <<jump ManualDebug>>
+===
+
+title: ManualDebug
+---
+<<set $mood to "determined">>
+Pixel: Let's debug this together step by step!
+Pixel: I'll add some debug output to help us find the issue...
+<<addDebugMode()>>
+-> Found it! 💡
+    <<jump FeaturesComplete>>
+===
