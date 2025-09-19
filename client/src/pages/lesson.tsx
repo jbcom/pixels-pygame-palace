@@ -11,6 +11,7 @@ import LessonIntroModal from "@/components/lesson-intro-modal";
 import type { Lesson, UserProgress } from "@shared/schema";
 import { usePyodide } from "@/hooks/use-pyodide";
 import { createPythonRunner, type PythonRunner } from "@/lib/python/runner";
+import { gradeCode, type GradingContext } from "@/lib/grading";
 
 export default function LessonPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -39,78 +40,6 @@ export default function LessonPage() {
     });
   }, [pyodide, executeWithEnhancedErrors, isEnhancedReady]);
 
-  // Rule-based grading engine
-  const runRuleBasedGrading = async (test: any, actualOutput: string): Promise<{
-    passed: boolean;
-    feedback: string;
-    errors: string[];
-  }> => {
-    console.log("🔍 Running rule-based grading with:", { 
-      hasAstRules: !!test.astRules, 
-      hasRuntimeRules: !!test.runtimeRules,
-      astRules: test.astRules,
-      runtimeRules: test.runtimeRules 
-    });
-    
-    const errors: string[] = [];
-    let allPassed = true;
-
-    try {
-      // Phase A: Parse Python AST for syntax validation
-      if (test.astRules) {
-        console.log("📋 Running AST validation...");
-        const astResult = await parseAndValidateAST(code, test.astRules);
-        console.log("📋 AST validation result:", astResult);
-        
-        if (!astResult.passed) {
-          return {
-            passed: false,
-            feedback: astResult.feedback,
-            errors: astResult.errors
-          };
-        }
-      } else {
-        console.log("⚠️ No AST rules provided for rule-based test");
-      }
-
-      // Phase C: Runtime behavior validation
-      if (test.runtimeRules) {
-        console.log("🏃 Running runtime validation...");
-        const runtimeResult = await validateRuntimeBehavior(actualOutput, test.runtimeRules, test.input);
-        console.log("🏃 Runtime validation result:", runtimeResult);
-        
-        if (!runtimeResult.passed) {
-          allPassed = false;
-          errors.push(...runtimeResult.errors);
-        }
-      } else {
-        console.log("ℹ️ No runtime rules provided for rule-based test");
-      }
-
-      if (allPassed) {
-        console.log("✅ All rule-based validations passed!");
-        return {
-          passed: true,
-          feedback: "✅ Excellent! Your code demonstrates the programming concepts correctly.",
-          errors: []
-        };
-      } else {
-        console.log("❌ Some rule-based validations failed:", errors);
-        return {
-          passed: false,
-          feedback: "❌ Your code runs but doesn't meet all the requirements. " + (Array.isArray(errors) ? errors.join(" ") : "Unknown validation errors"),
-          errors: Array.isArray(errors) ? errors : []
-        };
-      }
-    } catch (error) {
-      console.error("💥 Error during rule validation:", error);
-      return {
-        passed: false,
-        feedback: "Error during rule validation: " + error,
-        errors: [String(error)]
-      };
-    }
-  };
 
   // Phase A: Parse and validate Python AST
   const parseAndValidateAST = async (code: string, astRules?: any): Promise<{
@@ -330,54 +259,6 @@ result
     }
   };
 
-  // Phase C: Validate runtime behavior
-  const validateRuntimeBehavior = async (actualOutput: string, runtimeRules?: any, testInput?: string): Promise<{
-    passed: boolean;
-    errors: string[];
-  }> => {
-    if (!runtimeRules) {
-      return { passed: true, errors: [] };
-    }
-
-    const errors: string[] = [];
-
-    // Check if output contains required strings
-    if (runtimeRules.outputContains) {
-      for (const required of runtimeRules.outputContains) {
-        if (!actualOutput.includes(required)) {
-          errors.push(`Output should contain "${required}"`);
-        }
-      }
-    }
-
-    // Check if output matches pattern
-    if (runtimeRules.outputMatches) {
-      const regex = new RegExp(runtimeRules.outputMatches);
-      if (!regex.test(actualOutput)) {
-        errors.push(`Output should match pattern: ${runtimeRules.outputMatches}`);
-      }
-    }
-
-    // Check if output includes user input (for interactive programs)
-    if (runtimeRules.outputIncludesInput && testInput) {
-      const inputLines = testInput.split('\n');
-      let allInputsIncluded = true;
-      for (const inputLine of inputLines) {
-        if (inputLine.trim() && !actualOutput.includes(inputLine.trim())) {
-          allInputsIncluded = false;
-          break;
-        }
-      }
-      if (!allInputsIncluded) {
-        errors.push("Output should include the user's input");
-      }
-    }
-
-    return {
-      passed: errors.length === 0,
-      errors
-    };
-  };
 
   const { data: lesson, isLoading: lessonLoading } = useQuery<Lesson>({
     queryKey: ["/api/lessons", lessonId],
@@ -480,67 +361,6 @@ result
     }
   }, [progress, lesson]);
 
-  // Fallback basic execution for when enhanced system isn't ready
-  const executeCodeBasic = async (inputValues?: string, runAutoGrading = false) => {
-    if (!pyodide || !code.trim()) return;
-
-    try {
-      // Basic execution with simple error capture and proper restoration
-      pyodide.runPython(`
-        import sys
-        import io
-        # Capture original streams
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-        # Redirect to StringIO for capture
-        sys.stdout = io.StringIO()
-        sys.stderr = io.StringIO()
-      `);
-
-      let stdout = '';
-      let stderr = '';
-      
-      try {
-        if (inputValues && inputValues.trim()) {
-          pyodide.runPython(`set_input_values_from_js("${inputValues.replace(/"/g, '\\"')}")`);
-        } else {
-          pyodide.runPython(`set_input_values_from_js("")`);
-        }
-
-        pyodide.runPython(code);
-
-        stdout = pyodide.runPython("sys.stdout.getvalue()");
-        stderr = pyodide.runPython("sys.stderr.getvalue()");
-        
-      } finally {
-        // CRITICAL: Always restore original streams to prevent pollution
-        pyodide.runPython(`
-          sys.stdout = original_stdout
-          sys.stderr = original_stderr
-        `);
-      }
-
-      if (stderr) {
-        setError(stderr);
-        if (runAutoGrading) {
-          setGradingResult({
-            passed: false,
-            feedback: "Your code has an error. Please fix it before checking.",
-            actualOutput: stderr
-          });
-        }
-      } else {
-        setOutput(stdout || "Code executed successfully!");
-        if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
-          // Continue with auto-grading logic...
-          console.log("Basic auto-grading would continue here");
-        }
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(errorMessage);
-    }
-  };
 
   const executeCode = async (inputValues?: string, runAutoGrading = false) => {
     if (!pythonRunner || !code.trim()) return;
@@ -548,9 +368,6 @@ result
     setError("");
     setOutput("");
     setGradingResult(null);
-
-    // Temporarily disable auto-grading to fix syntax issues - will be re-enabled after modularization
-    const enableAutoGrading = false; // TODO: Re-enable after extracting grading logic
 
     try {
       // Use PythonRunner for execution
@@ -561,7 +378,7 @@ result
 
       if (result.error) {
         setError(result.error);
-        if (enableAutoGrading && runAutoGrading) {
+        if (runAutoGrading) {
           setGradingResult({
             passed: false,
             feedback: "Your code has an error. Please fix it before checking.",
@@ -574,9 +391,45 @@ result
       // Success case - code executed without errors
       setOutput(result.output);
         
-      // TODO: Auto-grading temporarily disabled - will be re-enabled after modularization
-      if (enableAutoGrading && runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
-        console.log("Auto-grading temporarily disabled during modularization");
+      // Run auto-grading if requested and step has tests
+      if (runAutoGrading && currentStep && currentStep.tests && currentStep.tests.length > 0) {
+        try {
+          const gradingContext: GradingContext = {
+            code,
+            step: currentStep,
+            input: inputValues,
+            runner: pythonRunner,
+            pyodide
+          };
+
+          // Pass pre-execution result to avoid double execution
+          const gradeResult = await gradeCode(gradingContext, result);
+          setGradingResult({
+            passed: gradeResult.passed,
+            feedback: gradeResult.feedback,
+            expectedOutput: gradeResult.expectedOutput,
+            actualOutput: gradeResult.actualOutput
+          });
+
+          // If all tests pass, advance to next step automatically
+          if (gradeResult.passed) {
+            updateProgressMutation.mutate({ 
+              code,
+              currentStep: Math.max(currentStepIndex + 1, (progress?.currentStep || 0))
+            });
+          } else {
+            // Still save the code even if tests fail
+            updateProgressMutation.mutate({ code });
+          }
+        } catch (gradingError) {
+          console.error("Grading error:", gradingError);
+          setGradingResult({
+            passed: false,
+            feedback: `Grading failed: ${gradingError instanceof Error ? gradingError.message : String(gradingError)}`,
+            actualOutput: result.output
+          });
+          updateProgressMutation.mutate({ code });
+        }
       } else {
         // Update progress with current code (regular run without grading)
         updateProgressMutation.mutate({ code });
@@ -585,7 +438,7 @@ result
       console.error("Python execution error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while executing the code.";
       setError(errorMessage);
-      if (enableAutoGrading && runAutoGrading) {
+      if (runAutoGrading) {
         setGradingResult({
           passed: false,
           feedback: "Your code has an error. Please fix it before checking.",
@@ -595,9 +448,6 @@ result
     }
   };
 
-  const executeCodeBackup = async (inputValues?: string, runAutoGrading = false) => {
-    return executeCodeBasic(inputValues, runAutoGrading);
-  };
 
   const nextStep = () => {
     if (!lesson || currentStepIndex >= lesson.content.steps.length - 1) return;
