@@ -167,15 +167,19 @@ Pixel: Perfect! I've calibrated my circuits to match your style!
 <<else>>
     Pixel: I've got the perfect starting point for your skill level!
 <<endif>>
-Pixel: Ready to create your first game, {$playerName}? 
--> Let's code! 💻
-    <<set $onboardingComplete to true>>
-    <<saveProfile()>>
-    <<jump ../game-selection/GameSelection>>
--> Show me around first 🏛️
-    <<jump InterfaceTour>>
--> I need a moment ⏸️
-    <<jump TakeBreak>>
+Pixel: So {$playerName}, what brings you to the Palace today? 🏰
+-> I want to make a game! 🎮
+    <<set $userIntent to "create">>
+    <<jump GameCreationPath>>
+-> I want to learn Python first 🐍
+    <<set $userIntent to "learn">>
+    <<jump LearningPathIntro>>
+-> Show me what others have made 🌟
+    <<set $userIntent to "explore">>
+    <<jump GalleryTourIntro>>
+-> I just want to explore 🗺️
+    <<set $userIntent to "explore">>
+    <<jump ExplorePath>>
 ===
 
 title: InterfaceTour
@@ -186,10 +190,8 @@ Pixel: On the left, you've got the code editor - that's where the magic happens!
 Pixel: The right panel is your game canvas - watch your code come to life in real-time!
 Pixel: Down below, that's the console - it'll tell you if something's not working right.
 Pixel: And I'm always here in the corner if you need me! Just click my icon! 
--> Got it! Let's build! 🚀
-    <<set $onboardingComplete to true>>
-    <<saveProfile()>>
-    <<jump ../game-selection/GameSelection>>
+-> Got it! What's next? 🚀
+    <<jump ReadyToStart>>
 -> Tell me more about Python 🐍
     <<jump PythonIntro>>
 ===
@@ -230,7 +232,51 @@ Pixel: No rush at all! I'll be here whenever you're ready!
 Pixel: Feel free to explore the interface or check out the gallery for inspiration!
 Pixel: Just click my icon when you want to continue! 💜
 -> Actually, let's start now!
-    <<set $onboardingComplete to true>>
-    <<saveProfile()>>
-    <<jump ../game-selection/GameSelection>>
+    <<jump ReadyToStart>>
+===
+
+title: GameCreationPath
+---
+<<set $mood to "excited">>
+Pixel: AWESOME! Let's create something amazing together! 🎮✨
+Pixel: I'll guide you step by step, no coding experience needed!
+<<jump ../game-creation/GameCreation>>
+===
+
+title: LearningPathIntro  
+---
+<<set $mood to "teaching">>
+Pixel: Smart choice! Understanding Python will unlock unlimited creative potential! 📚
+Pixel: Let me be your guide through the world of code!
+<<jump ../learning-path/LearningPath>>
+===
+
+title: GalleryTourIntro
+---
+<<set $mood to "showing">>
+Pixel: Great idea! Seeing what's possible is super inspiring! 🎨
+Pixel: Let me show you some incredible games created by other students!
+<<jump ../gallery-tour/GalleryTour>>
+===
+
+title: ExplorePath
+---
+<<set $mood to "welcoming">>
+Pixel: Perfect! Take your time exploring the Palace! 🏰
+Pixel: The interface has lots of cool features to discover.
+Pixel: Would you like me to give you a quick tour, or do you prefer exploring on your own?
+-> Give me the tour! 🎯
+    <<jump InterfaceTour>>
+-> I'll explore myself 🔍
+    <<jump SelfExploration>>
+===
+
+title: SelfExploration
+---
+<<set $mood to "available">>
+Pixel: Go ahead and explore! I'll be right here if you need anything!
+Pixel: Just click my icon or say "Hey Pixel" when you want to chat! 💜
+<<set $onboardingComplete to true>>
+<<saveProfile()>>
+<<minimizePixel()>>
 ===
