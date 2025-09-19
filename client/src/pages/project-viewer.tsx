@@ -91,6 +91,7 @@ export default function ProjectViewer() {
           setOutput('🎮 Pygame environment initialized - starting project...\n\n');
         }
       }
+    } // close isPygameProject block
 
     try {
       // Set up input values if provided
