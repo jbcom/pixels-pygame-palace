@@ -1,0 +1,276 @@
+title: ExportOptions
+---
+<<set $mood to "celebrating">>
+Pixel: {$playerName}, your game is COMPLETE! This is a huge achievement! 🎊
+Pixel: You've created something amazing from scratch!
+<<calculateStats()>>
+Pixel: Game stats: {$linesOfCode} lines of code, {$featureCount} features, 100% awesome! 
+-> Share with the world! 🌍
+    <<jump PublishGame>>
+-> Save to my computer 💾
+    <<jump DownloadGame>>
+-> Keep it private 🔒
+    <<jump SavePrivate>>
+-> Add more features! ➕
+    <<jump ../feature-selection/MoreFeatures>>
+===
+
+title: PublishGame
+---
+<<set $mood to "excited">>
+Pixel: Let's share your creation with the Pygame Academy community! 🚀
+Pixel: First, let's give your game an awesome title!
+-> Enter game title
+    <<set $gameTitle to "{input}">>
+    <<jump GameDescription>>
+===
+
+title: GameDescription
+---
+<<set $mood to "creative">>
+Pixel: "{$gameTitle}" - I LOVE IT! Now, describe your game in a few words:
+-> Enter description
+    <<set $gameDescription to "{input}">>
+    <<jump ChooseThumbnail>>
+===
+
+title: ChooseThumbnail
+---
+<<set $mood to "artistic">>
+Pixel: Let's pick a thumbnail that'll make everyone want to play!
+-> Auto-generate from game 📸
+    <<generateThumbnail()>>
+    <<jump ThumbnailReady>>
+-> Use a screenshot 🖼️
+    <<captureScreenshot()>>
+    <<jump ThumbnailReady>>
+-> I'll upload one 📤
+    <<requestUpload()>>
+    <<jump ThumbnailReady>>
+-> Use default ⭐
+    <<useDefaultThumbnail()>>
+    <<jump ThumbnailReady>>
+===
+
+title: ThumbnailReady
+---
+<<set $mood to "satisfied">>
+Pixel: Perfect! Your game card looks professional! 
+<<showGameCard($gameTitle, $gameDescription, $thumbnail)>>
+-> Publish it! 🚀
+    <<publishToGallery()>>
+    <<jump PublishSuccess>>
+-> Let me edit... ✏️
+    <<jump PublishGame>>
+-> Actually, keep it private
+    <<jump SavePrivate>>
+===
+
+title: PublishSuccess
+---
+<<set $mood to "celebrating">>
+Pixel: 🎉 YOUR GAME IS LIVE! 🎉
+Pixel: "{$gameTitle}" is now in the Pygame Academy Gallery!
+<<generateShareLink()>>
+Pixel: Share link: {$shareLink}
+Pixel: Your friends can play it right in their browser!
+-> View in gallery 🖼️
+    <<navigate("gallery")>>
+-> Share on social 📱
+    <<jump SocialShare>>
+-> Create another game! 🎮
+    <<jump NewGame>>
+-> I'm done for now 😊
+    <<jump Goodbye>>
+===
+
+title: SocialShare
+---
+<<set $mood to "social">>
+Pixel: Let's tell the world about your game! Where should we share?
+-> Copy share message 📋
+    <<copyShareMessage()>>
+    Pixel: Copied! Message: "Check out {$gameTitle} - my new game made with Pygame Academy! {$shareLink} 🎮"
+-> Generate social card 🎴
+    <<generateSocialCard()>>
+    Pixel: Social media card created and downloaded!
+-> Email to friend 📧
+    <<prepareEmail()>>
+    Pixel: Email template copied to clipboard!
+-> Done sharing ✅
+    <<jump PublishSuccess>>
+===
+
+title: DownloadGame
+---
+<<set $mood to "helpful">>
+Pixel: Let's package your game for download! Choose your format:
+-> Python file (.py) 🐍
+    <<packagePython()>>
+    <<jump DownloadReady>>
+-> Web version (HTML5) 🌐
+    <<packageWeb()>>
+    <<jump DownloadReady>>
+-> Executable (.exe) 💻
+    <<packageExecutable()>>
+    <<jump DownloadReady>>
+-> Project folder (ZIP) 📁
+    <<packageProject()>>
+    <<jump DownloadReady>>
+===
+
+title: DownloadReady
+---
+<<set $mood to "accomplished">>
+Pixel: Your game is packaged and ready! 📦
+<<startDownload()>>
+Pixel: Download started! You can run this anywhere!
+<<if $packageType == "python">>
+    Pixel: Just need Python and Pygame installed to run it!
+<<elseif $packageType == "web">>
+    Pixel: Open the HTML file in any browser to play!
+<<elseif $packageType == "executable">>
+    Pixel: Double-click to run - no installation needed!
+<<endif>>
+-> Also publish online 🌍
+    <<jump PublishGame>>
+-> Create another game 🎮
+    <<jump NewGame>>
+-> That's all! 😊
+    <<jump Goodbye>>
+===
+
+title: SavePrivate
+---
+<<set $mood to "understanding">>
+Pixel: Your game is saved privately! Only you can see and edit it! 🔒
+Pixel: You can always publish it later when you're ready!
+<<saveToProfile()>>
+-> Continue editing ✏️
+    // Return to editor
+-> Download a copy 💾
+    <<jump DownloadGame>>
+-> Start new game 🆕
+    <<jump NewGame>>
+-> I'm done 👋
+    <<jump Goodbye>>
+===
+
+title: NewGame
+---
+<<set $mood to "energetic">>
+Pixel: Already ready for the next adventure? You're unstoppable! 🚀
+-> Yes! New game! 🎮
+    <<resetProject()>>
+    <<jump ../game-selection/GameSelection>>
+-> Actually, let me polish this one
+    <<jump ../feature-selection/MoreFeatures>>
+-> I'll take a break 😌
+    <<jump Goodbye>>
+===
+
+title: Goodbye
+---
+<<set $mood to "grateful">>
+Pixel: {$playerName}, you've been AMAZING today! 🌟
+<<if $gamesCreated == 1>>
+    Pixel: You created your first game! That's a huge milestone!
+<<else>>
+    Pixel: You've created {$gamesCreated} games! You're on fire!
+<<endif>>
+Pixel: Remember, every expert was once a beginner who never gave up!
+Pixel: I'll be here whenever you're ready to create more magic! 💜
+-> One more game! 🎮
+    <<jump NewGame>>
+-> See you later, Pixel! 👋
+    <<set $mood to "waving">>
+    Pixel: See you soon, {$playerName}! Keep being awesome! ✨
+    // Close wizard
+===
+
+title: ShareAchievement
+---
+<<set $mood to "proud">>
+Pixel: You've unlocked an achievement! 🏆
+<<showAchievement($achievement)>>
+-> Share it! 📢
+    <<shareAchievement()>>
+    Pixel: Achievement shared! Your friends will be impressed!
+-> Keep it quiet 🤫
+    Pixel: Your secret is safe with me! 😉
+===
+
+title: CommunityFeatures
+---
+<<set $mood to "community">>
+Pixel: Want to see what other creators are building? 
+-> Browse gallery 🖼️
+    <<navigate("gallery")>>
+-> Join a game jam 🏃
+    <<showGameJams()>>
+-> View leaderboards 🏆
+    <<showLeaderboards()>>
+-> Back to my game
+    <<jump ExportOptions>>
+===
+
+title: GameJamInfo
+---
+<<set $mood to "competitive">>
+Pixel: Game jams are timed challenges where you build games around a theme!
+Pixel: Current jam: "{$currentJamTheme}" - {$timeRemaining} left!
+-> Enter the jam! 🎯
+    <<enterGameJam()>>
+    <<jump JamEntered>>
+-> Maybe later
+    <<jump CommunityFeatures>>
+===
+
+title: JamEntered
+---
+<<set $mood to "determined">>
+Pixel: You're in! Your game will be automatically submitted when you publish!
+Pixel: Pro tip: Games that match the theme best often win! 
+-> Let's build! 🏗️
+    <<jump ../game-selection/GameSelection>>
+===
+
+title: TechnicalExport
+---
+<<set $mood to "technical">>
+Pixel: Advanced export options for the pro developer! 🛠️
+-> GitHub repository 🐙
+    <<exportToGithub()>>
+    <<jump GithubExported>>
+-> Replit project 💻
+    <<exportToReplit()>>
+    <<jump ReplitExported>>
+-> CodePen 🖊️
+    <<exportToCodePen()>>
+    <<jump CodePenExported>>
+-> Raw code 📝
+    <<showRawCode()>>
+===
+
+title: GithubExported
+---
+<<set $mood to "professional">>
+Pixel: Your game is now a GitHub repository! 
+Pixel: I've included a README, .gitignore, and requirements.txt!
+Pixel: Repository: {$githubUrl}
+-> Awesome! ✨
+    <<jump ExportOptions>>
+===
+
+title: SuccessStory
+---
+<<set $mood to "inspiring">>
+Pixel: {$playerName}, let me tell you something...
+Pixel: You just did what many people only dream about - you CREATED A GAME!
+Pixel: From blank canvas to working game. That's real programming! 
+Pixel: You're officially a game developer now! 🎓
+-> I feel proud! 😊
+    <<set $mood to "celebrating">>
+    Pixel: You SHOULD! This is just the beginning of your journey!
+    <<jump ExportOptions>>
+===

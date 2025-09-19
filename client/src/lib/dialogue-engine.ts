@@ -32,9 +32,37 @@ export class DialogueEngine {
   private onAction: DialogueCallback | null = null;
   private dialogueFiles: Map<string, string> = new Map();
   private currentFlow: string = '';
+  private context: Record<string, any> = {};
+  private flowStack: string[] = [];
+  private currentMood: string = 'happy';
+  private typingSpeed: number = 30;
 
   constructor() {
     this.state = this.loadState();
+    this.initializeContext();
+  }
+
+  // Initialize conversation context
+  private initializeContext(): void {
+    const profile = getUserProfile();
+    this.context = {
+      playerName: profile?.name || '',
+      skillLevel: profile?.skillLevel || 'beginner',
+      preferredGenres: profile?.preferredGenres || [],
+      currentProject: profile?.currentProject || null,
+      mood: 'welcoming',
+      lastInteraction: new Date(),
+      sessionStarted: new Date(),
+      featuresAdded: [],
+      assetsLoaded: [],
+      achievementsUnlocked: [],
+      helpRequests: 0,
+      gamesCreated: 0,
+      enthusiasm: 'medium',
+      supportLevel: 'moderate',
+      learningStyle: 'hands-on',
+      preferredStyle: 'mixed'
+    };
   }
 
   // Load saved state from localStorage
@@ -74,26 +102,71 @@ export class DialogueEngine {
     }
   }
 
-  // Load a dialogue file
-  async loadDialogue(flowName: string): Promise<boolean> {
+  // Load a dialogue file with flow navigation support
+  async loadDialogue(flowName: string, pushToStack: boolean = true): Promise<boolean> {
     try {
-      const response = await fetch(`${DIALOGUE_BASE_PATH}${flowName}.yarn`);
-      if (!response.ok) {
-        throw new Error(`Failed to load dialogue: ${flowName}`);
+      // Check if we already have this dialogue cached
+      let content = this.dialogueFiles.get(flowName);
+      
+      if (!content) {
+        const response = await fetch(`${DIALOGUE_BASE_PATH}${flowName}.yarn`);
+        if (!response.ok) {
+          console.error(`Failed to fetch dialogue: ${flowName}`);
+          // Fallback to a default flow if needed
+          return await this.loadDialogue('welcome');
+        }
+        content = await response.text();
+        this.dialogueFiles.set(flowName, content);
       }
       
-      const content = await response.text();
-      this.dialogueFiles.set(flowName, content);
+      if (pushToStack && this.currentFlow && this.currentFlow !== flowName) {
+        this.flowStack.push(this.currentFlow);
+      }
+      
       this.currentFlow = flowName;
       
       // Initialize yarn-bound runner
       await this.initializeRunner(content);
+      
+      // Update context
+      this.updateContext({ currentFlow: flowName });
       
       return true;
     } catch (error) {
       console.error(`Failed to load dialogue ${flowName}:`, error);
       return false;
     }
+  }
+
+  // Navigate back to previous flow
+  async goBack(): Promise<boolean> {
+    if (this.flowStack.length > 0) {
+      const previousFlow = this.flowStack.pop()!;
+      return await this.loadDialogue(previousFlow, false);
+    }
+    return false;
+  }
+
+  // Update conversation context
+  updateContext(updates: Record<string, any>): void {
+    this.context = { ...this.context, ...updates };
+    
+    // Sync with user profile if needed
+    if (updates.playerName || updates.skillLevel || updates.preferredGenres) {
+      const profile = getUserProfile();
+      if (profile) {
+        updateUserProfile({
+          name: updates.playerName || profile.name,
+          skillLevel: updates.skillLevel || profile.skillLevel,
+          preferredGenres: updates.preferredGenres || profile.preferredGenres
+        });
+      }
+    }
+  }
+
+  // Get current context
+  getContext(): Record<string, any> {
+    return { ...this.context };
   }
 
   // Initialize the yarn-bound runner
@@ -123,6 +196,13 @@ export class DialogueEngine {
         this.runner.variables.set('currentProject', profile.currentProject);
         this.runner.variables.set('favoriteGenre', profile.preferredGenres?.[0] || '');
       }
+      
+      // Sync context variables
+      Object.entries(this.context).forEach(([key, value]) => {
+        if (typeof value !== 'object') {
+          this.runner!.variables.set(key, value);
+        }
+      });
     } catch (error) {
       console.error('Failed to initialize runner:', error);
     }
@@ -131,6 +211,16 @@ export class DialogueEngine {
   // Register custom Yarn commands
   private registerCustomCommands(): void {
     if (!this.runner) return;
+
+    // Set mood command
+    this.runner.registerCommand('set', (variable: string, value: string) => {
+      if (variable === '$mood') {
+        this.currentMood = value;
+        this.updateContext({ mood: value });
+      }
+      this.runner!.variables.set(variable, value);
+      this.updateContext({ [variable.replace('$', '')]: value });
+    });
 
     // Navigation command
     this.runner.registerCommand('navigate', (page: string) => {
@@ -141,6 +231,10 @@ export class DialogueEngine {
 
     // Create project command
     this.runner.registerCommand('createProject', (template: string) => {
+      this.updateContext({ 
+        currentProject: template,
+        gamesCreated: this.context.gamesCreated + 1
+      });
       if (this.onAction) {
         this.onAction('createProject', { template });
       }
@@ -162,90 +256,144 @@ export class DialogueEngine {
       } else if (field === 'name') {
         createNewProfile(value, 'beginner');
       }
+      this.updateContext({ [field]: value });
     });
 
-    // Start lesson command
-    this.runner.registerCommand('startLesson', (lessonId: string) => {
-      if (this.onAction) {
-        this.onAction('startLesson', { lessonId });
+    // Save profile command
+    this.runner.registerCommand('saveProfile', () => {
+      const profile = getUserProfile();
+      if (profile) {
+        saveUserProfile(profile);
       }
     });
 
-    // Show code example
-    this.runner.registerCommand('showCodeExample', (concept: string) => {
+    // Load assets command
+    this.runner.registerCommand('loadAssets', (assetPack: string) => {
+      this.updateContext({ 
+        assetsLoaded: [...this.context.assetsLoaded, assetPack],
+        lastAssetPack: assetPack
+      });
       if (this.onAction) {
-        this.onAction('showCodeExample', { concept });
+        this.onAction('loadAssets', { assetPack });
       }
     });
 
-    // Highlight code section
+    // Add feature command
+    this.runner.registerCommand('addFeature', (feature: string) => {
+      this.updateContext({ 
+        featuresAdded: [...this.context.featuresAdded, feature],
+        lastFeature: feature,
+        featureCount: this.context.featuresAdded.length + 1
+      });
+      if (this.onAction) {
+        this.onAction('addFeature', { feature });
+      }
+    });
+
+    // Show asset grid command
+    this.runner.registerCommand('showAssetGrid', (category: string) => {
+      if (this.onAction) {
+        this.onAction('showAssetGrid', { category });
+      }
+    });
+
+    // Show code command
+    this.runner.registerCommand('showCode', (section: string) => {
+      if (this.onAction) {
+        this.onAction('showCode', { section });
+      }
+    });
+
+    // Run game command
+    this.runner.registerCommand('runGame', () => {
+      if (this.onAction) {
+        this.onAction('runGame', {});
+      }
+    });
+
+    // Jump to another flow - enhanced for cross-file navigation
+    this.runner.registerCommand('jump', async (target: string) => {
+      // Handle cross-file jumps
+      if (target.includes('/')) {
+        const parts = target.split('/');
+        const flowFile = parts[parts.length - 2];
+        const nodeName = parts[parts.length - 1] || 'Start';
+        
+        await this.loadDialogue(flowFile);
+        this.jumpToNode(nodeName);
+      } else {
+        this.jumpToNode(target);
+      }
+    });
+
+    // Wait command for pauses
+    this.runner.registerCommand('wait', (seconds: number) => {
+      // This would be handled in the UI to create a pause effect
+      if (this.onAction) {
+        this.onAction('wait', { seconds });
+      }
+    });
+
+    // Additional commands for enhanced features
+    this.runner.registerCommand('showAssetPreview', (assetPack: string) => {
+      if (this.onAction) {
+        this.onAction('showAssetPreview', { assetPack });
+      }
+    });
+
+    this.runner.registerCommand('testFeature', (feature: string) => {
+      if (this.onAction) {
+        this.onAction('testFeature', { feature });
+      }
+    });
+
     this.runner.registerCommand('highlightCode', (section: string) => {
       if (this.onAction) {
         this.onAction('highlightCode', { section });
       }
     });
 
-    // Set controls
-    this.runner.registerCommand('setControls', (controlType: string) => {
-      if (this.onAction) {
-        this.onAction('setControls', { controlType });
-      }
-    });
-
-    // Show error fix
-    this.runner.registerCommand('showErrorFix', (errorType: string) => {
-      if (this.onAction) {
-        this.onAction('showErrorFix', { errorType });
-      }
-    });
-
-    // Generate practice
-    this.runner.registerCommand('generatePractice', (difficulty: string) => {
-      if (this.onAction) {
-        this.onAction('generatePractice', { difficulty });
-      }
-    });
-
-    // Navigate to next lesson
-    this.runner.registerCommand('navigateNextLesson', () => {
-      if (this.onAction) {
-        this.onAction('navigateNextLesson', {});
-      }
-    });
-
-    // Check for errors
-    this.runner.registerCommand('checkForErrors', () => {
-      if (this.onAction) {
-        this.onAction('checkForErrors', {});
-      }
-    });
-
-    // Auto fix errors
-    this.runner.registerCommand('autoFix', () => {
-      if (this.onAction) {
-        this.onAction('autoFix', {});
-      }
-    });
-
-    // Refresh project
-    this.runner.registerCommand('refreshProject', () => {
-      if (this.onAction) {
-        this.onAction('refreshProject', {});
-      }
-    });
-
-    // Show feature code
     this.runner.registerCommand('showFeatureCode', (feature: string) => {
       if (this.onAction) {
         this.onAction('showFeatureCode', { feature });
       }
     });
 
-    // Suggest difficulty values
-    this.runner.registerCommand('suggestDifficultyValues', () => {
+    this.runner.registerCommand('explainFeature', (feature: string) => {
       if (this.onAction) {
-        this.onAction('suggestDifficultyValues', {});
+        this.onAction('explainFeature', { feature });
       }
+    });
+
+    this.runner.registerCommand('adjustSetting', (setting: string) => {
+      if (this.onAction) {
+        this.onAction('adjustSetting', { setting });
+      }
+    });
+
+    this.runner.registerCommand('debugIssue', (issueType: string) => {
+      if (this.onAction) {
+        this.onAction('debugIssue', { issueType });
+      }
+    });
+
+    this.runner.registerCommand('publishToGallery', () => {
+      if (this.onAction) {
+        this.onAction('publishToGallery', {});
+      }
+    });
+
+    this.runner.registerCommand('packageProject', () => {
+      if (this.onAction) {
+        this.onAction('packageProject', {});
+      }
+    });
+
+    this.runner.registerCommand('calculateStats', () => {
+      this.updateContext({
+        linesOfCode: Math.floor(Math.random() * 200) + 100,
+        featureCount: this.context.featuresAdded.length
+      });
     });
   }
 
@@ -266,6 +414,7 @@ export class DialogueEngine {
       
       // Mark node as visited
       this.state.visitedNodes.add(startNode);
+      this.state.currentNode = startNode;
       
       // Run the dialogue
       this.runner.startDialogue(startNode);
@@ -294,7 +443,8 @@ export class DialogueEngine {
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           role: this.detectRole(result.text),
           content: this.processText(result.text),
-          timestamp: new Date()
+          timestamp: new Date(),
+          mood: this.currentMood
         };
         
         // Check for options after this message
@@ -318,7 +468,7 @@ export class DialogueEngine {
         }
       }
 
-      // Handle command result (already processed by registered commands)
+      // Handle command result
       if ('command' in result) {
         // Commands are handled by registered handlers
         return this.getNextMessage(); // Continue to next
@@ -336,6 +486,22 @@ export class DialogueEngine {
     if (!this.runner) return null;
 
     try {
+      // Get the current options
+      const currentResult = this.runner.currentResult;
+      if (currentResult && 'options' in currentResult) {
+        const selectedOption = currentResult.options[optionIndex];
+        
+        // Create user message for the selected option
+        const userMessage: ConversationMessage = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          role: 'user',
+          content: selectedOption.text.replace(/^->\s*/, ''),
+          timestamp: new Date()
+        };
+        
+        this.state.history.push(userMessage);
+      }
+      
       // Select the option
       this.runner.choose(optionIndex);
       
@@ -347,22 +513,9 @@ export class DialogueEngine {
     }
   }
 
-  // Handle user input (for free text responses)
-  handleUserInput(input: string): ConversationMessage | null {
+  // Process user input
+  processInput(input: string): ConversationMessage | null {
     if (!this.runner) return null;
-
-    // Store input as a variable if waiting for input
-    if (this.state.waitingForInput) {
-      this.runner.variables.set(this.state.waitingForInput, input);
-      
-      // Also update user profile if it's the player name
-      if (this.state.waitingForInput === 'playerName') {
-        const profile = getUserProfile() || createNewProfile(input, 'beginner');
-        saveUserProfile(profile);
-      }
-      
-      this.state.waitingForInput = null;
-    }
 
     // Create user message
     const userMessage: ConversationMessage = {
@@ -373,10 +526,69 @@ export class DialogueEngine {
     };
     
     this.state.history.push(userMessage);
+
+    // Handle special input patterns
+    if (this.state.waitingForInput === '{input}') {
+      // Replace input placeholder in variables
+      this.runner.variables.set('input', input);
+      this.state.waitingForInput = null;
+    } else if (this.state.waitingForInput) {
+      this.runner.variables.set(this.state.waitingForInput, input);
+      
+      // Update profile for specific fields
+      if (this.state.waitingForInput === 'playerName') {
+        const profile = getUserProfile() || createNewProfile(input, 'beginner');
+        updateUserProfile({ name: input });
+        this.updateContext({ playerName: input });
+      } else if (this.state.waitingForInput === 'mascotName') {
+        updateUserProfile({ mascotName: input });
+        this.updateContext({ mascotName: input });
+      }
+      
+      this.state.waitingForInput = null;
+    }
+
     this.saveState();
 
     // Continue dialogue
     return this.getNextMessage();
+  }
+
+  // Get current mood
+  getCurrentMood(): string {
+    return this.currentMood;
+  }
+
+  // Get contextual suggestions based on current state
+  getContextualSuggestions(): string[] {
+    const suggestions: string[] = [];
+    const profile = getUserProfile();
+    
+    if (!profile || !profile.onboardingComplete) {
+      suggestions.push('Tell me about game development', 'What can I create here?', 'How do I start?');
+    } else if (this.context.currentProject) {
+      suggestions.push('Test my game', 'Add a feature', 'Change the graphics', 'I need help');
+    } else {
+      suggestions.push('Create a new game', 'Show me examples', 'Teach me something new');
+    }
+    
+    return suggestions;
+  }
+
+  // Jump to a specific node
+  jumpToNode(nodeName: string): boolean {
+    if (!this.runner) return false;
+
+    try {
+      this.state.currentNode = nodeName;
+      this.state.visitedNodes.add(nodeName);
+      this.runner.startDialogue(nodeName);
+      this.saveState();
+      return true;
+    } catch (error) {
+      console.error(`Failed to jump to node ${nodeName}:`, error);
+      return false;
+    }
   }
 
   // Detect if text is from Pixel or narrator
@@ -387,11 +599,11 @@ export class DialogueEngine {
     return 'system';
   }
 
-  // Process text to remove role prefixes
+  // Process text to remove role prefixes and replace variables
   private processText(text: string): string {
     // Remove "Pixel:" prefix if present
     if (text.toLowerCase().startsWith('pixel:')) {
-      return text.substring(6).trim();
+      text = text.substring(6).trim();
     }
     
     // Replace variable placeholders
@@ -402,33 +614,34 @@ export class DialogueEngine {
       text = text.replace(/\{\$mascotName\}/g, profile.mascotName || 'Pixel');
     }
     
+    // Replace context variables
+    Object.entries(this.context).forEach(([key, value]) => {
+      if (typeof value === 'string' || typeof value === 'number') {
+        text = text.replace(new RegExp(`\\{\\$${key}\\}`, 'g'), String(value));
+      }
+    });
+    
+    // Handle {input} placeholder
+    if (text.includes('{input}')) {
+      this.state.waitingForInput = '{input}';
+    }
+    
     return text;
   }
 
   // Get current options
   getCurrentOptions(): DialogueOption[] {
-    const lastMessage = this.state.history[this.state.history.length - 1];
-    if (lastMessage?.quickReplies) {
-      return lastMessage.quickReplies.map((text, index) => ({
-        text,
+    if (!this.runner || !this.runner.currentResult) return [];
+    
+    const result = this.runner.currentResult;
+    if ('options' in result) {
+      return result.options.map((opt: YarnDialogueOption, index: number) => ({
+        text: opt.text.replace(/^->\s*/, ''),
         index
       }));
     }
+    
     return [];
-  }
-
-  // Jump to a specific node
-  jumpToNode(nodeName: string): ConversationMessage | null {
-    if (!this.runner) return null;
-
-    try {
-      this.state.currentNode = nodeName;
-      this.runner.startDialogue(nodeName);
-      return this.getNextMessage();
-    } catch (error) {
-      console.error(`Failed to jump to node ${nodeName}:`, error);
-      return null;
-    }
   }
 
   // Get conversation history
@@ -452,6 +665,7 @@ export class DialogueEngine {
       waitingForInput: null
     };
     this.saveState();
+    this.initializeContext();
     
     if (this.runner) {
       this.runner.variables.clear();
@@ -482,11 +696,27 @@ export class DialogueEngine {
     return this.currentFlow;
   }
 
+  // Set typing speed
+  setTypingSpeed(speed: number): void {
+    this.typingSpeed = speed;
+  }
+
+  // Get typing speed
+  getTypingSpeed(): number {
+    return this.typingSpeed;
+  }
+
   // Load appropriate dialogue based on user state
   async loadAppropriateDialogue(profile: UserProfile | null): Promise<string> {
     if (!profile || !profile.onboardingComplete) {
-      await this.loadDialogue('onboarding');
-      return 'onboarding';
+      await this.loadDialogue('welcome');
+      return 'welcome';
+    }
+    
+    // Check context for last flow
+    if (this.context.currentProject) {
+      await this.loadDialogue('feature-selection');
+      return 'feature-selection';
     }
     
     // Check if returning user
@@ -495,8 +725,8 @@ export class DialogueEngine {
       return 'returning';
     }
     
-    // Default to onboarding for new users
-    await this.loadDialogue('onboarding');
-    return 'onboarding';
+    // Default to welcome for new users
+    await this.loadDialogue('welcome');
+    return 'welcome';
   }
 }

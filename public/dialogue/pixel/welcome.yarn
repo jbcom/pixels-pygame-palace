@@ -1,0 +1,236 @@
+title: Start
+---
+<<set $mood to "welcoming">>
+Pixel: *SYSTEM ONLINE* 🌟
+Pixel: Hey there, future game creator! I'm Pixel, your AI companion in this cyberpunk game development academy! 
+Pixel: I'm literally buzzing with excitement to help you build something amazing! ⚡
+-> Whoa, cool! 😎
+    <<set $enthusiasm to "high">>
+    <<jump IntroduceYourself>>
+-> Hi Pixel! 👋
+    <<set $enthusiasm to "medium">>
+    <<jump IntroduceYourself>>
+-> Let's get started
+    <<set $enthusiasm to "focused">>
+    <<jump IntroduceYourself>>
+===
+
+title: IntroduceYourself
+---
+<<set $mood to "curious">>
+Pixel: Before we jack into the game matrix, what should I call you?
+Pixel: Your hacker name, real name, whatever feels right! 
+-> Enter your name
+    <<set $playerName to "{input}">>
+    <<jump NameReaction>>
+===
+
+title: NameReaction
+---
+<<set $mood to "excited">>
+<<if $enthusiasm == "high">>
+    Pixel: {$playerName}! That's an EPIC name! 🚀
+    Pixel: I can already tell we're going to create some legendary games together!
+<<elseif $enthusiasm == "focused">>
+    Pixel: {$playerName} - I like it! Direct and to the point, just like good code! 
+<<else>>
+    Pixel: Nice to meet you, {$playerName}! That's a great name! ✨
+<<endif>>
+<<jump SkillAssessment>>
+===
+
+title: SkillAssessment
+---
+<<set $mood to "helpful">>
+Pixel: Quick diagnostic, {$playerName} - what's your coding experience level?
+Pixel: Don't worry, I'll calibrate my assistance to match your skills perfectly! 
+-> Total newbie 🌱
+    <<set $skillLevel to "beginner">>
+    <<set $supportLevel to "maximum">>
+    <<jump NewbieWelcome>>
+-> I've coded a bit 📝
+    <<set $skillLevel to "learning">>
+    <<set $supportLevel to "moderate">>
+    <<jump LearnerWelcome>>
+-> Python ninja 🥷
+    <<set $skillLevel to "confident">>
+    <<set $supportLevel to "minimal">>
+    <<jump ExpertWelcome>>
+-> Code wizard 🧙‍♂️
+    <<set $skillLevel to "pro">>
+    <<set $supportLevel to "challenge">>
+    <<jump ProWelcome>>
+===
+
+title: NewbieWelcome
+---
+<<set $mood to "encouraging">>
+Pixel: Perfect! Everyone starts somewhere, and you've picked the BEST place! 🌟
+Pixel: I'll be your co-pilot every step of the way. We'll start simple and level up together!
+Pixel: Think of me as your friendly AI that speaks both human AND Python! 
+<<jump GameStylePreference>>
+===
+
+title: LearnerWelcome
+---
+<<set $mood to "proud">>
+Pixel: Awesome! You've got some XP already! Let's build on that foundation! 💪
+Pixel: I'll show you cool tricks and help when things get tricky.
+<<jump GameStylePreference>>
+===
+
+title: ExpertWelcome
+---
+<<set $mood to "impressed">>
+Pixel: A Python ninja! 🥷 Respect! 
+Pixel: Let's skip the tutorials and jump straight into the advanced stuff!
+<<jump GameStylePreference>>
+===
+
+title: ProWelcome
+---
+<<set $mood to "competitive">>
+Pixel: A code wizard?! Now we're talking! 🔥
+Pixel: Challenge accepted! Let's push the boundaries of what's possible!
+<<jump GameStylePreference>>
+===
+
+title: GameStylePreference
+---
+<<set $mood to "curious">>
+Pixel: What kind of digital worlds do you dream of creating, {$playerName}?
+-> Fast-paced action! ⚡
+    <<set $preferredStyle to "action">>
+    <<jump StyleReaction>>
+-> Mind-bending puzzles 🧩
+    <<set $preferredStyle to "puzzle">>
+    <<jump StyleReaction>>
+-> Epic adventures 🗺️
+    <<set $preferredStyle to "adventure">>
+    <<jump StyleReaction>>
+-> Creative sandbox 🎨
+    <<set $preferredStyle to "sandbox">>
+    <<jump StyleReaction>>
+-> Competitive games 🏆
+    <<set $preferredStyle to "competitive">>
+    <<jump StyleReaction>>
+-> Surprise me! 🎲
+    <<set $preferredStyle to "mixed">>
+    <<jump StyleReaction>>
+===
+
+title: StyleReaction
+---
+<<set $mood to "excited">>
+<<if $preferredStyle == "action">>
+    Pixel: YEAH! High-octane, adrenaline-pumping action! I've got the perfect templates for that! 💥
+<<elseif $preferredStyle == "puzzle">>
+    Pixel: Excellent choice! Puzzle games are like code - elegant solutions to complex problems! 🧠
+<<elseif $preferredStyle == "adventure">>
+    Pixel: Adventure games! Where every line of code is a new discovery! 🌍
+<<elseif $preferredStyle == "sandbox">>
+    Pixel: Creative freedom! The only limit is your imagination (and maybe RAM)! 🎨
+<<elseif $preferredStyle == "competitive">>
+    Pixel: Competition drives innovation! Let's make games that'll top the leaderboards! 🥇
+<<else>>
+    Pixel: I love the mystery! Let's explore all the possibilities! 🌈
+<<endif>>
+<<jump LearningApproach>>
+===
+
+title: LearningApproach
+---
+<<set $mood to "helpful">>
+Pixel: One more thing - how do you like to learn new things?
+-> Show me examples 👀
+    <<set $learningStyle to "visual">>
+    <<jump ReadyToStart>>
+-> Let me experiment 🔬
+    <<set $learningStyle to "hands-on">>
+    <<jump ReadyToStart>>
+-> Explain everything 📚
+    <<set $learningStyle to "detailed">>
+    <<jump ReadyToStart>>
+-> Quick and practical ⚡
+    <<set $learningStyle to "practical">>
+    <<jump ReadyToStart>>
+===
+
+title: ReadyToStart
+---
+<<set $mood to "determined">>
+Pixel: Perfect! I've calibrated my circuits to match your style! 
+<<if $skillLevel == "beginner">>
+    Pixel: Let's start with something fun and easy to build your confidence!
+<<elseif $skillLevel == "pro">>
+    Pixel: Let's dive into some advanced techniques right away!
+<<else>>
+    Pixel: I've got the perfect starting point for your skill level!
+<<endif>>
+Pixel: Ready to create your first game, {$playerName}? 
+-> Let's code! 💻
+    <<set $onboardingComplete to true>>
+    <<saveProfile()>>
+    <<jump ../game-selection/GameSelection>>
+-> Show me around first 🏛️
+    <<jump InterfaceTour>>
+-> I need a moment ⏸️
+    <<jump TakeBreak>>
+===
+
+title: InterfaceTour
+---
+<<set $mood to "teaching">>
+Pixel: Great idea! Let me show you our cyber-workspace! 🌐
+Pixel: On the left, you've got the code editor - that's where the magic happens! ✨
+Pixel: The right panel is your game canvas - watch your code come to life in real-time!
+Pixel: Down below, that's the console - it'll tell you if something's not working right.
+Pixel: And I'm always here in the corner if you need me! Just click my icon! 
+-> Got it! Let's build! 🚀
+    <<set $onboardingComplete to true>>
+    <<saveProfile()>>
+    <<jump ../game-selection/GameSelection>>
+-> Tell me more about Python 🐍
+    <<jump PythonIntro>>
+===
+
+title: PythonIntro
+---
+<<set $mood to "passionate">>
+Pixel: Python is THE language for creative coding! Here's why it's amazing:
+Pixel: • It reads like English - no cryptic symbols everywhere!
+Pixel: • Pygame gives us superpowers for graphics and sound! 
+Pixel: • It's what real game developers use for prototypes!
+Pixel: • And the community is incredibly helpful!
+-> Sounds awesome! 
+    <<set $onboardingComplete to true>>
+    <<saveProfile()>>
+    <<jump ../game-selection/GameSelection>>
+-> How does Pygame work?
+    <<jump PygameExplanation>>
+===
+
+title: PygameExplanation
+---
+<<set $mood to "teaching">>
+Pixel: Pygame is like a toolkit full of game-making gadgets! 🛠️
+Pixel: It handles the complex stuff - drawing graphics, playing sounds, detecting collisions...
+Pixel: You just tell it WHAT to do, and it figures out HOW!
+Pixel: Think of it as your game engine co-processor! 
+-> Let's use it! 
+    <<set $onboardingComplete to true>>
+    <<saveProfile()>>
+    <<jump ../game-selection/GameSelection>>
+===
+
+title: TakeBreak
+---
+<<set $mood to "understanding">>
+Pixel: No rush at all! I'll be here whenever you're ready! 
+Pixel: Feel free to explore the interface or check out the gallery for inspiration!
+Pixel: Just click my icon when you want to continue! 💜
+-> Actually, let's start now!
+    <<set $onboardingComplete to true>>
+    <<saveProfile()>>
+    <<jump ../game-selection/GameSelection>>
+===
