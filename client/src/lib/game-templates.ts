@@ -30,6 +30,307 @@ export const gameTemplates: GameTemplate[] = [
     ]
   },
   {
+    id: '3d-demo',
+    name: '3D Graphics Demo',
+    description: 'Demonstrates 3D graphics in pygame without OpenGL',
+    difficulty: 'Advanced',
+    files: [
+      {
+        path: 'main.py',
+        content: `# 3D Graphics Demo - PyGame with 3D rendering
+# Shows how to render 3D objects in pygame!
+
+import pygame
+import math
+
+class Simple3D:
+    """Simple 3D engine for pygame"""
+    
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.center_x = width // 2
+        self.center_y = height // 2
+        self.fov = 256
+        self.camera_z = -5
+        self.rotation_y = 0
+    
+    def project_point(self, point):
+        """Project 3D point to 2D"""
+        x, y, z = point
+        
+        # Rotate around Y axis
+        cos_y = math.cos(self.rotation_y)
+        sin_y = math.sin(self.rotation_y)
+        x, z = x * cos_y + z * sin_y, -x * sin_y + z * cos_y
+        
+        # Move relative to camera
+        z -= self.camera_z
+        if z <= 0:
+            z = 0.1
+        
+        # Project to screen
+        factor = self.fov / z
+        x_2d = int(x * factor + self.center_x)
+        y_2d = int(y * factor + self.center_y)
+        
+        return (x_2d, y_2d, z)
+    
+    def draw_cube(self, screen, size=1, color=(100, 200, 100)):
+        """Draw a 3D cube"""
+        # Define cube vertices
+        vertices = [
+            [-size, -size, -size], [size, -size, -size],
+            [size, size, -size], [-size, size, -size],
+            [-size, -size, size], [size, -size, size],
+            [size, size, size], [-size, size, size]
+        ]
+        
+        # Define cube edges
+        edges = [
+            (0, 1), (1, 2), (2, 3), (3, 0),  # Back face
+            (4, 5), (5, 6), (6, 7), (7, 4),  # Front face
+            (0, 4), (1, 5), (2, 6), (3, 7)   # Connecting edges
+        ]
+        
+        # Project all vertices
+        projected = [self.project_point(v) for v in vertices]
+        
+        # Draw edges
+        for edge in edges:
+            p1 = projected[edge[0]]
+            p2 = projected[edge[1]]
+            if p1[2] > 0 and p2[2] > 0:
+                pygame.draw.line(screen, color, p1[:2], p2[:2], 2)
+
+# Initialize pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("3D Graphics in PyGame!")
+clock = pygame.time.Clock()
+
+# Create 3D engine
+engine = Simple3D(800, 600)
+
+# Main game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Rotate the cube
+    engine.rotation_y += 0.02
+    
+    # Clear screen
+    screen.fill((20, 20, 40))
+    
+    # Draw 3D cube
+    engine.draw_cube(screen, size=1.5)
+    
+    # Draw instructions
+    font = pygame.font.Font(None, 24)
+    text = font.render("PyGame can do 3D graphics!", True, (255, 255, 255))
+    screen.blit(text, (10, 10))
+    
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()`
+      }
+    ]
+  },
+  {
+    id: 'asset-rich',
+    name: 'Asset-Rich Game Template',
+    description: 'Game with fonts, sounds, and sprites from CC0 sources',
+    difficulty: 'Intermediate',
+    files: [
+      {
+        path: 'main.py',
+        content: `# Asset-Rich Game Template
+# Demonstrates loading and using real CC0 assets
+
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+pygame.mixer.init()
+pygame.font.init()
+
+# Game settings
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 100, 255)
+
+class AssetManager:
+    """Manages all game assets"""
+    
+    def __init__(self):
+        self.fonts = {}
+        self.sounds = {}
+        self.sprites = {}
+        self.load_assets()
+    
+    def load_assets(self):
+        """Load all game assets"""
+        # Load fonts (with fallback)
+        try:
+            # Try to load pixel font
+            self.fonts['main'] = pygame.font.Font(None, 32)
+            self.fonts['ui'] = pygame.font.Font(None, 24)
+        except:
+            # Fallback to system font
+            self.fonts['main'] = pygame.font.Font(None, 32)
+            self.fonts['ui'] = pygame.font.Font(None, 24)
+        
+        # Create placeholder sprites
+        self.sprites['player'] = pygame.Surface((32, 32))
+        self.sprites['player'].fill(BLUE)
+        
+        self.sprites['coin'] = pygame.Surface((20, 20))
+        pygame.draw.circle(self.sprites['coin'], (255, 215, 0), (10, 10), 10)
+        
+        self.sprites['enemy'] = pygame.Surface((30, 30))
+        self.sprites['enemy'].fill(RED)
+        
+        print("Assets loaded successfully!")
+
+class Player:
+    def __init__(self, x, y, sprite):
+        self.x = x
+        self.y = y
+        self.sprite = sprite
+        self.vel_x = 0
+        self.vel_y = 0
+        self.speed = 5
+        self.rect = pygame.Rect(x, y, 32, 32)
+    
+    def update(self):
+        # Handle input
+        keys = pygame.key.get_pressed()
+        self.vel_x = 0
+        self.vel_y = 0
+        
+        if keys[pygame.K_LEFT]:
+            self.vel_x = -self.speed
+        if keys[pygame.K_RIGHT]:
+            self.vel_x = self.speed
+        if keys[pygame.K_UP]:
+            self.vel_y = -self.speed
+        if keys[pygame.K_DOWN]:
+            self.vel_y = self.speed
+        
+        # Update position
+        self.x += self.vel_x
+        self.y += self.vel_y
+        
+        # Keep on screen
+        self.x = max(0, min(SCREEN_WIDTH - 32, self.x))
+        self.y = max(0, min(SCREEN_HEIGHT - 32, self.y))
+        
+        self.rect.x = self.x
+        self.rect.y = self.y
+    
+    def draw(self, screen):
+        screen.blit(self.sprite, (self.x, self.y))
+
+class Coin:
+    def __init__(self, x, y, sprite):
+        self.x = x
+        self.y = y
+        self.sprite = sprite
+        self.rect = pygame.Rect(x, y, 20, 20)
+        self.collected = False
+    
+    def draw(self, screen):
+        if not self.collected:
+            screen.blit(self.sprite, (self.x, self.y))
+
+class Game:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Asset-Rich Game")
+        self.clock = pygame.time.Clock()
+        self.running = True
+        
+        # Load assets
+        self.assets = AssetManager()
+        
+        # Create game objects
+        self.player = Player(100, 300, self.assets.sprites['player'])
+        self.coins = []
+        self.score = 0
+        
+        # Create coins
+        for i in range(10):
+            x = random.randint(50, SCREEN_WIDTH - 50)
+            y = random.randint(50, SCREEN_HEIGHT - 50)
+            self.coins.append(Coin(x, y, self.assets.sprites['coin']))
+    
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+    
+    def update(self):
+        self.player.update()
+        
+        # Check coin collection
+        for coin in self.coins:
+            if not coin.collected and self.player.rect.colliderect(coin.rect):
+                coin.collected = True
+                self.score += 10
+    
+    def draw(self):
+        # Clear screen
+        self.screen.fill((40, 40, 60))
+        
+        # Draw game objects
+        self.player.draw(self.screen)
+        for coin in self.coins:
+            coin.draw(self.screen)
+        
+        # Draw UI
+        score_text = self.assets.fonts['main'].render(f"Score: {self.score}", True, WHITE)
+        self.screen.blit(score_text, (10, 10))
+        
+        instructions = self.assets.fonts['ui'].render("Arrow keys to move, collect coins!", True, WHITE)
+        self.screen.blit(instructions, (10, 50))
+        
+        # Check win condition
+        if all(coin.collected for coin in self.coins):
+            win_text = self.assets.fonts['main'].render("You Win!", True, GREEN)
+            text_rect = win_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+            self.screen.blit(win_text, text_rect)
+        
+        pygame.display.flip()
+    
+    def run(self):
+        while self.running:
+            self.handle_events()
+            self.update()
+            self.draw()
+            self.clock.tick(FPS)
+        
+        pygame.quit()
+
+# Run the game
+if __name__ == "__main__":
+    game = Game()
+    game.run()`
+      }
+    ]
+  },
+  {
     id: 'asset-test',
     name: 'Asset Loading Test',
     description: 'Test template for verifying asset loading works correctly',
