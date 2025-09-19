@@ -186,8 +186,8 @@ export default function CodeEditor({
             <Button
               onClick={() => onExecute(inputValues, false)}
               disabled={isExecuting}
-              variant="outline"
-              className="min-h-[48px] px-5 text-base font-medium hover:bg-accent flex items-center gap-2"
+              variant="secondary"
+              className="min-h-[48px] px-5 text-base font-medium bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-2"
               data-testid="button-run-code"
             >
               <Play className="h-5 w-5" />
