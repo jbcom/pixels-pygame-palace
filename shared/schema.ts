@@ -1,24 +1,20 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, json, integer, boolean, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+// Simple TypeScript types for PyGame Academy - no database dependencies!
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
+export interface User {
+  id: string;
+  username: string;
+}
 
-export const lessons = pgTable("lessons", {
-  id: varchar("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  order: integer("order").notNull(),
-  intro: text("intro"),
-  learningObjectives: json("learningObjectives").$type<string[]>(),
-  goalDescription: text("goalDescription"),
-  previewCode: text("previewCode"),
-  content: json("content").notNull().$type<{
+export interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  intro?: string;
+  learningObjectives?: string[];
+  goalDescription?: string;
+  previewCode?: string;
+  content: {
     introduction: string;
     steps: Array<{
       id: string;
@@ -59,70 +55,49 @@ export const lessons = pgTable("lessons", {
         expected?: any;
       };
     }>;
-  }>(),
-  prerequisites: json("prerequisites").$type<string[]>(),
-  difficulty: text("difficulty"),
-  estimatedTime: integer("estimated_time"),
-});
+  };
+  prerequisites?: string[];
+  difficulty?: string;
+  estimatedTime?: number;
+}
 
-export const userProgress = pgTable("user_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  lessonId: varchar("lesson_id").notNull().references(() => lessons.id),
-  currentStep: integer("current_step").notNull().default(0),
-  completed: boolean("completed").notNull().default(false),
-  code: text("code"),
-});
+export interface UserProgress {
+  id: string;
+  userId: string;
+  lessonId: string;
+  currentStep: number;
+  completed: boolean;
+  code?: string;
+}
 
-export const projects = pgTable("projects", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  name: text("name").notNull(),
-  template: text("template").notNull(),
-  description: text("description"),
-  published: boolean("published").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().default(sql`now()`),
-  publishedAt: timestamp("published_at"),
-  thumbnailDataUrl: text("thumbnail_data_url"),
-  files: json("files").notNull().$type<Array<{
+export interface Project {
+  id: string;
+  userId: string;
+  name: string;
+  template: string;
+  description?: string;
+  published: boolean;
+  createdAt: Date;
+  publishedAt?: Date;
+  thumbnailDataUrl?: string;
+  files: Array<{
     path: string;
     content: string;
-  }>>(),
-  assets: json("assets").notNull().default('[]').$type<Array<{
+  }>;
+  assets: Array<{
     id: string;
     name: string;
     type: 'image' | 'sound' | 'other';
     path: string;
     dataUrl: string;
-  }>>(),
-});
+  }>;
+}
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export const insertLessonSchema = createInsertSchema(lessons).omit({
-  id: true,
-});
-
-export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
-  id: true,
-});
-
-export const insertProjectSchema = createInsertSchema(projects).omit({
-  id: true,
-  createdAt: true,
-  publishedAt: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type Lesson = typeof lessons.$inferSelect;
-export type InsertLesson = z.infer<typeof insertLessonSchema>;
-export type UserProgress = typeof userProgress.$inferSelect;
-export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
-export type Project = typeof projects.$inferSelect;
-export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type ProjectAsset = Project['assets'][0];
 export type ProjectFile = Project['files'][0];
+
+// For backward compatibility, keeping these type aliases
+export type InsertUser = Omit<User, 'id'>;
+export type InsertLesson = Omit<Lesson, 'id'>;
+export type InsertUserProgress = Omit<UserProgress, 'id'>;
+export type InsertProject = Omit<Project, 'id' | 'createdAt' | 'publishedAt'>;
