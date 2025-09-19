@@ -1,0 +1,178 @@
+{
+  "fonts": [
+    {
+      "category": "pixel",
+      "items": [
+        {
+          "name": "Kenney Pixel",
+          "file": "pixel/Kenney Pixel.ttf",
+          "style": "regular",
+          "size": "28KB",
+          "usage": "Perfect for retro games, pixel art interfaces, 8-bit and 16-bit style games",
+          "characteristics": ["pixelated", "retro", "clean", "readable"],
+          "recommended_sizes": ["8px", "16px", "24px", "32px"]
+        },
+        {
+          "name": "Kenney Pixel Square",
+          "file": "pixel/Kenney Pixel Square.ttf",
+          "style": "square",
+          "size": "25KB",
+          "usage": "Ideal for retro games with square pixel aesthetic, grid-based games",
+          "characteristics": ["pixelated", "square", "blocky", "monospace"],
+          "recommended_sizes": ["8px", "16px", "24px", "32px"]
+        }
+      ]
+    },
+    {
+      "category": "future",
+      "items": [
+        {
+          "name": "Kenney Future",
+          "file": "future/Kenney Future.ttf",
+          "style": "regular",
+          "size": "34KB",
+          "usage": "Perfect for sci-fi games, futuristic UIs, space games, tech interfaces",
+          "characteristics": ["modern", "clean", "futuristic", "bold"],
+          "recommended_sizes": ["14px", "18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney Future Narrow",
+          "file": "future/Kenney Future Narrow.ttf",
+          "style": "narrow",
+          "size": "34KB",
+          "usage": "Great for space-constrained UIs, headers, HUD elements in sci-fi games",
+          "characteristics": ["condensed", "modern", "space-efficient", "futuristic"],
+          "recommended_sizes": ["14px", "18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney Future Square",
+          "file": "future/Kenney Future Square.ttf",
+          "style": "square",
+          "size": "22KB",
+          "usage": "Ideal for tech displays, digital readouts, spaceship controls",
+          "characteristics": ["square", "technical", "modern", "uniform"],
+          "recommended_sizes": ["14px", "18px", "24px", "36px", "48px"]
+        }
+      ]
+    },
+    {
+      "category": "blocks",
+      "items": [
+        {
+          "name": "Kenney Blocks",
+          "file": "blocks/Kenney Blocks.ttf",
+          "style": "blocky",
+          "size": "31KB",
+          "usage": "Perfect for puzzle games, building games, children's games, playful interfaces",
+          "characteristics": ["blocky", "playful", "bold", "friendly"],
+          "recommended_sizes": ["20px", "30px", "40px", "50px", "60px"]
+        }
+      ]
+    },
+    {
+      "category": "misc",
+      "items": [
+        {
+          "name": "Kenney Rocket",
+          "file": "misc/Kenney Rocket.ttf",
+          "style": "regular",
+          "size": "28KB",
+          "usage": "Great for space games, adventure titles, dynamic action games",
+          "characteristics": ["dynamic", "energetic", "bold", "adventurous"],
+          "recommended_sizes": ["18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney Rocket Square",
+          "file": "misc/Kenney Rocket Square.ttf",
+          "style": "square",
+          "size": "25KB",
+          "usage": "Perfect for technical displays in space games, control panels",
+          "characteristics": ["square", "technical", "bold", "structured"],
+          "recommended_sizes": ["18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney Mini",
+          "file": "misc/Kenney Mini.ttf",
+          "style": "regular",
+          "size": "26KB",
+          "usage": "Ideal for small text, tooltips, UI labels, mobile games",
+          "characteristics": ["small", "compact", "readable", "efficient"],
+          "recommended_sizes": ["8px", "10px", "12px", "14px", "16px"]
+        },
+        {
+          "name": "Kenney Mini Square",
+          "file": "misc/Kenney Mini Square.ttf",
+          "style": "square",
+          "size": "24KB",
+          "usage": "Perfect for small UI elements, data tables, compact displays",
+          "characteristics": ["square", "compact", "uniform", "readable"],
+          "recommended_sizes": ["8px", "10px", "12px", "14px", "16px"]
+        },
+        {
+          "name": "Kenney Mini Square Mono",
+          "file": "misc/Kenney Mini Square Mono.ttf",
+          "style": "monospace",
+          "size": "25KB",
+          "usage": "Excellent for code displays, terminal text, data grids",
+          "characteristics": ["monospace", "square", "uniform", "technical"],
+          "recommended_sizes": ["8px", "10px", "12px", "14px", "16px"]
+        },
+        {
+          "name": "Kenney Bold",
+          "file": "misc/Kenney Bold.ttf",
+          "style": "bold",
+          "size": "10KB",
+          "usage": "Great for titles, headers, emphasis, impact text",
+          "characteristics": ["bold", "strong", "impactful", "attention-grabbing"],
+          "recommended_sizes": ["24px", "36px", "48px", "60px", "72px"]
+        },
+        {
+          "name": "Kenney High",
+          "file": "misc/Kenney High.ttf",
+          "style": "tall",
+          "size": "28KB",
+          "usage": "Ideal for vertical text, narrow spaces, artistic headers",
+          "characteristics": ["tall", "narrow", "elegant", "distinctive"],
+          "recommended_sizes": ["18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney High Square",
+          "file": "misc/Kenney High Square.ttf",
+          "style": "tall-square",
+          "size": "25KB",
+          "usage": "Perfect for unique headers, vertical UI elements, special displays",
+          "characteristics": ["tall", "square", "distinctive", "modern"],
+          "recommended_sizes": ["18px", "24px", "36px", "48px"]
+        },
+        {
+          "name": "Kenney Space",
+          "file": "misc/Kenney Space.ttf",
+          "style": "spaced",
+          "size": "14KB",
+          "usage": "Great for space games, futuristic UIs, wide headers",
+          "characteristics": ["wide", "spaced", "futuristic", "clean"],
+          "recommended_sizes": ["20px", "30px", "40px", "50px"]
+        },
+        {
+          "name": "Kenney Thick",
+          "file": "misc/Kenney Thick.ttf",
+          "style": "thick",
+          "size": "10KB",
+          "usage": "Perfect for impact text, game logos, bold statements",
+          "characteristics": ["thick", "bold", "heavy", "powerful"],
+          "recommended_sizes": ["30px", "40px", "50px", "60px", "72px"]
+        }
+      ]
+    }
+  ],
+  "total_fonts": 16,
+  "categories": {
+    "pixel": "Retro and pixelated fonts for classic game aesthetics",
+    "future": "Modern and futuristic fonts for sci-fi and tech themes",
+    "blocks": "Blocky and playful fonts for casual and puzzle games",
+    "misc": "Versatile fonts for various game styles and purposes"
+  },
+  "license": "Kenney fonts are free to use in personal and commercial projects",
+  "version": "1.0.0",
+  "created": "2024-09-19"
+}
