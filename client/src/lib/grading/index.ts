@@ -1,3 +1,10 @@
+// Export all grading functionality
+export * from './types';
+export * from './ast';
+export * from './runtime';
+export * from './engine';
+
+// Legacy exports for backwards compatibility
 export interface TestResult {
   testIndex: number;
   passed: boolean;
@@ -11,14 +18,6 @@ export interface GradingResult {
   feedback: string;
   expectedOutput?: string;
   actualOutput?: string;
-}
-
-export interface TestSpec {
-  expectedOutput: string;
-  input?: string;
-  mode?: 'rules' | 'output';
-  astRules?: any[];
-  runtimeRules?: any[];
 }
 
 export function gradeTests(testResults: TestResult[]): GradingResult {
@@ -42,14 +41,4 @@ export function gradeTests(testResults: TestResult[]): GradingResult {
     expectedOutput: testResults[0]?.expectedOutput || "",
     actualOutput: testResults[0]?.actualOutput || ""
   };
-}
-
-export async function runRuleBasedGrading(test: TestSpec, output: string): Promise<{ passed: boolean; feedback: string }> {
-  // Placeholder for rule-based grading - can be expanded later
-  const expectedNormalized = test.expectedOutput.trim().replace(/\s+/g, ' ');
-  const actualNormalized = output.trim().replace(/\s+/g, ' ');
-  const passed = actualNormalized === expectedNormalized;
-  const feedback = passed ? "Perfect match!" : `Expected: "${test.expectedOutput}" but got: "${output}"`;
-  
-  return { passed, feedback };
 }
