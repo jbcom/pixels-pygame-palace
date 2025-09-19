@@ -1,0 +1,22 @@
+I see the problem overall. This is being left WAY too open ended! Which is also why the flow on the main page feels disjointed. It isn't "Start learning" and then "Create your game" it's all a part of the learning experience. But it's all ALSO a part of creating your game. We need to shift the beginning lessons as more along the lines of "Need to Learn Python First?", as in the MAIN focus is they're here to have fun and build a game - But if they don't know Python that's okay, we'll teach them! We want it to be a reassuring and fun experience for everyone!
+
+We should shift to a more graphics oriented home page with big colorful buttons and make the GAMES the fun MAIN part, not buried. They aren't some buried drop down. It's COOL that you can make a plattformer etc.... Let's use your image generation to make panels for each type we support. And then a panel for "Need to Learn Python First?" as a top banner. Because it's okay if that comes first.
+
+Let's revamp the main page so that it's like collapsable accordian navbar style. You get by defaull collapsed navbar banners.
+
+You've got the one we went over already. Then one that instead of dropping RIGHT INTO games, what we need is, ahead of time YOU need to build a bunch of reusable pygame components, modular ones, for all the different parts OF a python game. And make them A/B choices in a lot of cases, e.g. a combat system with an A/B choice between realtime and turn-base, inventory system with an A/B choice, player class system, character design system, map design, dungeon maze generator, and so on.. Make a BUNCH of them, really get creative here. 
+
+And think about something fun for the banner that's better than just, "Reusable Pygame Components"
+
+the point is that when you click on a banner under it shoiuld fold down the lessons for that section (like all the python lessons, or the pygame component lessons) 
+
+and rather than a giant massive long below the fold list it should be an INTELLIGENT accordian meaning it should drop down let's go with the first 5 elements and then a back / next with the ability to use swiping on mobile so that its paginated (and on mobile you can touch to select)
+And clicking on one of the lessons highlights it, doublick clicking goes to the lessons
+
+And we can use that for all of them
+
+
+And then the point is by doing it this way when it comes to the GAMES we can have I would say for a nice even balance four games as our ultimate goal although I think ultimately we should TRY for five and EVENTUALLY stretch to ten, and we should have enough reusable pygame components that what we can do is use our local storage approach so that if the player went through any of the lessons for learning python OR reusable pygame components (name pending PLEASE use a better name!!!) we can incorporate their A/B and asset choices!!)
+
+meaning that if they don't its fine because we can STILL reuse the lessons on building a python project etc for how to skeleton out our code and reuse combinations of reusables to build out different games but if they DID we can grab SPECIFIC A or B choices to show them how THEIR choices come together to make a specific KIND of game!
+
