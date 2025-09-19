@@ -13,7 +13,7 @@ import {
   Server, 
   Database, 
   Cpu, 
-  Memory, 
+  HardDrive, 
   Wifi, 
   Clock,
   Trash2,
@@ -459,7 +459,7 @@ export default function DebugPanel({ isOpen, onClose }: DebugPanelProps) {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Memory className="h-4 w-4" />
+                        <HardDrive className="h-4 w-4" />
                         Memory Usage
                       </CardTitle>
                     </CardHeader>
