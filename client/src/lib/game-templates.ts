@@ -1,6 +1,8 @@
 // Game templates for the Project Builder
 // These provide starter code for different types of games
 
+import { generateGameTemplate, getUserComponentChoices, ComponentChoice } from './game-building-blocks';
+
 export interface GameTemplate {
   id: string;
   name: string;
@@ -10,9 +12,23 @@ export interface GameTemplate {
     path: string;
     content: string;
   }>;
+  useComponents?: boolean;
 }
 
 export const gameTemplates: GameTemplate[] = [
+  {
+    id: 'custom-components',
+    name: 'Custom Game with Your Components',
+    description: 'A game built with your selected building blocks',
+    difficulty: 'Intermediate',
+    useComponents: true,
+    files: [
+      {
+        path: 'main.py',
+        content: ''
+      }
+    ]
+  },
   {
     id: 'asset-test',
     name: 'Asset Loading Test',
