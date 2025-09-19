@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { 
   Gamepad2, 
   Trophy, 
@@ -41,6 +42,14 @@ import {
   Blocks
 } from "lucide-react";
 import type { Lesson, UserProgress } from "@shared/schema";
+import { 
+  gameComponents, 
+  saveComponentChoice, 
+  getComponentChoice,
+  getUserComponentChoices,
+  generateGameTemplate,
+  getComponentSummary 
+} from "@/lib/game-building-blocks";
 
 // Import generated game images
 import platformerImage from "@assets/generated_images/Platformer_game_illustration_16ef54bb.png";
@@ -60,19 +69,14 @@ interface GameType {
   difficulty: "Beginner" | "Intermediate" | "Advanced";
 }
 
-interface BuildingBlock {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  optionA: {
-    title: string;
-    description: string;
-  };
-  optionB: {
-    title: string;
-    description: string;
-  };
-}
+// Map component icons
+const componentIcons: {[key: string]: React.ReactNode} = {
+  'combat': <Swords className="h-8 w-8" />,
+  'inventory': <Backpack className="h-8 w-8" />,
+  'movement': <Zap className="h-8 w-8" />,
+  'progression': <Trophy className="h-8 w-8" />,
+  'mapgen': <Map className="h-8 w-8" />
+};
 
 const gameTypes: GameType[] = [
   {
@@ -131,79 +135,12 @@ const gameTypes: GameType[] = [
   }
 ];
 
-const buildingBlocks: BuildingBlock[] = [
-  {
-    id: "combat",
-    title: "Combat System",
-    icon: <Swords className="h-8 w-8" />,
-    optionA: {
-      title: "Real-time Combat",
-      description: "Fast-paced action with instant reactions"
-    },
-    optionB: {
-      title: "Turn-based Combat",
-      description: "Strategic battles with planned moves"
-    }
-  },
-  {
-    id: "inventory",
-    title: "Inventory System",
-    icon: <Backpack className="h-8 w-8" />,
-    optionA: {
-      title: "Grid-based",
-      description: "Tetris-style item management"
-    },
-    optionB: {
-      title: "List-based",
-      description: "Simple scrollable item list"
-    }
-  },
-  {
-    id: "player",
-    title: "Player Classes",
-    icon: <Users className="h-8 w-8" />,
-    optionA: {
-      title: "Predefined Classes",
-      description: "Choose from warrior, mage, archer"
-    },
-    optionB: {
-      title: "Custom Creation",
-      description: "Build your own unique character"
-    }
-  },
-  {
-    id: "map",
-    title: "Map Generation",
-    icon: <Map className="h-8 w-8" />,
-    optionA: {
-      title: "Procedural",
-      description: "Random worlds every playthrough"
-    },
-    optionB: {
-      title: "Designed",
-      description: "Hand-crafted levels with secrets"
-    }
-  },
-  {
-    id: "art",
-    title: "Character Art",
-    icon: <Palette className="h-8 w-8" />,
-    optionA: {
-      title: "Pixel Art",
-      description: "Classic retro style graphics"
-    },
-    optionB: {
-      title: "Vector Art",
-      description: "Smooth modern graphics"
-    }
-  }
-];
 
 export default function Home() {
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [gamePageIndex, setGamePageIndex] = useState(0);
   const [blockPageIndex, setBlockPageIndex] = useState(0);
-  const [selectedBlock, setSelectedBlock] = useState<{[key: string]: 'A' | 'B'}>({});
+  const [componentChoices, setComponentChoices] = useState<{[key: string]: 'A' | 'B'}>({});
   const [expandedAccordions, setExpandedAccordions] = useState<string[]>(["games"]);
   const lastClickTime = useRef<{[key: string]: number}>({});
 
@@ -219,9 +156,29 @@ export default function Home() {
     queryKey: ["/api/gallery"],
   });
 
-  const itemsPerPage = 5;
+  // Load saved component choices on mount
+  useEffect(() => {
+    const choices: {[key: string]: 'A' | 'B'} = {};
+    gameComponents.forEach(component => {
+      const savedChoice = getComponentChoice(component.id);
+      if (savedChoice) {
+        choices[component.id] = savedChoice;
+      }
+    });
+    setComponentChoices(choices);
+  }, []);
+
+  const handleComponentToggle = (componentId: string, choice: 'A' | 'B') => {
+    setComponentChoices(prev => ({
+      ...prev,
+      [componentId]: choice
+    }));
+    saveComponentChoice(componentId, choice);
+  };
+
+  const itemsPerPage = 3;
   const totalGamePages = Math.ceil(gameTypes.length / itemsPerPage);
-  const totalBlockPages = Math.ceil(buildingBlocks.length / itemsPerPage);
+  const totalBlockPages = Math.ceil(gameComponents.length / itemsPerPage);
 
   const gameSwipeHandlers = useSwipeable({
     onSwipedLeft: () => {
@@ -275,7 +232,7 @@ export default function Home() {
     (gamePageIndex + 1) * itemsPerPage
   );
 
-  const visibleBlocks = buildingBlocks.slice(
+  const visibleBlocks = gameComponents.slice(
     blockPageIndex * itemsPerPage,
     (blockPageIndex + 1) * itemsPerPage
   );
@@ -473,58 +430,96 @@ export default function Home() {
                     transition={{ duration: 0.3 }}
                     className="space-y-4"
                   >
-                    {visibleBlocks.map((block) => (
+                    {visibleBlocks.map((component) => (
                       <motion.div
-                        key={block.id}
-                        whileHover={{ x: 5 }}
-                        className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-lg p-4 border-2 border-border"
-                        data-testid={`block-${block.id}`}
+                        key={component.id}
+                        whileHover={{ scale: 1.02 }}
+                        className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border-2 border-border shadow-md"
+                        data-testid={`component-${component.id}`}
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="p-3 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg text-white">
-                            {block.icon}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg text-white shadow-lg">
+                              {componentIcons[component.id]}
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold">{component.title}</h3>
+                              <p className="text-sm text-muted-foreground">{component.description}</p>
+                            </div>
                           </div>
-                          <h3 className="text-lg font-bold">{block.title}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-sm font-medium transition-colors ${
+                              componentChoices[component.id] === 'A' ? 'text-primary' : 'text-muted-foreground'
+                            }`}>A</span>
+                            <Switch
+                              checked={componentChoices[component.id] === 'B'}
+                              onCheckedChange={(checked) => handleComponentToggle(component.id, checked ? 'B' : 'A')}
+                              data-testid={`switch-${component.id}`}
+                            />
+                            <span className={`text-sm font-medium transition-colors ${
+                              componentChoices[component.id] === 'B' ? 'text-primary' : 'text-muted-foreground'
+                            }`}>B</span>
+                          </div>
                         </div>
+                        
                         <div className="grid md:grid-cols-2 gap-4">
-                          <button
-                            onClick={() => setSelectedBlock({...selectedBlock, [block.id]: 'A'})}
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleComponentToggle(component.id, 'A')}
                             className={`p-4 rounded-lg border-2 transition-all text-left ${
-                              selectedBlock[block.id] === 'A'
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border hover:border-primary/50'
+                              componentChoices[component.id] === 'A'
+                                ? 'border-primary bg-primary/10 shadow-md'
+                                : 'border-border hover:border-primary/50 opacity-70'
                             }`}
-                            data-testid={`block-${block.id}-optionA`}
+                            data-testid={`component-${component.id}-optionA`}
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold">{block.optionA.title}</span>
-                              {selectedBlock[block.id] === 'A' && (
+                              <span className="font-bold text-lg">{component.optionA.title}</span>
+                              {componentChoices[component.id] === 'A' && (
                                 <CheckCircle className="h-5 w-5 text-primary" />
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {block.optionA.description}
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {component.optionA.description}
                             </p>
-                          </button>
-                          <button
-                            onClick={() => setSelectedBlock({...selectedBlock, [block.id]: 'B'})}
+                            <div className="space-y-1">
+                              {component.optionA.features.slice(0, 3).map((feature, idx) => (
+                                <div key={idx} className="flex items-center space-x-1">
+                                  <span className="text-xs text-primary">•</span>
+                                  <span className="text-xs">{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.button>
+                          
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleComponentToggle(component.id, 'B')}
                             className={`p-4 rounded-lg border-2 transition-all text-left ${
-                              selectedBlock[block.id] === 'B'
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border hover:border-primary/50'
+                              componentChoices[component.id] === 'B'
+                                ? 'border-primary bg-primary/10 shadow-md'
+                                : 'border-border hover:border-primary/50 opacity-70'
                             }`}
-                            data-testid={`block-${block.id}-optionB`}
+                            data-testid={`component-${component.id}-optionB`}
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold">{block.optionB.title}</span>
-                              {selectedBlock[block.id] === 'B' && (
+                              <span className="font-bold text-lg">{component.optionB.title}</span>
+                              {componentChoices[component.id] === 'B' && (
                                 <CheckCircle className="h-5 w-5 text-primary" />
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {block.optionB.description}
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {component.optionB.description}
                             </p>
-                          </button>
+                            <div className="space-y-1">
+                              {component.optionB.features.slice(0, 3).map((feature, idx) => (
+                                <div key={idx} className="flex items-center space-x-1">
+                                  <span className="text-xs text-primary">•</span>
+                                  <span className="text-xs">{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.button>
                         </div>
                       </motion.div>
                     ))}
@@ -567,6 +562,38 @@ export default function Home() {
                   </div>
                 )}
               </div>
+              
+              {/* Show selected components summary */}
+              {Object.keys(componentChoices).length > 0 && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-lg border border-primary/20">
+                  <h4 className="font-semibold mb-2">Your Game Configuration:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {gameComponents.map(component => {
+                      const choice = componentChoices[component.id];
+                      if (!choice) return null;
+                      const option = choice === 'A' ? component.optionA : component.optionB;
+                      return (
+                        <Badge key={component.id} variant="secondary" className="text-xs">
+                          {component.title}: {option.title}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <Button 
+                    className="mt-3"
+                    size="sm"
+                    onClick={() => {
+                      const template = generateGameTemplate('Custom Game', getUserComponentChoices());
+                      console.log('Generated template with choices:', getComponentSummary());
+                      // Navigate to project builder with the template
+                      window.location.href = '/project-builder';
+                    }}
+                  >
+                    <Code2 className="h-4 w-4 mr-2" />
+                    Generate Game with These Components
+                  </Button>
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
 
