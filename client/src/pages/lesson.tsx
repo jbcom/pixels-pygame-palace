@@ -580,7 +580,7 @@ result
         if (runAutoGrading) {
           setGradingResult({
             passed: false,
-            feedback: `🐛 ${result.error.title}\n\n${result.error.message}\n\n💡 Tips to fix this:\n${result.error.suggestions.map(s => `• ${s}`).join('\n')}`,
+            feedback: `🐛 ${result.error.title}\n\n${result.error.message}\n\n💡 Tips to fix this:\n${result.error.suggestions.map((s: any) => `• ${s}`).join('\n')}`,
             actualOutput: result.error.traceback || enhancedErrorText
           });
         }
