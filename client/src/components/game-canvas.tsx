@@ -155,7 +155,7 @@ export default function GameCanvas({ code, pyodide, isRunning }: GameCanvasProps
   }, [code, isRunning, pyodide, renderingMode, lastFrameTime]);
 
   return (
-    <div className="w-1/2 flex flex-col border-l-2 border-border">
+    <div className="w-full md:w-1/2 flex flex-col md:border-l-2 border-t-2 md:border-t-0 border-border order-1 md:order-2">
       <div className="bg-card border-b-2 border-border p-5 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h3 className="text-xl font-semibold">Game Preview</h3>

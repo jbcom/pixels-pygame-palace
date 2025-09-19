@@ -178,16 +178,16 @@ export default function CodeEditor({
   };
 
   return (
-    <div className="w-1/2 flex flex-col">
+    <div className="w-full md:w-1/2 flex flex-col">
       <div className="code-editor-header">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-2xl font-bold">Code Editor</h3>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+          <h3 className="text-xl sm:text-2xl font-bold">Code Editor</h3>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <Button
               onClick={() => onExecute(inputValues, false)}
               disabled={isExecuting}
               variant="secondary"
-              className="min-h-[48px] px-5 text-base font-medium bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-2"
+              className="min-h-[44px] sm:min-h-[48px] px-3 sm:px-5 text-sm sm:text-base font-medium bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-2"
               data-testid="button-run-code"
             >
               <Play className="h-5 w-5" />
@@ -196,7 +196,7 @@ export default function CodeEditor({
             <Button
               onClick={() => onExecute(inputValues, true)}
               disabled={isExecuting}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 min-h-[44px] sm:min-h-[48px] px-3 sm:px-5 text-sm sm:text-base"
               data-testid="button-run-check"
             >
               <CheckCircle2 className="h-5 w-5" />
@@ -204,8 +204,8 @@ export default function CodeEditor({
             </Button>
             <Button
               onClick={resetCode}
-              variant="outline"
-              className="min-h-[48px] px-5 text-base font-medium hover:bg-accent"
+              variant="secondary"
+              className="min-h-[44px] sm:min-h-[48px] px-3 sm:px-5 text-sm sm:text-base font-medium bg-amber-500 text-gray-900 hover:bg-amber-400"
               data-testid="button-reset-code"
             >
               <RotateCcw className="h-5 w-5" />
