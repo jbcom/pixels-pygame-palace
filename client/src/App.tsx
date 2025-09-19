@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import ProjectBuilderEnhanced from "@/pages/project-builder-enhanced";
 import Gallery from "@/pages/gallery";
 import ProjectViewer from "@/pages/project-viewer";
 import SplashScreen from "@/components/splash-screen";
+import PixelPresence from "@/components/pixel-presence";
 
 function Router() {
   return (
@@ -61,6 +62,7 @@ function Router() {
 
 function App() {
   const inputBridge = useInputBridge();
+  const [location, setLocation] = useLocation();
   const [showSplash, setShowSplash] = useState(() => {
     // Show splash screen on first visit or if it hasn't been shown today
     const lastShown = localStorage.getItem("splashScreenLastShown");
@@ -100,6 +102,10 @@ function App() {
             <>
               <Toaster />
               <Router />
+              <PixelPresence 
+                onNavigate={setLocation}
+                currentPath={location}
+              />
               <InputPromptDialog
                 isOpen={inputBridge.isOpen}
                 prompt={inputBridge.prompt}

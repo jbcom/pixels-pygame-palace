@@ -1,23 +1,10 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Gamepad2, 
   Sparkles
 } from "lucide-react";
-import PixelPresence from "@/components/pixel-presence";
-import { useLocation } from "wouter";
 
 export default function Home() {
-  const [, setLocation] = useLocation();
-  const [hasChosen, setHasChosen] = useState(false);
-
-  // Handle navigation from Pixel
-  const handleNavigation = (path: string) => {
-    setHasChosen(true);
-    setTimeout(() => {
-      setLocation(path);
-    }, 300);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
@@ -56,25 +43,22 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content - Only shows after Pixel choice */}
-      {hasChosen && (
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-center"
-          >
-            <h2 className="text-2xl font-bold mb-4 text-muted-foreground">
-              Loading your experience...
-            </h2>
-            <div className="animate-pulse">
-              <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-lg mb-4"></div>
-              <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-center"
+        >
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Welcome to Pixel's PyGame Palace!
+          </h2>
+          <p className="text-xl text-muted-foreground">
+            Your adventure in game creation begins here
+          </p>
+        </motion.div>
+      </div>
 
       {/* Fun animated background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -102,11 +86,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Pixel Presence System */}
-      <PixelPresence 
-        onNavigate={handleNavigation}
-        currentPath="/"
-      />
     </div>
   );
 }
