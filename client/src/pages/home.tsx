@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Play, Gamepad2, Trophy, Sparkles, ArrowRight, BookOpen, Code2, Zap, Star, Users, Clock } from "lucide-react";
+import { CheckCircle, Play, Gamepad2, Trophy, Sparkles, ArrowRight, BookOpen, Code2, Zap, Star, Users, Clock, User, Eye } from "lucide-react";
 import type { Lesson, UserProgress } from "@shared/schema";
 import heroIllustration from "@assets/generated_images/Python_education_hero_illustration_f78e9d61.png";
 import { motion } from "framer-motion";
@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-950 dark:to-purple-950">
       {/* Header */}
-      <header className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-border sticky top-0 z-50 shadow-sm">
+      <header className="bg-white dark:bg-gray-900 border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <motion.div 
@@ -83,7 +83,7 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="hidden md:flex items-center space-x-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full px-4 py-2">
+              <div className="hidden md:flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm">
                 <Trophy className="h-4 w-4 text-secondary" />
                 <span className="text-sm text-muted-foreground">Progress</span>
                 <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
@@ -97,10 +97,6 @@ export default function Home() {
                 <span className="text-sm font-semibold">{overallProgress}%</span>
               </div>
               
-              <Button size="sm" className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-all duration-300 hover:scale-105">
-                <Sparkles className="h-4 w-4 mr-1" />
-                Profile
-              </Button>
             </motion.div>
           </div>
         </div>
@@ -118,7 +114,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-secondary/10 backdrop-blur-sm rounded-full px-4 py-2">
+              <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-gray-800 rounded-full px-4 py-2">
                 <Zap className="h-4 w-4 text-primary animate-pulse" />
                 <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Interactive Python Learning
@@ -168,7 +164,7 @@ export default function Home() {
                     <Button 
                       size="lg" 
                       variant="outline"
-                      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 hover:shadow-xl transition-all duration-300 group hover:bg-primary hover:text-white hover:border-primary"
+                      className="bg-white dark:bg-gray-800 border-2 hover:shadow-xl transition-all duration-300 group hover:bg-primary hover:text-white hover:border-primary"
                       data-testid="button-create-game"
                     >
                       <Gamepad2 className="h-5 w-5 mr-2" />
@@ -247,7 +243,7 @@ export default function Home() {
               
               {/* Floating badges */}
               <motion.div 
-                className="absolute top-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg"
+                className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 shadow-lg"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -308,7 +304,7 @@ export default function Home() {
                   whileHover={{ y: -4 }}
                   className="group"
                 >
-                  <Card className="relative overflow-hidden hover:shadow-xl transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-border/50 hover:border-primary/30">
+                  <Card className="relative overflow-hidden hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800 border-border hover:border-primary">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
                     
                     <CardHeader className="pb-3 pt-4 px-5 relative z-10">
@@ -425,7 +421,7 @@ export default function Home() {
 
 // Featured Projects Section Component
 function FeaturedProjectsSection() {
-  const { data: featuredProjects, isLoading } = useQuery<Project[]>({
+  const { data: featuredProjects, isLoading } = useQuery<any[]>({
     queryKey: ["/api/gallery"],
     select: (projects) => projects?.slice(0, 3) // Show first 3 featured projects
   });
@@ -443,7 +439,7 @@ function FeaturedProjectsSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-secondary/10 backdrop-blur-sm rounded-full px-4 py-2 mb-4">
+            <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-gray-800 rounded-full px-4 py-2 mb-4">
               <Trophy className="h-4 w-4 text-primary animate-pulse" />
               <span className="text-sm font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Student Gallery
@@ -501,7 +497,7 @@ function FeaturedProjectsSection() {
                       whileHover={{ y: -8 }}
                       className="group"
                     >
-                      <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-border/50 hover:border-primary/30 h-full">
+                      <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white dark:bg-gray-800 border-border hover:border-primary h-full">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
                         
                         {/* Project Thumbnail */}
@@ -525,7 +521,7 @@ function FeaturedProjectsSection() {
                           )}
                           
                           <div className="absolute top-3 right-3">
-                            <Badge variant="secondary" className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-xs">
+                            <Badge variant="secondary" className="bg-white dark:bg-gray-800 text-xs">
                               {getTemplateIcon(project.template)} {getTemplateDisplayName(project.template)}
                             </Badge>
                           </div>
@@ -578,7 +574,7 @@ function FeaturedProjectsSection() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-center"
               >
-                <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-border/50 p-8 shadow-lg">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border p-8 shadow-lg">
                   <div className="text-3xl mb-4">🌟</div>
                   <h3 className="text-xl font-bold mb-2">Ready to Share Your Creation?</h3>
                   <p className="text-muted-foreground mb-6">
@@ -589,7 +585,7 @@ function FeaturedProjectsSection() {
                       <Button 
                         variant="outline" 
                         size="lg"
-                        className="bg-white/80 dark:bg-gray-800/80 hover:shadow-lg transition-all duration-300"
+                        className="bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-300"
                         data-testid="explore-gallery"
                       >
                         <Trophy className="h-5 w-5 mr-2" />
@@ -620,7 +616,7 @@ function FeaturedProjectsSection() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-border/50 p-12 shadow-lg">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border p-12 shadow-lg">
                 <div className="text-4xl mb-6">🚀</div>
                 <h3 className="text-2xl font-bold mb-4">Be the First to Publish!</h3>
                 <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
