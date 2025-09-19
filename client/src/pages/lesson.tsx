@@ -235,7 +235,7 @@ export default function LessonPage() {
         onBack={() => setLocation("/")}
       />
       
-      <div className="flex h-screen">
+      <div className="flex flex-col md:flex-row h-screen">
         <LessonSidebar
           lesson={lesson}
           currentStepIndex={currentStepIndex}

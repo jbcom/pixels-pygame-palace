@@ -17,7 +17,7 @@ export default function LessonSidebar({ lesson, currentStepIndex, progress, onSt
 
   return (
     <motion.aside 
-      className="w-72 lesson-sidebar flex flex-col"
+      className="w-full md:w-72 lesson-sidebar flex flex-col order-2 md:order-1"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
