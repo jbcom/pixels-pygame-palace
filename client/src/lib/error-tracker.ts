@@ -1,5 +1,5 @@
 /**
- * Centralized Error Tracking and Logging System for PyGame Academy
+ * Centralized Error Tracking and Logging System for Pixel's PyGame Palace
  * Provides comprehensive error tracking, analytics, and debugging capabilities
  */
 

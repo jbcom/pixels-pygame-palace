@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:3cdc81129d79dee4d6679a1c0cdc3dfa1a503b01bc03b5019dfbd96a0ff39759
+size 17385
+=======
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -233,7 +238,7 @@ export default function PublishDialog({ isOpen, onClose, project }: PublishDialo
           <DialogDescription>
             {project.published 
               ? "Your project is currently published in the gallery. You can update details or unpublish it."
-              : "Share your amazing creation with the PyGame Academy community!"
+              : "Share your amazing creation with the Pixel's PyGame Palace community!"
             }
           </DialogDescription>
         </DialogHeader>
@@ -475,3 +480,4 @@ export default function PublishDialog({ isOpen, onClose, project }: PublishDialo
     </Dialog>
   );
 }
+>>>>>>> Stashed changes

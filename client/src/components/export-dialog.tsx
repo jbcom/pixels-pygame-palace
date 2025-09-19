@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:9e7c5fd57a631e19c761a27226c790a65cfd72ac87a06e892672d566e1ed1ed8
+size 16109
+=======
 import { useState } from "react";
 import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
@@ -54,7 +59,7 @@ export default function ExportDialog({
   // Generate README.md content
   const generateReadme = () => {
     const gameTitle = exportName || projectName;
-    const gameDescription = description || "A Python game created with PyGame Academy.";
+    const gameDescription = description || "A Python game created with Pixel's PyGame Palace.";
     
     // Template-specific controls
     const controlsSection = getControlsForTemplate(template);
@@ -95,10 +100,10 @@ ${controlsSection}
 
 ## About
 
-This game was created using PyGame Academy - a platform for learning Python game development!
+This game was created using Pixel's PyGame Palace - a platform for learning Python game development!
 
 ---
-Created with 💜 using PyGame Academy
+Created with 💜 using Pixel's PyGame Palace
 `;
   };
 
@@ -528,3 +533,4 @@ except Exception as e:
     </Dialog>
   );
 }
+>>>>>>> Stashed changes

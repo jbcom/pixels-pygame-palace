@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:25dc7bbb8eb4dec5ef909a355c642e374704ca1f00467ef266e5f95a2008057a
+size 3103
+=======
 import { Switch, Route } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,6 +20,7 @@ import LessonPage from "@/pages/lesson";
 import ProjectBuilder from "@/pages/project-builder";
 import Gallery from "@/pages/gallery";
 import ProjectViewer from "@/pages/project-viewer";
+import SplashScreen from "@/components/splash-screen";
 
 function Router() {
   return (
@@ -60,6 +66,20 @@ function Router() {
 
 function App() {
   const inputBridge = useInputBridge();
+  const [showSplash, setShowSplash] = useState(() => {
+    // Show splash screen on first visit or if it hasn't been shown today
+    const lastShown = localStorage.getItem("splashScreenLastShown");
+    if (!lastShown) return true;
+    
+    const lastShownDate = new Date(lastShown);
+    const today = new Date();
+    const daysSinceLastShown = Math.floor(
+      (today.getTime() - lastShownDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    // Show splash once per day
+    return daysSinceLastShown >= 1;
+  });
 
   // Initialize global error handling and setup
   useEffect(() => {
@@ -71,7 +91,7 @@ function App() {
     
     return () => {
       // Cleanup on unmount
-      delete window.__getInput;
+      window.__getInput = window.__getInput || (() => Promise.resolve(null));
     };
   }, [inputBridge.open]);
 
@@ -79,15 +99,21 @@ function App() {
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Router />
-          <InputPromptDialog
-            isOpen={inputBridge.isOpen}
-            prompt={inputBridge.prompt}
-            onSubmit={inputBridge.handleSubmit}
-            onCancel={inputBridge.handleCancel}
-          />
-          <DebugToggle showInProduction={false} showErrorBadge={true} />
+          {showSplash ? (
+            <SplashScreen onComplete={() => setShowSplash(false)} />
+          ) : (
+            <>
+              <Toaster />
+              <Router />
+              <InputPromptDialog
+                isOpen={inputBridge.isOpen}
+                prompt={inputBridge.prompt}
+                onSubmit={inputBridge.handleSubmit}
+                onCancel={inputBridge.handleCancel}
+              />
+              <DebugToggle showInProduction={false} showErrorBadge={true} />
+            </>
+          )}
         </TooltipProvider>
       </QueryClientProvider>
     </AppErrorBoundary>
@@ -95,3 +121,4 @@ function App() {
 }
 
 export default App;
+>>>>>>> Stashed changes

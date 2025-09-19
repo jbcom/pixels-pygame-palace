@@ -1,5 +1,5 @@
 /**
- * Enhanced Python Error Handling for PyGame Academy
+ * Enhanced Python Error Handling for Pixel's PyGame Palace
  * Provides comprehensive error capture, formatting, and educational context
  */
 

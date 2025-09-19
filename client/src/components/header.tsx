@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:f90b4b53df00be40e39931221f2e025f0cf4a6958e58680d1e0f62067cb0d6ef
+size 4118
+=======
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Gamepad2, Trophy, Star } from "lucide-react";
 import type { Lesson } from "@shared/schema";
@@ -50,7 +55,7 @@ export default function Header({ lesson, progress, onBack }: HeaderProps) {
                 </div>
               </div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                PyGame Academy
+                Pixel's PyGame Palace
               </h1>
             </motion.div>
             
@@ -97,3 +102,4 @@ export default function Header({ lesson, progress, onBack }: HeaderProps) {
     </motion.header>
   );
 }
+>>>>>>> Stashed changes

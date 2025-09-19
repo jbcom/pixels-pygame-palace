@@ -48,7 +48,7 @@ export const directAssetLinks = {
 };
 
 // Python script to help download assets
-export const assetDownloadScript = `# Asset Downloader for PyGame Academy
+export const assetDownloadScript = `# Asset Downloader for Pixel's PyGame Palace
 # Downloads CC0 assets for use in your games
 
 import os

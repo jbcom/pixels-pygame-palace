@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:d4d344080461ee6312b6ae4d08f08b40c7e184895082d10db7af837633b4cb88
+size 24260
+=======
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -141,7 +146,7 @@ export default function Gallery() {
                       <Gamepad2 className="text-primary h-6 w-6" />
                     </div>
                   </div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">PyGame Academy</h1>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pixel's PyGame Palace</h1>
                 </div>
               </Link>
             </motion.div>
@@ -404,7 +409,7 @@ export default function Gallery() {
                         <Badge variant="secondary" className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
                           {getTemplateIcon(project.template)} {getTemplateDisplayName(project.template)}
                         </Badge>
-                        {isRecentlyPublished(project.publishedAt) && (
+                        {isRecentlyPublished(project.publishedAt ?? null) && (
                           <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg animate-pulse">
                             <Sparkles className="h-3 w-3 mr-1" />
                             NEW
@@ -461,8 +466,8 @@ export default function Gallery() {
                       {/* Publication Info */}
                       <div className="flex items-center text-xs text-muted-foreground mb-4">
                         <Clock className="h-3 w-3 mr-1" />
-                        <span className={`${isRecentlyPublished(project.publishedAt) ? 'text-emerald-600 font-medium' : ''}`}>
-                          {formatTimeAgo(project.publishedAt)}
+                        <span className={`${isRecentlyPublished(project.publishedAt ?? null) ? 'text-emerald-600 font-medium' : ''}`}>
+                          {formatTimeAgo(project.publishedAt ?? null)}
                         </span>
                       </div>
                       
@@ -500,3 +505,4 @@ export default function Gallery() {
     </div>
   );
 }
+>>>>>>> Stashed changes

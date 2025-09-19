@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+version https://git-lfs.github.com/spec/v1
+oid sha256:8bba4e2cf9e8374007ff02857c09e0658d1fc856075e0d968354e165d7c9f9c4
+size 18028
+=======
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -31,17 +36,125 @@ import {
   getConversationHistory,
   saveConversationHistory
 } from "@/lib/user-profile";
-import {
-  dialogFlows,
-  processDialogStep,
-  createMessage,
-  getDialogFlow,
-  getPixelResponse,
-  PixelMood,
-  getPixelMood,
-  skillLevelResponses
-} from "@/lib/pixel-dialog";
+import { DialogueEngine } from "@/lib/dialogue-engine";
+import { PixelMood, getPixelMood } from "@/lib/pixel-dialog";
 import { useLocation } from "wouter";
+
+// Import generated Pixel images
+import pixelHappy from '@assets/pixel/Pixel_happy_excited_expression_22a41625.png';
+import pixelThinking from '@assets/pixel/Pixel_thinking_pondering_expression_0ffffedb.png';
+import pixelCelebrating from '@assets/pixel/Pixel_celebrating_victory_expression_24b7a377.png';
+import pixelConfused from '@assets/pixel/Pixel_confused_puzzled_expression_843c04f4.png';
+import pixelEncouraging from '@assets/pixel/Pixel_encouraging_supportive_expression_cf958090.png';
+import pixelCool from '@assets/pixel/Pixel_cool_confident_expression_ba46337f.png';
+import pixelSurprised from '@assets/pixel/Pixel_surprised_wow_expression_e0d4a42f.png';
+import pixelTeaching from '@assets/pixel/Pixel_teaching_explaining_expression_27e09763.png';
+import pixelGaming from '@assets/pixel/Pixel_gaming_focused_expression_6f3fdfab.png';
+import pixelWelcoming from '@assets/pixel/Pixel_welcoming_waving_expression_279ffdd2.png';
+import pixelLaughing from '@assets/pixel/Pixel_laughing_joyful_expression_e1b57465.png';
+import pixelSleepy from '@assets/pixel/Pixel_sleepy_tired_expression_20c2d99f.png';
+import pixelDetermined from '@assets/pixel/Pixel_determined_focused_expression_036b4449.png';
+import pixelShy from '@assets/pixel/Pixel_shy_bashful_expression_3fb150c2.png';
+import pixelDancing from '@assets/pixel/Pixel_dancing_musical_expression_c71def5e.png';
+import pixelAngry from '@assets/pixel/Pixel_angry_frustrated_expression_daa5924a.png';
+import pixelProud from '@assets/pixel/Pixel_proud_achievement_expression_a968da89.png';
+import pixelMischievous from '@assets/pixel/Pixel_mischievous_playful_expression_fdd56be5.png';
+import pixelSad from '@assets/pixel/Pixel_sad_disappointed_expression_f88b201a.png';
+import pixelCurious from '@assets/pixel/Pixel_curious_investigating_expression_7e10e865.png';
+import pixelCoding from '@assets/pixel/Pixel_coding_programming_expression_56de8ca0.png';
+import pixelIdea from '@assets/pixel/Pixel_idea_eureka_expression_64420aee.png';
+import pixelNinja from '@assets/pixel/Pixel_ninja_stealth_expression_50deab14.png';
+import pixelSuperhero from '@assets/pixel/Pixel_superhero_flying_expression_d0432407.png';
+import pixelZen from '@assets/pixel/Pixel_zen_meditation_expression_1148cb14.png';
+
+// Map moods to generated images
+const moodImages: Record<PixelMood, string> = {
+  [PixelMood.Happy]: pixelHappy,
+  [PixelMood.Excited]: pixelCelebrating,
+  [PixelMood.Thinking]: pixelThinking,
+  [PixelMood.Helpful]: pixelEncouraging,
+  [PixelMood.Celebrating]: pixelCelebrating,
+  [PixelMood.Curious]: pixelCurious,
+  [PixelMood.Encouraging]: pixelEncouraging,
+  [PixelMood.Proud]: pixelProud
+};
+
+// Additional expression images for variety
+const additionalExpressions = {
+  confused: pixelConfused,
+  cool: pixelCool,
+  surprised: pixelSurprised,
+  teaching: pixelTeaching,
+  gaming: pixelGaming,
+  welcoming: pixelWelcoming,
+  laughing: pixelLaughing,
+  sleepy: pixelSleepy,
+  determined: pixelDetermined,
+  shy: pixelShy,
+  dancing: pixelDancing,
+  angry: pixelAngry,
+  mischievous: pixelMischievous,
+  sad: pixelSad,
+  coding: pixelCoding,
+  idea: pixelIdea,
+  ninja: pixelNinja,
+  superhero: pixelSuperhero,
+  zen: pixelZen,
+  thinking: pixelThinking
+};
+
+// Helper function to map context to expressions
+function getExpressionForContext(context: string): keyof typeof additionalExpressions | undefined {
+  const contextMap: Record<string, keyof typeof additionalExpressions> = {
+    'greeting': 'welcoming',
+    'hello': 'welcoming',
+    'teaching': 'teaching',
+    'coding': 'coding',
+    'gaming': 'gaming',
+    'confused': 'confused',
+    'error': 'confused',
+    'success': 'determined',
+    'thinking': 'coding',
+    'idea': 'idea',
+    'loading': 'coding',
+    'celebration': 'dancing',
+    'proud': 'cool',
+    'help': 'teaching',
+    'cool': 'cool',
+    'sad': 'sad',
+    'tired': 'sleepy',
+    'angry': 'angry',
+    'frustrated': 'angry',
+    'dance': 'dancing',
+    'music': 'dancing',
+    'ninja': 'ninja',
+    'stealth': 'ninja',
+    'super': 'superhero',
+    'hero': 'superhero',
+    'zen': 'zen',
+    'meditation': 'zen',
+    'laugh': 'laughing',
+    'funny': 'laughing',
+    'mischief': 'mischievous',
+    'prank': 'mischievous',
+    'shy': 'shy',
+    'bashful': 'shy',
+    'determined': 'determined',
+    'focused': 'determined',
+    'surprise': 'surprised',
+    'wow': 'surprised'
+  };
+  
+  // Find matching context
+  const lowerContext = context.toLowerCase();
+  for (const [key, value] of Object.entries(contextMap)) {
+    if (lowerContext.includes(key)) {
+      return value;
+    }
+  }
+  
+  return undefined;
+}
 
 interface PixelWizardProps {
   onClose?: () => void;
@@ -49,42 +162,24 @@ interface PixelWizardProps {
   isOverlay?: boolean;
 }
 
-// Pixel Avatar Component
-const PixelAvatar = ({ mood = PixelMood.Happy, size = "md" }: { mood?: PixelMood; size?: "sm" | "md" | "lg" }) => {
+// Pixel Avatar Component using generated images
+const PixelAvatar = ({ mood = PixelMood.Happy, size = "md", expression }: { mood?: PixelMood; size?: "sm" | "md" | "lg"; expression?: keyof typeof additionalExpressions }) => {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",
     lg: "w-16 h-16"
   };
   
-  const moodColors = {
-    [PixelMood.Happy]: "from-cyan-400 to-blue-500",
-    [PixelMood.Excited]: "from-pink-400 to-purple-500",
-    [PixelMood.Thinking]: "from-yellow-400 to-orange-500",
-    [PixelMood.Helpful]: "from-green-400 to-teal-500",
-    [PixelMood.Celebrating]: "from-purple-400 to-pink-500",
-    [PixelMood.Curious]: "from-blue-400 to-indigo-500",
-    [PixelMood.Encouraging]: "from-rose-400 to-pink-500",
-    [PixelMood.Proud]: "from-amber-400 to-yellow-500"
-  };
-  
-  const moodIcons = {
-    [PixelMood.Happy]: <Gamepad2 className="w-6 h-6 text-white" />,
-    [PixelMood.Excited]: <Rocket className="w-6 h-6 text-white" />,
-    [PixelMood.Thinking]: <Code2 className="w-6 h-6 text-white" />,
-    [PixelMood.Helpful]: <Heart className="w-6 h-6 text-white" />,
-    [PixelMood.Celebrating]: <Star className="w-6 h-6 text-white" />,
-    [PixelMood.Curious]: <Sparkles className="w-6 h-6 text-white" />,
-    [PixelMood.Encouraging]: <Zap className="w-6 h-6 text-white" />,
-    [PixelMood.Proud]: <Star className="w-6 h-6 text-white" />
-  };
+  // Choose image based on expression or mood
+  const imageSrc = expression && additionalExpressions[expression] 
+    ? additionalExpressions[expression] 
+    : moodImages[mood];
   
   return (
     <motion.div 
-      className={`relative ${sizeClasses[size]} rounded-full bg-gradient-to-br ${moodColors[mood]} p-2 shadow-lg`}
+      className={`relative ${sizeClasses[size]} rounded-full overflow-hidden shadow-lg border-2 border-cyan-400/50`}
       animate={{ 
-        scale: [1, 1.1, 1],
-        rotate: [0, 5, -5, 0]
+        scale: [1, 1.05, 1],
       }}
       transition={{ 
         duration: 3,
@@ -92,10 +187,13 @@ const PixelAvatar = ({ mood = PixelMood.Happy, size = "md" }: { mood?: PixelMood
         repeatType: "reverse"
       }}
     >
-      <div className="absolute inset-0 rounded-full bg-white/20 backdrop-blur-sm" />
-      <div className="relative flex items-center justify-center h-full">
-        {moodIcons[mood]}
-      </div>
+      <img 
+        src={imageSrc} 
+        alt={`Pixel ${expression || mood} expression`}
+        className="w-full h-full object-cover"
+        style={{ imageRendering: 'crisp-edges' }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 to-transparent pointer-events-none" />
       <motion.div 
         className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"
         animate={{ scale: [1, 1.2, 1] }}
@@ -115,34 +213,59 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [currentMood, setCurrentMood] = useState<PixelMood>(PixelMood.Happy);
+  const [currentExpression, setCurrentExpression] = useState<keyof typeof additionalExpressions | undefined>('welcoming');
   
   // User & Conversation State
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [wizardState, setWizardState] = useState<WizardState>(getWizardState());
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [currentFlow, setCurrentFlow] = useState<any[]>([]);
-  const [flowIndex, setFlowIndex] = useState(0);
   const [waitingForInput, setWaitingForInput] = useState<string | null>(null);
+  
+  // Dialogue Engine
+  const [dialogueEngine, setDialogueEngine] = useState<DialogueEngine | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize on mount
+  // Initialize dialogue engine on mount
   useEffect(() => {
-    const profile = getUserProfile();
-    setUserProfile(profile);
-    
-    const history = getConversationHistory();
-    if (history.length > 0) {
-      setMessages(history);
-    } else {
-      // Start initial conversation
-      const flow = getDialogFlow(profile ? 'returning' : 'firstVisit', profile);
-      setCurrentFlow(flow);
-      if (flow.length > 0) {
-        processNextStep(flow, 0, profile);
+    const initializeDialogue = async () => {
+      setIsLoading(true);
+      
+      const profile = getUserProfile();
+      setUserProfile(profile);
+      
+      // Create dialogue engine instance
+      const engine = new DialogueEngine();
+      
+      // Set up action callbacks
+      engine.setActionCallback((action: string, data?: any) => {
+        handleDialogueAction(action, data);
+      });
+      
+      // Load appropriate dialogue based on user state
+      const flowName = await engine.loadAppropriateDialogue(profile);
+      
+      // Get existing history or start new dialogue
+      const history = engine.getHistory();
+      if (history.length > 0) {
+        setMessages(history);
+      } else {
+        // Start dialogue
+        const firstMessage = await engine.startDialogue();
+        if (firstMessage) {
+          setMessages([firstMessage]);
+          setCurrentMood(getPixelMood('greeting'));
+          setCurrentExpression(getExpressionForContext('greeting'));
+        }
       }
-    }
+      
+      setDialogueEngine(engine);
+      setIsLoading(false);
+    };
+    
+    initializeDialogue();
   }, []);
 
   // Auto-scroll to bottom when messages change
@@ -152,144 +275,151 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
     }
   }, [messages]);
 
-  // Process next step in dialog flow
-  const processNextStep = (flow: any[], index: number, profile: UserProfile | null) => {
-    if (index >= flow.length) {
-      // Flow complete
-      if (wizardState.currentStep === 'welcome' && profile) {
-        const updatedProfile = updateUserProfile({ onboardingComplete: true });
-        setUserProfile(updatedProfile);
-        saveWizardState({ ...wizardState, currentStep: 'complete' });
-      }
-      return;
+  // Handle dialogue actions from the engine
+  const handleDialogueAction = (action: string, data?: any) => {
+    switch (action) {
+      case 'navigate':
+        if (data?.page) {
+          setLocation(`/${data.page}`);
+        }
+        break;
+        
+      case 'createProject':
+        if (onAction) {
+          onAction('createProject', data);
+        }
+        if (data?.template) {
+          setLocation('/project-builder');
+        }
+        break;
+        
+      case 'suggestTemplates':
+        if (onAction) {
+          onAction('suggestTemplates', data);
+        }
+        break;
+        
+      case 'startLesson':
+        if (data?.lessonId) {
+          setLocation(`/lesson/${data.lessonId}`);
+        }
+        break;
+        
+      case 'showCodeExample':
+      case 'highlightCode':
+      case 'showFeatureCode':
+      case 'showErrorFix':
+      case 'generatePractice':
+      case 'setControls':
+      case 'suggestDifficultyValues':
+      case 'checkForErrors':
+      case 'autoFix':
+      case 'refreshProject':
+      case 'navigateNextLesson':
+        if (onAction) {
+          onAction(action, data);
+        }
+        break;
+        
+      default:
+        console.log('Unhandled dialogue action:', action, data);
     }
-
-    const step = flow[index];
+  };
+  
+  // Process dialogue message with typing effect
+  const processDialogueMessage = async (message: ConversationMessage | null) => {
+    if (!message) return;
     
-    // Check condition if exists
-    if (step.condition && !step.condition(profile)) {
-      processNextStep(flow, index + 1, profile);
-      return;
-    }
-
-    if (step.pixel) {
-      const content = processDialogStep(step, profile);
-      const mood = getPixelMood(step.mood || 'greeting');
-      setCurrentMood(mood);
-      
+    if (message.role === 'pixel' || message.role === 'system') {
       setIsTyping(true);
+      setCurrentMood(getPixelMood(message.content));
+      setCurrentExpression(getExpressionForContext(message.content));
+      
+      // Simulate typing delay
       setTimeout(() => {
-        const message = createMessage(content, 'pixel', step.quickReplies);
-        setMessages(prev => [...prev, message]);
+        setMessages(prev => {
+          // Check if message already exists
+          if (prev.some(m => m.id === message.id)) {
+            return prev;
+          }
+          return [...prev, message];
+        });
         setIsTyping(false);
         
-        if (step.getUserName) {
-          setWaitingForInput('name');
-        } else if (step.getInput) {
-          setWaitingForInput(step.getInput);
-        } else if (!step.quickReplies) {
-          // Auto-continue if no user input needed
-          setTimeout(() => {
-            processNextStep(flow, index + 1, profile);
-          }, 1500);
+        // Check if waiting for input
+        const content = message.content.toLowerCase();
+        if (content.includes('what should i call you') || 
+            content.includes('enter your name')) {
+          setWaitingForInput('playerName');
         }
       }, 1000);
+    } else {
+      // User messages show immediately
+      setMessages(prev => {
+        if (prev.some(m => m.id === message.id)) {
+          return prev;
+        }
+        return [...prev, message];
+      });
     }
-    
-    setFlowIndex(index);
   };
 
   // Handle quick reply selection
-  const handleQuickReply = (reply: string) => {
-    const userMessage = createMessage(reply, 'user');
-    setMessages(prev => [...prev, userMessage]);
+  const handleQuickReply = async (reply: string, optionIndex: number) => {
+    if (!dialogueEngine) return;
     
-    // Process reply based on context
-    if (reply.includes("First time")) {
-      const profile = userProfile || createNewProfile("Friend", 'beginner');
-      setUserProfile(profile);
-      processNextStep(currentFlow, flowIndex + 1, profile);
-    } else if (reply.includes("I've tried")) {
-      const profile = userProfile || createNewProfile("Friend", 'learning');
-      setUserProfile(profile);
-      processNextStep(currentFlow, flowIndex + 1, profile);
-    } else if (reply.includes("I know Python")) {
-      const profile = userProfile || createNewProfile("Friend", 'confident');
-      setUserProfile(profile);
-      processNextStep(currentFlow, flowIndex + 1, profile);
-    } else if (reply.includes("I'm a pro")) {
-      const profile = userProfile || createNewProfile("Friend", 'pro');
-      setUserProfile(profile);
-      processNextStep(currentFlow, flowIndex + 1, profile);
-    } else if (reply.includes("Let's do this")) {
-      // Navigate to project builder
-      onAction?.('createProject');
-      setLocation('/project-builder');
-    } else if (reply.includes("Show me around")) {
-      // Start tour
-      onAction?.('startTour');
-    } else if (reply.includes("learn Python basics")) {
-      // Navigate to lessons
-      onAction?.('startLessons');
-      setLocation('/lesson/lesson-1');
-    } else if (reply.includes("Continue my project")) {
-      onAction?.('continueProject');
-      setLocation('/project-builder');
-    } else if (reply.includes("Browse gallery")) {
-      setLocation('/gallery');
-    } else {
-      // Handle genre selections
-      if (reply.includes("Platformer") || reply.includes("Puzzle") || reply.includes("Adventure") || 
-          reply.includes("Racing") || reply.includes("Music") || reply.includes("Tower Defense")) {
-        const genres = userProfile?.preferredGenres || [];
-        const genreType = reply.split(" ")[0].toLowerCase();
-        if (!genres.includes(genreType)) {
-          genres.push(genreType);
-          updateUserProfile({ preferredGenres: genres });
+    // Select the option in the dialogue engine
+    const nextMessage = dialogueEngine.selectOption(optionIndex);
+    
+    // Process the next message
+    processDialogueMessage(nextMessage);
+    
+    // Continue dialogue if there are more messages
+    setTimeout(async () => {
+      let msg = dialogueEngine.getNextMessage();
+      while (msg) {
+        processDialogueMessage(msg);
+        // Check if this message has options - if so, stop
+        if (msg.quickReplies && msg.quickReplies.length > 0) {
+          break;
         }
+        // Small delay between messages
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        msg = dialogueEngine.getNextMessage();
       }
-      processNextStep(currentFlow, flowIndex + 1, userProfile);
-    }
-    
-    // Save conversation
-    saveConversationHistory(messages);
+    }, 100);
   };
 
   // Handle text input submission
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || !dialogueEngine) return;
     
-    const userMessage = createMessage(inputValue, 'user');
-    setMessages(prev => [...prev, userMessage]);
+    const input = inputValue;
+    setInputValue("");
     
-    if (waitingForInput === 'name') {
-      const profile = createNewProfile(inputValue, 'beginner');
-      setUserProfile(profile);
-      setWaitingForInput(null);
-      processNextStep(currentFlow, flowIndex + 1, profile);
-    } else if (waitingForInput === 'mascotName') {
-      const updatedProfile = updateUserProfile({ mascotName: inputValue });
-      setUserProfile(updatedProfile);
-      setWaitingForInput(null);
+    // Handle user input through dialogue engine
+    const response = dialogueEngine.handleUserInput(input);
+    
+    if (response) {
+      processDialogueMessage(response);
       
-      const thankYouMessage = createMessage(
-        `I love it! From now on, call me ${inputValue}! 🎭`,
-        'pixel'
-      );
-      setMessages(prev => [...prev, thankYouMessage]);
-    } else {
-      // General conversation
-      setIsTyping(true);
-      setTimeout(() => {
-        const response = getPixelResponse('greetings');
-        const pixelMessage = createMessage(response, 'pixel');
-        setMessages(prev => [...prev, pixelMessage]);
-        setIsTyping(false);
-      }, 1000);
+      // Continue dialogue if there are more messages
+      setTimeout(async () => {
+        let msg = dialogueEngine.getNextMessage();
+        while (msg) {
+          processDialogueMessage(msg);
+          // Check if this message has options - if so, stop
+          if (msg.quickReplies && msg.quickReplies.length > 0) {
+            break;
+          }
+          // Small delay between messages
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          msg = dialogueEngine.getNextMessage();
+        }
+      }, 100);
     }
     
-    setInputValue("");
-    saveConversationHistory(messages);
+    setWaitingForInput(null);
   };
 
   // Toggle minimize/maximize
@@ -335,14 +465,14 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <PixelAvatar mood={currentMood} size="md" />
+              <PixelAvatar mood={currentMood} size="md" expression={currentExpression} />
             </motion.button>
           ) : (
             <>
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200/20 dark:border-gray-700/20 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
                 <div className="flex items-center space-x-3">
-                  <PixelAvatar mood={currentMood} size="sm" />
+                  <PixelAvatar mood={currentMood} size="sm" expression={currentExpression} />
                   <div>
                     <h3 className="font-bold text-gray-900 dark:text-white">
                       {userProfile?.mascotName || "Pixel"}
@@ -384,7 +514,11 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
                     >
                       <div className={`flex items-start space-x-2 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                         {message.role === 'pixel' && (
-                          <PixelAvatar mood={currentMood} size="sm" />
+                          <PixelAvatar 
+                            mood={currentMood} 
+                            size="sm" 
+                            expression={getExpressionForContext(message.content) || currentExpression}
+                          />
                         )}
                         <div className={`rounded-2xl px-4 py-2 ${
                           message.role === 'user' 
@@ -409,7 +543,7 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
                           key={idx}
                           variant="outline"
                           size="sm"
-                          onClick={() => handleQuickReply(reply)}
+                          onClick={() => handleQuickReply(reply, idx)}
                           className="text-xs hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10"
                         >
                           {reply}
@@ -425,7 +559,7 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
                       animate={{ opacity: 1 }}
                       className="flex items-center space-x-2"
                     >
-                      <PixelAvatar mood={PixelMood.Thinking} size="sm" />
+                      <PixelAvatar mood={PixelMood.Thinking} size="sm" expression="thinking" />
                       <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
                         <motion.div className="flex space-x-1">
                           {[0, 1, 2].map((i) => (
@@ -481,3 +615,4 @@ export default function PixelWizard({ onClose, onAction, isOverlay = false }: Pi
     </AnimatePresence>
   );
 }
+>>>>>>> Stashed changes
