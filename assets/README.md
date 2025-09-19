@@ -1,4 +1,4 @@
-# PyGame Academy Assets Directory
+# Pixel's PyGame Palace Assets Directory
 
 This directory contains all game assets tracked by Git LFS for efficient storage.
 

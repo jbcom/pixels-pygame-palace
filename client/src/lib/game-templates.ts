@@ -525,7 +525,7 @@ if __name__ == "__main__":
     files: [
       {
         path: 'main.py',
-        content: `# PyGame Academy - Blank Canvas Template
+        content: `# Pixel's PyGame Palace - Blank Canvas Template
 # Start building your own game from scratch!
 
 import pygame
@@ -610,7 +610,7 @@ if __name__ == "__main__":
     files: [
       {
         path: 'main.py',
-        content: `# PyGame Academy - Platformer Template
+        content: `# Pixel's PyGame Palace - Platformer Template
 # A side-scrolling adventure game with jumping and platforms!
 
 import pygame
@@ -800,7 +800,7 @@ if __name__ == "__main__":
     files: [
       {
         path: 'main.py',
-        content: `# PyGame Academy - Space Shooter Template
+        content: `# Pixel's PyGame Palace - Space Shooter Template
 # Defend Earth from alien invaders!
 
 import pygame
@@ -1119,7 +1119,7 @@ if __name__ == "__main__":
     files: [
       {
         path: 'main.py',
-        content: `# PyGame Academy - Match-3 Puzzle Template
+        content: `# Pixel's PyGame Palace - Match-3 Puzzle Template
 # Match 3 or more gems to clear them and score points!
 
 import pygame
