@@ -1,0 +1,299 @@
+title: AssetSelection
+---
+<<set $mood to "excited">>
+Pixel: Time to make your game look AMAZING! 🎨
+Pixel: I've got access to thousands of professional game assets!
+<<if $selectedGenre == "platformer">>
+    <<jump PlatformerAssets>>
+<<elseif $selectedGenre == "puzzle">>
+    <<jump PuzzleAssets>>
+<<elseif $selectedGenre == "racing">>
+    <<jump RacingAssets>>
+<<elseif $selectedGenre == "adventure">>
+    <<jump AdventureAssets>>
+<<else>>
+    <<jump GeneralAssets>>
+<<endif>>
+===
+
+title: PlatformerAssets
+---
+<<set $mood to "helpful">>
+Pixel: For your platformer, let's pick the perfect visual style! 🏃
+-> Cute animals 🐰
+    <<set $assetPack to "jumper-pack">>
+    <<jump AssetDetails>>
+-> Sci-fi robots 🤖
+    <<set $assetPack to "scifi-pack">>
+    <<jump AssetDetails>>
+-> Abstract shapes 🔷
+    <<set $assetPack to "abstract-platformer">>
+    <<jump AssetDetails>>
+-> Pixel art style 👾
+    <<set $assetPack to "pixel-platformer">>
+    <<jump AssetDetails>>
+-> Medieval fantasy ⚔️
+    <<set $assetPack to "rpg-pack">>
+    <<jump AssetDetails>>
+===
+
+title: PuzzleAssets
+---
+<<set $mood to "thoughtful">>
+Pixel: Puzzle games need clear, appealing visuals! Let me show you some options! 🧩
+-> Candy & sweets 🍬
+    <<set $assetPack to "candy-pack">>
+    <<jump AssetDetails>>
+-> Gems & jewels 💎
+    <<set $assetPack to "puzzle-pack">>
+    <<jump AssetDetails>>
+-> Space theme 🌟
+    <<set $assetPack to "space-pack">>
+    <<jump AssetDetails>>
+-> Nature blocks 🌿
+    <<set $assetPack to "nature-pack">>
+    <<jump AssetDetails>>
+-> Minimalist shapes ⬜
+    <<set $assetPack to "shape-pack">>
+    <<jump AssetDetails>>
+===
+
+title: RacingAssets
+---
+<<set $mood to "energetic">>
+Pixel: Speed demons need the right look! Check these out! 🏎️
+-> Formula racing 🏁
+    <<set $assetPack to "racing-pack">>
+    <<jump AssetDetails>>
+-> Street racing 🚗
+    <<set $assetPack to "street-pack">>
+    <<jump AssetDetails>>
+-> Kart racing 🛺
+    <<set $assetPack to "kart-pack">>
+    <<jump AssetDetails>>
+-> Futuristic hovercars ⚡
+    <<set $assetPack to "scifi-racing">>
+    <<jump AssetDetails>>
+-> Off-road trucks 🚙
+    <<set $assetPack to "offroad-pack">>
+    <<jump AssetDetails>>
+===
+
+title: AdventureAssets
+---
+<<set $mood to "adventurous">>
+Pixel: Every adventure needs the right atmosphere! What world are we building? 🗺️
+-> Medieval RPG ⚔️
+    <<set $assetPack to "rpg-pack">>
+    <<jump AssetDetails>>
+-> Space exploration 🚀
+    <<set $assetPack to "space-pack">>
+    <<jump AssetDetails>>
+-> Dungeon crawler 🏰
+    <<set $assetPack to "roguelike-pack">>
+    <<jump AssetDetails>>
+-> Pirate seas 🏴‍☠️
+    <<set $assetPack to "pirate-pack">>
+    <<jump AssetDetails>>
+-> Post-apocalyptic 🏚️
+    <<set $assetPack to "apocalypse-pack">>
+    <<jump AssetDetails>>
+===
+
+title: GeneralAssets
+---
+<<set $mood to "creative">>
+Pixel: Let's browse through our asset library! So many choices! 🎨
+-> Show me characters 👥
+    <<jump CharacterAssets>>
+-> Show me environments 🌍
+    <<jump EnvironmentAssets>>
+-> Show me UI elements 📱
+    <<jump UIAssets>>
+-> Show me effects ✨
+    <<jump EffectAssets>>
+-> I'll choose later
+    <<jump SkipAssets>>
+===
+
+title: CharacterAssets
+---
+<<set $mood to "showing">>
+Pixel: Here are some awesome character options! Each has multiple animations! 🏃
+<<showAssetGrid("characters")>>
+-> Pixel art characters
+    <<set $characterStyle to "pixel">>
+    <<jump CharacterSelected>>
+-> Vector characters
+    <<set $characterStyle to "vector">>
+    <<jump CharacterSelected>>
+-> Animal characters
+    <<set $characterStyle to "animals">>
+    <<jump CharacterSelected>>
+-> Robot characters
+    <<set $characterStyle to "robots">>
+    <<jump CharacterSelected>>
+===
+
+title: CharacterSelected
+---
+<<set $mood to "happy">>
+Pixel: Great choice! These {$characterStyle} characters look fantastic! 
+Pixel: They come with walk, jump, idle, and special animations!
+-> Show me environments next
+    <<jump EnvironmentAssets>>
+-> That's all I need
+    <<jump AssetsComplete>>
+===
+
+title: EnvironmentAssets
+---
+<<set $mood to "showing">>
+Pixel: Environments set the mood! Check out these tile sets! 🌍
+<<showAssetGrid("environments")>>
+-> Forest & nature 🌲
+    <<set $environment to "nature">>
+    <<jump EnvironmentSelected>>
+-> City & urban 🏢
+    <<set $environment to "urban">>
+    <<jump EnvironmentSelected>>
+-> Castle & dungeon 🏰
+    <<set $environment to "castle">>
+    <<jump EnvironmentSelected>>
+-> Space station 🛸
+    <<set $environment to "space">>
+    <<jump EnvironmentSelected>>
+-> Abstract tiles 🔷
+    <<set $environment to "abstract">>
+    <<jump EnvironmentSelected>>
+===
+
+title: EnvironmentSelected
+---
+<<set $mood to "excited">>
+Pixel: The {$environment} environment will make your game world come alive!
+Pixel: These tiles snap together perfectly for easy level building!
+-> Show me UI elements
+    <<jump UIAssets>>
+-> Add some effects
+    <<jump EffectAssets>>
+-> Perfect, let's use these!
+    <<jump AssetsComplete>>
+===
+
+title: UIAssets
+---
+<<set $mood to "detailed">>
+Pixel: UI elements make your game feel professional! 🎮
+<<showAssetGrid("ui")>>
+-> Cyberpunk UI 💜
+    <<set $uiStyle to "cyberpunk">>
+    <<jump UISelected>>
+-> Fantasy UI ⚔️
+    <<set $uiStyle to "fantasy">>
+    <<jump UISelected>>
+-> Minimal UI ⬜
+    <<set $uiStyle to "minimal">>
+    <<jump UISelected>>
+-> Retro UI 👾
+    <<set $uiStyle to "retro">>
+    <<jump UISelected>>
+-> Cartoon UI 🌈
+    <<set $uiStyle to "cartoon">>
+    <<jump UISelected>>
+===
+
+title: UISelected
+---
+<<set $mood to "satisfied">>
+Pixel: The {$uiStyle} UI pack includes buttons, panels, icons, and health bars!
+Pixel: Everything you need for a polished interface!
+-> Add particle effects
+    <<jump EffectAssets>>
+-> That's everything!
+    <<jump AssetsComplete>>
+===
+
+title: EffectAssets
+---
+<<set $mood to "magical">>
+Pixel: Effects bring the magic! Let's add some visual flair! ✨
+<<showAssetGrid("effects")>>
+-> Explosions 💥
+    <<set $effects to "explosions">>
+    <<jump EffectsSelected>>
+-> Magic spells ✨
+    <<set $effects to "magic">>
+    <<jump EffectsSelected>>
+-> Weather effects 🌧️
+    <<set $effects to "weather">>
+    <<jump EffectsSelected>>
+-> Particle trails 🌟
+    <<set $effects to "particles">>
+    <<jump EffectsSelected>>
+-> All of them! 🎆
+    <<set $effects to "all">>
+    <<jump EffectsSelected>>
+===
+
+title: EffectsSelected
+---
+<<set $mood to "impressive">>
+Pixel: {$effects} effects loaded! Your game is going to look EPIC!
+<<jump AssetsComplete>>
+===
+
+title: AssetDetails
+---
+<<set $mood to "informative">>
+Pixel: The {$assetPack} includes:
+Pixel: • Multiple character sprites with animations
+Pixel: • Tile sets for building levels
+Pixel: • Collectibles and power-ups
+Pixel: • UI elements and buttons
+Pixel: • Sound effects and music!
+-> Perfect! Use these! ✅
+    <<loadAssets($assetPack)>>
+    <<jump AssetsComplete>>
+-> Show me other options 👀
+    <<jump AssetSelection>>
+-> Let me preview them 🔍
+    <<showAssetPreview($assetPack)>>
+    <<jump AssetPreviewResponse>>
+===
+
+title: AssetPreviewResponse
+---
+<<set $mood to "patient">>
+Pixel: Take your time exploring! These are professional-quality assets!
+-> I love them! 💜
+    <<loadAssets($assetPack)>>
+    <<jump AssetsComplete>>
+-> Show me alternatives
+    <<jump AssetSelection>>
+===
+
+title: AssetsComplete
+---
+<<set $mood to "celebrating">>
+Pixel: Assets loaded and ready! Your game is already looking awesome! 🎉
+Pixel: You can always change these later if you want a different style!
+<<if $skillLevel == "beginner">>
+    Pixel: I've added comments in the code showing you how to use each asset!
+<<endif>>
+-> Let's add features! 🎮
+    <<jump ../feature-selection/FeatureSelection>>
+-> Show me the code 👩‍💻
+    <<showCode("assets")>>
+-> I want to test it! ▶️
+    <<runGame()>>
+===
+
+title: SkipAssets
+---
+<<set $mood to "understanding">>
+Pixel: No problem! We can always add visual assets later!
+Pixel: For now, I'll use simple colored shapes so you can focus on the gameplay!
+-> Sounds good! 
+    <<jump ../feature-selection/FeatureSelection>>
+===
