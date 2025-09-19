@@ -1,7 +1,13 @@
 /**
- * Structured Console Logging System for PyGame Academy
+ * Structured Console Logging System for Pixel's PyGame Palace
  * Provides leveled logging with filtering and educational context
  */
+
+declare global {
+  interface Window {
+    __trackError?: Function;
+  }
+}
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'success';
 export type LogCategory = 'system' | 'python' | 'pygame' | 'user' | 'network' | 'performance' | 'ui';
@@ -21,8 +27,8 @@ class ConsoleLogger {
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
   private sessionId: string;
-  private enabledLevels: Set<LogLevel> = new Set(['info', 'warn', 'error', 'success']);
-  private enabledCategories: Set<LogCategory> = new Set(['system', 'python', 'pygame', 'user', 'network', 'performance', 'ui']);
+  private enabledLevels: Set<LogLevel> = new Set<LogLevel>(['info', 'warn', 'error', 'success']);
+  private enabledCategories: Set<LogCategory> = new Set<LogCategory>(['system', 'python', 'pygame', 'user', 'network', 'performance', 'ui']);
   private isDebugMode = false;
 
   constructor() {
@@ -46,12 +52,12 @@ class ConsoleLogger {
     try {
       const savedLevels = localStorage.getItem('pygame-log-levels');
       if (savedLevels) {
-        this.enabledLevels = new Set(JSON.parse(savedLevels));
+        this.enabledLevels = new Set(JSON.parse(savedLevels) as LogLevel[]);
       }
 
       const savedCategories = localStorage.getItem('pygame-log-categories');
       if (savedCategories) {
-        this.enabledCategories = new Set(JSON.parse(savedCategories));
+        this.enabledCategories = new Set(JSON.parse(savedCategories) as LogCategory[]);
       }
     } catch (e) {
       // Ignore localStorage errors
@@ -278,8 +284,8 @@ class ConsoleLogger {
 
   private savePreferences() {
     try {
-      localStorage.setItem('pygame-log-levels', JSON.stringify([...this.enabledLevels]));
-      localStorage.setItem('pygame-log-categories', JSON.stringify([...this.enabledCategories]));
+      localStorage.setItem('pygame-log-levels', JSON.stringify(Array.from(this.enabledLevels)));
+      localStorage.setItem('pygame-log-categories', JSON.stringify(Array.from(this.enabledCategories)));
     } catch (e) {
       // Ignore localStorage errors
     }
@@ -320,8 +326,8 @@ class ConsoleLogger {
       timestamp: new Date().toISOString(),
       logs: this.logs,
       config: {
-        enabledLevels: [...this.enabledLevels],
-        enabledCategories: [...this.enabledCategories],
+        enabledLevels: Array.from(this.enabledLevels),
+        enabledCategories: Array.from(this.enabledCategories),
         isDebugMode: this.isDebugMode
       }
     };
@@ -354,8 +360,8 @@ class ConsoleLogger {
   // Configuration getters
   getConfig() {
     return {
-      enabledLevels: [...this.enabledLevels],
-      enabledCategories: [...this.enabledCategories],
+      enabledLevels: Array.from(this.enabledLevels),
+      enabledCategories: Array.from(this.enabledCategories),
       isDebugMode: this.isDebugMode,
       sessionId: this.sessionId,
       totalLogs: this.logs.length

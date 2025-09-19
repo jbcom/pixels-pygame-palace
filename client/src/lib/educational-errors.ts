@@ -1,5 +1,5 @@
 /**
- * Educational Error Experience for PyGame Academy
+ * Educational Error Experience for Pixel's PyGame Palace
  * Transforms technical errors into learning opportunities
  */
 
@@ -324,7 +324,7 @@ pygame.draw.rect(screen, (0, 0, 255), (50, 50, 100, 100))`,
       createEducationalError: (match, originalError) => ({
         originalError,
         friendlyMessage: `The browser doesn't recognize '${match[1]}'. This might be a JavaScript error in the platform.`,
-        explanation: "This is a browser/JavaScript error, not a Python error. It's likely an issue with the PyGame Academy platform itself, not your code.",
+        explanation: "This is a browser/JavaScript error, not a Python error. It's likely an issue with the Pixel's PyGame Palace platform itself, not your code.",
         learningTips: [
           "JavaScript errors are different from Python errors",
           "These usually indicate platform issues, not problems with your Python code",
@@ -347,7 +347,7 @@ pygame.draw.rect(screen, (0, 0, 255), (50, 50, 100, 100))`,
       createEducationalError: (match, originalError) => ({
         originalError,
         friendlyMessage: "There was a problem loading part of the website. Try refreshing the page.",
-        explanation: "The browser couldn't load a piece of the PyGame Academy platform. This is a technical issue with the website, not your Python code.",
+        explanation: "The browser couldn't load a piece of the Pixel's PyGame Palace platform. This is a technical issue with the website, not your Python code.",
         learningTips: [
           "Chunk load errors are website loading issues",
           "They're not related to your Python programming",

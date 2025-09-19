@@ -1,5 +1,5 @@
 /**
- * Global Error Handling System for PyGame Academy
+ * Global Error Handling System for Pixel's PyGame Palace
  * Provides comprehensive error tracking, logging, and reporting
  */
 

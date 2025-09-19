@@ -1,4 +1,4 @@
-// CC0 Asset Library for PyGame Academy
+// CC0 Asset Library for Pixel's PyGame Palace
 // Free assets from various sources that kids can use in their games
 
 export interface GameAsset {
