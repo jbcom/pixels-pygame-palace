@@ -16,11 +16,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   Play, Save, FolderPlus, FileText, Plus, Trash2, ArrowLeft, Settings,
-  Gamepad2, Code2, Image, Volume2, Upload, Download, Copy, Palette, Share
+  Gamepad2, Code2, Image, Volume2, Upload, Download, Copy, Palette, Share, Star
 } from "lucide-react";
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
 import AssetManager from "@/components/asset-manager";
+import AssetBrowser from "@/components/asset-browser";
 import ExportDialog from "@/components/export-dialog";
 import PublishDialog from "@/components/publish-dialog";
 import { usePyodide } from "@/hooks/use-pyodide";
@@ -720,7 +721,7 @@ fallback_error = error_buffer.getvalue()
         {/* Left Panel - Files & Assets */}
         <div className="w-80 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-r border-border flex flex-col">
           <Tabs defaultValue="files" className="flex flex-col h-full">
-            <TabsList className="grid w-full grid-cols-2 m-4 mb-0">
+            <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
               <TabsTrigger value="files" data-testid="tab-files">
                 <Code2 className="h-4 w-4 mr-1" />
                 Files
@@ -728,6 +729,10 @@ fallback_error = error_buffer.getvalue()
               <TabsTrigger value="assets" data-testid="tab-assets">
                 <Image className="h-4 w-4 mr-1" />
                 Assets
+              </TabsTrigger>
+              <TabsTrigger value="library" data-testid="tab-library">
+                <Star className="h-4 w-4 mr-1" />
+                Library
               </TabsTrigger>
             </TabsList>
 
@@ -796,6 +801,23 @@ fallback_error = error_buffer.getvalue()
                   setUnsavedChanges(true);
                 }}
                 disabled={!currentProject}
+              />
+            </TabsContent>
+
+            <TabsContent value="library" className="flex-1 m-0">
+              <AssetBrowser 
+                onAssetSelect={(assetCode) => {
+                  if (files.length > 0) {
+                    // Add asset code to current file
+                    const currentFile = files[activeFileIndex];
+                    const newContent = currentFile.content + '\n\n' + assetCode;
+                    updateFileContent(newContent);
+                    toast({
+                      title: "Asset Code Added",
+                      description: "Asset loading code has been added to your file",
+                    });
+                  }
+                }}
               />
             </TabsContent>
           </Tabs>
