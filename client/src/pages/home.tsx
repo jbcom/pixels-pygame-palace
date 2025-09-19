@@ -41,7 +41,7 @@ import {
   Music,
   Blocks
 } from "lucide-react";
-import type { Lesson, UserProgress } from "@shared/schema";
+import type { Lesson, UserProgress, UserProfile } from "@shared/schema";
 import { 
   gameComponents, 
   saveComponentChoice, 
@@ -50,6 +50,8 @@ import {
   generateGameTemplate,
   getComponentSummary 
 } from "@/lib/game-building-blocks";
+import PixelWizard from "@/components/pixel-wizard";
+import { getUserProfile, saveUserProfile } from "@/lib/user-profile";
 
 // Import generated game images
 import platformerImage from "@assets/generated_images/Platformer_game_illustration_16ef54bb.png";
@@ -142,6 +144,8 @@ export default function Home() {
   const [blockPageIndex, setBlockPageIndex] = useState(0);
   const [componentChoices, setComponentChoices] = useState<{[key: string]: 'A' | 'B'}>({});
   const [expandedAccordions, setExpandedAccordions] = useState<string[]>(["games"]);
+  const [showWizard, setShowWizard] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const lastClickTime = useRef<{[key: string]: number}>({});
 
   const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
@@ -156,8 +160,9 @@ export default function Home() {
     queryKey: ["/api/gallery"],
   });
 
-  // Load saved component choices on mount
+  // Load saved component choices and user profile on mount
   useEffect(() => {
+    // Load component choices
     const choices: {[key: string]: 'A' | 'B'} = {};
     gameComponents.forEach(component => {
       const savedChoice = getComponentChoice(component.id);
@@ -166,6 +171,16 @@ export default function Home() {
       }
     });
     setComponentChoices(choices);
+    
+    // Load user profile from localStorage
+    const savedProfile = getUserProfile();
+    if (savedProfile) {
+      setUserProfile(savedProfile);
+      setShowWizard(false);
+    } else {
+      // First time user - show wizard
+      setShowWizard(true);
+    }
   }, []);
 
   const handleComponentToggle = (componentId: string, choice: 'A' | 'B') => {
