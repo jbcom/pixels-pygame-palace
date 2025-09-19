@@ -12,7 +12,7 @@ import DebugToggle from "@/components/debug-toggle";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import LessonPage from "@/pages/lesson";
-import ProjectBuilder from "@/pages/project-builder";
+import ProjectBuilderEnhanced from "@/pages/project-builder-enhanced";
 import Gallery from "@/pages/gallery";
 import ProjectViewer from "@/pages/project-viewer";
 import SplashScreen from "@/components/splash-screen";
@@ -32,12 +32,12 @@ function Router() {
       )} />
       <Route path="/project-builder" component={() => (
         <PageErrorBoundary context="Project Builder">
-          <ProjectBuilder />
+          <ProjectBuilderEnhanced />
         </PageErrorBoundary>
       )} />
       <Route path="/projects" component={() => (
         <PageErrorBoundary context="Project Builder">
-          <ProjectBuilder />
+          <ProjectBuilderEnhanced />
         </PageErrorBoundary>
       )} />
       <Route path="/gallery" component={() => (
