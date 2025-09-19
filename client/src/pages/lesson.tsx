@@ -732,7 +732,7 @@ result
           // Update progress with current code (regular run without grading)
           updateProgressMutation.mutate({ code });
         }
-      }
+      } // end if (runAutoGrading && ...)
     } catch (err) {
       console.error("Enhanced Python execution error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while executing the code.";
