@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSwipeable } from "react-swipeable";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -13,11 +14,21 @@ import {
   Car,
   Map,
   Puzzle,
-  ChevronRight
+  ChevronRight,
+  X,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  Menu
 } from "lucide-react";
 import LessonsPage from "@/pages/lessons";
 import ProjectBuilderEnhanced from "@/pages/project-builder-enhanced";
 import AssetSelector from "@/components/asset-selector";
+import PixelMenu from "@/components/pixel-menu";
+import { useIsMobile } from "@/hooks/use-media-query";
+import { useOrientation } from "@/hooks/use-orientation";
+import { useDeviceType } from "@/hooks/use-device-type";
+import { useEdgeSwipe } from "@/hooks/use-edge-swipe";
 
 // Import Pixel images
 import pixelWelcoming from '@assets/pixel/Pixel_welcoming_waving_expression_279ffdd2.png';
@@ -57,6 +68,15 @@ interface WizardFlow {
   startNode: string;
 }
 
+interface SessionAction {
+  id: string;
+  type: 'game_created' | 'lesson_completed' | 'asset_selected' | 'code_generated' | 'settings_changed';
+  title: string;
+  description?: string;
+  timestamp: Date;
+  icon: React.ComponentType<any>;
+}
+
 interface UniversalWizardProps {
   dialoguePath?: string;
   startNode?: string;
@@ -77,6 +97,27 @@ export default function UniversalWizard({
   const [variables, setVariables] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [dialogueStep, setDialogueStep] = useState<'text' | 'followUp'>('text');
+  const [mobileDialogueOpen, setMobileDialogueOpen] = useState(true);
+  const [showAllChoices, setShowAllChoices] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const choicesContainerRef = useRef<HTMLDivElement>(null);
+  const [pixelMenuOpen, setPixelMenuOpen] = useState(false);
+  const [sessionActions, setSessionActions] = useState<SessionAction[]>([]);
+  
+  // Device and orientation detection
+  const isMobile = useIsMobile();
+  const { isPortrait, isLandscape, orientation } = useOrientation();
+  const { deviceType, isFoldable, isTablet, isDesktop } = useDeviceType();
+
+  // Edge swipe detection
+  useEdgeSwipe({
+    onEdgeSwipe: (edge) => {
+      console.log(`Edge swipe detected from ${edge}`);
+      setPixelMenuOpen(true);
+    },
+    enabled: isMobile || isTablet || isFoldable,
+    edgeThreshold: 50
+  });
 
   // Icon mapping for game types
   const gameTypeIcons: Record<string, React.ComponentType<any>> = {
@@ -128,6 +169,22 @@ export default function UniversalWizard({
 
     loadDialogue();
   }, [dialoguePath]);
+
+  // Track session action
+  const trackAction = useCallback((type: SessionAction['type'], title: string, description?: string) => {
+    const newAction: SessionAction = {
+      id: Date.now().toString(),
+      type,
+      title,
+      description,
+      timestamp: new Date(),
+      icon: type === 'game_created' ? Gamepad2 : 
+            type === 'lesson_completed' ? BookOpen : 
+            type === 'asset_selected' ? Trophy : 
+            type === 'code_generated' ? Code2 : Trophy
+    };
+    setSessionActions(prev => [newAction, ...prev]);
+  }, []);
 
   // Update Pixel image based on context
   const updatePixelImage = useCallback((text: string) => {
@@ -186,11 +243,15 @@ export default function UniversalWizard({
         setEmbeddedComponent('editor');
         setPixelState('corner-waiting');
         setPixelImage(pixelCoding);
+        if (isMobile) setMobileDialogueOpen(false);
+        trackAction('code_generated', 'Opened Code Editor', 'Started writing game code');
         break;
       case 'openLessons':
         setEmbeddedComponent('lessons');
         setPixelState('corner-waiting');
         setPixelImage(pixelTeaching);
+        if (isMobile) setMobileDialogueOpen(false);
+        trackAction('lesson_completed', 'Started Lessons', 'Learning Python fundamentals');
         break;
       case 'showAssets':
         const type = params?.type || variables.gameType || 'generic';
@@ -199,6 +260,8 @@ export default function UniversalWizard({
         setEmbeddedComponent('assets');
         setPixelState('corner-waiting');
         setPixelImage(pixelExcited);
+        if (isMobile) setMobileDialogueOpen(false);
+        trackAction('asset_selected', 'Browsing Assets', `Looking at ${type} assets`);
         break;
       case 'startLesson':
         const lessonId = params?.id || 'python-basics';
@@ -224,7 +287,7 @@ export default function UniversalWizard({
         // This would integrate with the project builder
         break;
     }
-  }, [variables, setLocation]);
+  }, [variables, setLocation, isMobile, trackAction]);
 
   // Execute conditional action
   const executeConditionalAction = useCallback((node: DialogueNode) => {
@@ -301,6 +364,11 @@ export default function UniversalWizard({
   const handleOptionSelect = useCallback((option: DialogueOption) => {
     console.log('Selected option:', option.text);
     
+    // Track game creation if selecting game type
+    if (option.setVariable?.gameType) {
+      trackAction('game_created', `Created ${option.setVariable.gameType} Game`, option.text);
+    }
+    
     // Set any variables
     if (option.setVariable) {
       const newVars = { ...variables, ...option.setVariable };
@@ -315,19 +383,25 @@ export default function UniversalWizard({
       // If there's also a next node, navigate after a delay
       if (option.next) {
         setTimeout(() => {
-          navigateToNode(option.next);
+          navigateToNode(option.next!);
         }, 200);
       }
     } else if (option.next) {
       // Navigate to next node
-      navigateToNode(option.next);
+      navigateToNode(option.next!);
     }
-  }, [variables, executeAction, navigateToNode]);
+  }, [variables, executeAction, navigateToNode, trackAction]);
 
   // Handle returning from embedded component
   const returnToDialogue = useCallback(() => {
     setEmbeddedComponent('none');
-    setPixelState('center-stage');
+    // On mobile, keep Pixel in corner, open dialogue modal
+    if (isMobile) {
+      setPixelState('corner-waiting');
+      setMobileDialogueOpen(true);
+    } else {
+      setPixelState('center-stage');
+    }
     setPixelImage(pixelHappy);
     
     // Navigate to appropriate return node based on what was completed
@@ -336,7 +410,7 @@ export default function UniversalWizard({
     } else {
       navigateToNode('projectComplete');
     }
-  }, [embeddedComponent, navigateToNode]);
+  }, [embeddedComponent, navigateToNode, isMobile]);
 
   // Get current display text
   const getCurrentText = useCallback((): string => {
@@ -376,7 +450,418 @@ export default function UniversalWizard({
     return !currentNode.options && !!currentNode.next && dialogueStep === 'followUp';
   }, [currentNode, dialogueStep, getConditionalFollowUp]);
 
-  // Render dialogue content
+  // Determine which layout to use
+  const getLayoutMode = useCallback((): 'desktop' | 'mobile-portrait' | 'mobile-landscape' | 'tablet' => {
+    // Desktop mode for desktop devices
+    if (isDesktop && !isFoldable) {
+      return 'desktop';
+    }
+    
+    // Tablet mode for tablets and foldables in tablet mode
+    if (isTablet || (isFoldable && !isMobile)) {
+      // If portrait on tablet/foldable, use mobile portrait layout
+      if (isPortrait) {
+        return 'mobile-portrait';
+      }
+      return 'tablet';
+    }
+    
+    // Mobile layouts
+    if (isMobile || (isFoldable && isMobile)) {
+      return isPortrait ? 'mobile-portrait' : 'mobile-landscape';
+    }
+    
+    return 'desktop';
+  }, [isDesktop, isTablet, isMobile, isFoldable, isPortrait]);
+
+  // Swipe handlers for portrait mode (swipe down to show more choices)
+  const swipeHandlersPortrait = useSwipeable({
+    onSwipedUp: () => {
+      if (!showAllChoices && currentNode?.options && currentNode.options.length > 2) {
+        setShowAllChoices(true);
+      }
+    },
+    onSwipedDown: () => {
+      if (showAllChoices) {
+        setShowAllChoices(false);
+      }
+    },
+    trackMouse: false
+  });
+
+  // Swipe handlers for landscape mode (carousel)
+  const swipeHandlersLandscape = useSwipeable({
+    onSwipedLeft: () => {
+      if (currentNode?.options) {
+        const maxIndex = Math.floor((currentNode.options.length - 1) / 2);
+        if (carouselIndex < maxIndex) {
+          setCarouselIndex(carouselIndex + 1);
+        }
+      }
+    },
+    onSwipedRight: () => {
+      if (carouselIndex > 0) {
+        setCarouselIndex(carouselIndex - 1);
+      }
+    },
+    trackMouse: false
+  });
+
+  // Mobile Portrait Layout Component
+  const MobilePortraitLayout = () => {
+    if (!currentNode) return null;
+    const displayText = getCurrentText();
+    const showOptions = shouldShowOptions();
+    const showContinue = shouldShowContinue();
+    const hasMoreChoices = currentNode.options && currentNode.options.length > 2;
+
+    return (
+      <div className="h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+        {/* Menu Button - Top Right Corner */}
+        <Button
+          onClick={() => setPixelMenuOpen(true)}
+          className="absolute top-4 right-4 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg"
+          variant="outline"
+          size="icon"
+          data-testid="open-pixel-menu-button"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Pixel Avatar Section - 1/3 of screen */}
+        <motion.div 
+          className="flex-none h-[33vh] flex items-center justify-center p-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            animate={{ 
+              scale: [1, 1.05, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+            className="relative"
+          >
+            <img 
+              src={pixelImage}
+              alt="Pixel"
+              className="w-40 h-40 object-cover rounded-full shadow-xl"
+              style={{ imageRendering: 'crisp-edges' }}
+            />
+            <motion.div 
+              className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-white shadow-lg"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </motion.div>
+        </motion.div>
+
+        {/* Dialogue Text Section - 1/4 of screen */}
+        <motion.div 
+          className="flex-none h-[25vh] px-6 flex items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="w-full bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+            <p className="text-center text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+              {displayText}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Choices Section - Remaining screen with scroll */}
+        <motion.div 
+          className="flex-1 overflow-y-auto px-6 pb-safe-or-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          {...(hasMoreChoices ? swipeHandlersPortrait : {})}
+        >
+          <div className="space-y-3" ref={choicesContainerRef}>
+            {showOptions && currentNode.options && (
+              <>
+                {/* Show first 2 choices always */}
+                {currentNode.options.slice(0, 2).map((option, index) => {
+                  const gameTypeMatch = option.text.match(/^(\w+)\s*-/);
+                  const gameType = gameTypeMatch ? gameTypeMatch[1].toLowerCase() : null;
+                  const Icon = gameType && gameTypeIcons[gameType] ? gameTypeIcons[gameType] : ChevronRight;
+                  
+                  return (
+                    <Button
+                      key={index}
+                      onClick={() => handleOptionSelect(option)}
+                      className="w-full justify-start text-left py-6 px-6 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                      variant="outline"
+                      size="lg"
+                      data-testid={`dialogue-option-${index}`}
+                    >
+                      <Icon className="mr-4 h-6 w-6 flex-shrink-0 text-purple-600" />
+                      <span className="font-medium text-base">{option.text}</span>
+                    </Button>
+                  );
+                })}
+                
+                {/* Show remaining choices if expanded or always for 6+ options */}
+                {hasMoreChoices && (
+                  <>
+                    {!showAllChoices && (
+                      <motion.div 
+                        className="text-center py-2"
+                        animate={{ y: [0, 5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Swipe up for more options</p>
+                        <ChevronDown className="h-5 w-5 mx-auto text-gray-400" />
+                      </motion.div>
+                    )}
+                    
+                    <AnimatePresence>
+                      {showAllChoices && currentNode.options.slice(2).map((option, index) => {
+                        const gameTypeMatch = option.text.match(/^(\w+)\s*-/);
+                        const gameType = gameTypeMatch ? gameTypeMatch[1].toLowerCase() : null;
+                        const Icon = gameType && gameTypeIcons[gameType] ? gameTypeIcons[gameType] : ChevronRight;
+                        
+                        return (
+                          <motion.div
+                            key={index + 2}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Button
+                              onClick={() => handleOptionSelect(option)}
+                              className="w-full justify-start text-left py-6 px-6 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95 mb-3"
+                              variant="outline"
+                              size="lg"
+                              data-testid={`dialogue-option-${index + 2}`}
+                            >
+                              <Icon className="mr-4 h-6 w-6 flex-shrink-0 text-purple-600" />
+                              <span className="font-medium text-base">{option.text}</span>
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </>
+                )}
+              </>
+            )}
+            
+            {showContinue && (
+              <Button
+                onClick={advance}
+                className="w-full py-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                size="lg"
+                data-testid="dialogue-continue"
+              >
+                Continue <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // Mobile Landscape Layout Component
+  const MobileLandscapeLayout = () => {
+    if (!currentNode) return null;
+    const displayText = getCurrentText();
+    const showOptions = shouldShowOptions();
+    const showContinue = shouldShowContinue();
+    const hasCarousel = currentNode.options && currentNode.options.length > 2;
+
+    return (
+      <div className="h-screen grid grid-cols-2 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+        {/* Menu Button - Top Right Corner */}
+        <Button
+          onClick={() => setPixelMenuOpen(true)}
+          className="absolute top-4 right-4 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg"
+          variant="outline"
+          size="icon"
+          data-testid="open-pixel-menu-button"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Left Side - Pixel Portrait */}
+        <motion.div 
+          className="col-span-1 flex items-center justify-center p-4 border-r-2 border-purple-200/30 dark:border-purple-800/30"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            animate={{ 
+              scale: [1, 1.05, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+            className="relative"
+          >
+            <img 
+              src={pixelImage}
+              alt="Pixel"
+              className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-full shadow-xl"
+              style={{ imageRendering: 'crisp-edges' }}
+            />
+            <motion.div 
+              className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-400 rounded-full border-4 border-white shadow-lg"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </motion.div>
+        </motion.div>
+
+        {/* Right Side - Content */}
+        <div className="col-span-1 flex flex-col">
+          {/* Dialogue Text */}
+          <motion.div 
+            className="flex-none p-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+              <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                {displayText}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Choices Grid */}
+          <motion.div 
+            className="flex-1 p-4 overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            {...(hasCarousel ? swipeHandlersLandscape : {})}
+          >
+            {showOptions && currentNode.options && (
+              <div className="h-full flex flex-col">
+                {!hasCarousel ? (
+                  /* 2 or fewer options - simple grid */
+                  <div className="grid grid-cols-2 gap-3 h-full">
+                    {currentNode.options.map((option, index) => {
+                      const gameTypeMatch = option.text.match(/^(\w+)\s*-/);
+                      const gameType = gameTypeMatch ? gameTypeMatch[1].toLowerCase() : null;
+                      const Icon = gameType && gameTypeIcons[gameType] ? gameTypeIcons[gameType] : ChevronRight;
+                      
+                      return (
+                        <Button
+                          key={index}
+                          onClick={() => handleOptionSelect(option)}
+                          className="h-full flex flex-col items-center justify-center p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                          variant="outline"
+                          data-testid={`dialogue-option-${index}`}
+                        >
+                          <Icon className="h-8 w-8 mb-2 text-purple-600" />
+                          <span className="font-medium text-sm text-center">{option.text}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Carousel for 3+ options */
+                  <div className="relative h-full">
+                    <div className="grid grid-cols-2 gap-3 h-full">
+                      {currentNode.options
+                        .slice(carouselIndex * 2, carouselIndex * 2 + 2)
+                        .map((option, index) => {
+                          const actualIndex = carouselIndex * 2 + index;
+                          const gameTypeMatch = option.text.match(/^(\w+)\s*-/);
+                          const gameType = gameTypeMatch ? gameTypeMatch[1].toLowerCase() : null;
+                          const Icon = gameType && gameTypeIcons[gameType] ? gameTypeIcons[gameType] : ChevronRight;
+                          
+                          return (
+                            <motion.div
+                              key={actualIndex}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="h-full"
+                            >
+                              <Button
+                                onClick={() => handleOptionSelect(option)}
+                                className="w-full h-full flex flex-col items-center justify-center p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                                variant="outline"
+                                data-testid={`dialogue-option-${actualIndex}`}
+                              >
+                                <Icon className="h-8 w-8 mb-2 text-purple-600" />
+                                <span className="font-medium text-sm text-center">{option.text}</span>
+                              </Button>
+                            </motion.div>
+                          );
+                        })}
+                    </div>
+                    
+                    {/* Carousel Indicators */}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-2 pb-2">
+                      {Array.from({ length: Math.ceil(currentNode.options.length / 2) }).map((_, index) => (
+                        <div
+                          key={index}
+                          className={`h-2 w-2 rounded-full transition-colors ${
+                            index === carouselIndex
+                              ? 'bg-purple-600'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Navigation hint */}
+                    <div className="absolute top-1/2 -translate-y-1/2 left-1 right-1 flex justify-between pointer-events-none">
+                      {carouselIndex > 0 && (
+                        <motion.div 
+                          animate={{ x: [-5, 0, -5] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="text-purple-600/50"
+                        >
+                          <ChevronLeft className="h-8 w-8" />
+                        </motion.div>
+                      )}
+                      {carouselIndex < Math.floor((currentNode.options.length - 1) / 2) && (
+                        <motion.div 
+                          animate={{ x: [5, 0, 5] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="text-purple-600/50 ml-auto"
+                        >
+                          <ChevronRight className="h-8 w-8" />
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {showContinue && (
+              <Button
+                onClick={advance}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                size="lg"
+                data-testid="dialogue-continue"
+              >
+                Continue <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render dialogue content (desktop/tablet)
   const renderDialogue = () => {
     if (!currentNode) return null;
 
@@ -407,9 +892,13 @@ export default function UniversalWizard({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className={`${
-              currentNode.options.length > 4 
-                ? 'grid grid-cols-2 sm:grid-cols-3 gap-3'
-                : 'flex flex-col sm:flex-row gap-3 justify-center'
+              isMobile
+                ? currentNode.options.length > 4
+                  ? 'flex flex-col gap-2'
+                  : 'flex flex-col gap-3'
+                : currentNode.options.length > 4 
+                  ? 'grid grid-cols-2 sm:grid-cols-3 gap-3'
+                  : 'flex flex-col sm:flex-row gap-3 justify-center'
             }`}
           >
             {currentNode.options.map((option, index) => {
@@ -423,22 +912,34 @@ export default function UniversalWizard({
                   key={index}
                   onClick={() => handleOptionSelect(option)}
                   className={`${
-                    currentNode.options!.length > 4
-                      ? 'p-4 h-auto flex flex-col items-center justify-center text-center'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6'
+                    isMobile
+                      ? 'w-full justify-start text-left py-4 px-4'
+                      : currentNode.options!.length > 4
+                        ? 'p-4 h-auto flex flex-col items-center justify-center text-center'
+                        : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6'
                   }`}
-                  variant={currentNode.options!.length > 4 ? 'outline' : 'default'}
+                  variant={isMobile ? 'outline' : currentNode.options!.length > 4 ? 'outline' : 'default'}
+                  size={isMobile ? 'lg' : 'default'}
                   data-testid={`dialogue-option-${index}`}
                 >
-                  {currentNode.options!.length > 4 && (
-                    <Icon className="w-8 h-8 mb-2 text-purple-600" />
+                  {isMobile ? (
+                    <>
+                      <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      <span className="font-medium">{option.text}</span>
+                    </>
+                  ) : (
+                    <>
+                      {currentNode.options!.length > 4 && (
+                        <Icon className="w-8 h-8 mb-2 text-purple-600" />
+                      )}
+                      {!gameType && currentNode.options!.length <= 4 && (
+                        <Icon className="mr-2 h-5 w-5" />
+                      )}
+                      <span className={currentNode.options!.length > 4 ? 'text-sm font-semibold' : ''}>
+                        {option.text}
+                      </span>
+                    </>
                   )}
-                  {!gameType && currentNode.options!.length <= 4 && (
-                    <Icon className="mr-2 h-5 w-5" />
-                  )}
-                  <span className={currentNode.options!.length > 4 ? 'text-sm font-semibold' : ''}>
-                    {option.text}
-                  </span>
                 </Button>
               );
             })}
@@ -451,11 +952,16 @@ export default function UniversalWizard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex justify-center"
+            className={isMobile ? "w-full" : "flex justify-center"}
           >
             <Button
               onClick={advance}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-8"
+              className={`${
+                isMobile 
+                  ? 'w-full py-4'
+                  : 'py-3 px-8'
+              } bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold`}
+              size={isMobile ? 'lg' : 'default'}
               data-testid="dialogue-continue"
             >
               Continue <ChevronRight className="ml-2 h-5 w-5" />
@@ -465,6 +971,31 @@ export default function UniversalWizard({
       </div>
     );
   };
+
+  // Pixel Menu handlers
+  const handlePixelMenuAction = useCallback((action: string) => {
+    setPixelMenuOpen(false);
+    
+    switch (action) {
+      case 'changeGame':
+        navigateToNode('gamePath');
+        break;
+      case 'switchLesson':
+        navigateToNode('learnPath');
+        break;
+      case 'exportGame':
+        // TODO: Implement export functionality
+        console.log('Export game');
+        break;
+      case 'viewProgress':
+        // TODO: Implement progress view
+        console.log('View progress');
+        break;
+      case 'returnCurrent':
+        // Just close the menu
+        break;
+    }
+  }, [navigateToNode]);
 
   if (isLoading) {
     return (
@@ -477,6 +1008,47 @@ export default function UniversalWizard({
     );
   }
 
+  // Determine which layout to use
+  const layoutMode = getLayoutMode();
+
+  // Render mobile layouts if on mobile device
+  if (layoutMode === 'mobile-portrait') {
+    return (
+      <>
+        <PixelMenu
+          isOpen={pixelMenuOpen}
+          onClose={() => setPixelMenuOpen(false)}
+          onChangeGame={() => handlePixelMenuAction('changeGame')}
+          onSwitchLesson={() => handlePixelMenuAction('switchLesson')}
+          onExportGame={() => handlePixelMenuAction('exportGame')}
+          onViewProgress={() => handlePixelMenuAction('viewProgress')}
+          onReturnCurrent={() => handlePixelMenuAction('returnCurrent')}
+          sessionActions={sessionActions}
+        />
+        <MobilePortraitLayout />
+      </>
+    );
+  }
+
+  if (layoutMode === 'mobile-landscape') {
+    return (
+      <>
+        <PixelMenu
+          isOpen={pixelMenuOpen}
+          onClose={() => setPixelMenuOpen(false)}
+          onChangeGame={() => handlePixelMenuAction('changeGame')}
+          onSwitchLesson={() => handlePixelMenuAction('switchLesson')}
+          onExportGame={() => handlePixelMenuAction('exportGame')}
+          onViewProgress={() => handlePixelMenuAction('viewProgress')}
+          onReturnCurrent={() => handlePixelMenuAction('returnCurrent')}
+          sessionActions={sessionActions}
+        />
+        <MobileLandscapeLayout />
+      </>
+    );
+  }
+
+  // Desktop and tablet layout
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
       {/* Header */}
@@ -515,8 +1087,8 @@ export default function UniversalWizard({
       </header>
 
       <AnimatePresence mode="wait">
-        {/* Center Stage Dialogue */}
-        {pixelState === 'center-stage' && embeddedComponent === 'none' && (
+        {/* Desktop: Center Stage Dialogue - Mobile: Modal Dialogue */}
+        {!isMobile && pixelState === 'center-stage' && embeddedComponent === 'none' && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -558,17 +1130,49 @@ export default function UniversalWizard({
           </motion.div>
         )}
 
-        {/* Corner Waiting Pixel */}
-        {pixelState === 'corner-waiting' && (
+        {/* Mobile Dialogue Modal */}
+        {isMobile && mobileDialogueOpen && embeddedComponent === 'none' && currentNode && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed inset-x-0 bottom-0 z-40 p-4 pb-safe"
+          >
+            <Card className="relative w-full p-6 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl shadow-2xl border-2 border-purple-500/20 rounded-t-2xl">
+              {/* Close button for mobile modal */}
+              <button
+                onClick={() => setMobileDialogueOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                data-testid="mobile-dialogue-close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Mobile Dialogue Content */}
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                {renderDialogue()}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Corner Pixel - Always shown on mobile, conditional on desktop */}
+        {(isMobile || pixelState === 'corner-waiting') && (
           <motion.div
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0 }}
-            className="fixed top-24 left-6 z-50"
+            className="fixed top-20 md:top-24 left-4 md:left-6 z-50"
           >
             <motion.button
               className="relative group cursor-pointer"
-              onClick={returnToDialogue}
+              onClick={() => {
+                if (isMobile) {
+                  setMobileDialogueOpen(!mobileDialogueOpen);
+                } else {
+                  returnToDialogue();
+                }
+              }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               data-testid="pixel-corner"
@@ -626,7 +1230,6 @@ export default function UniversalWizard({
                       console.log('Asset selected:', asset);
                       returnToDialogue();
                     }}
-                    onClose={() => returnToDialogue()}
                   />
                 </Card>
               </div>
