@@ -19,6 +19,63 @@ global.fetch = vi.fn();
 // Setup canvas mocking for Pyodide tests
 HTMLCanvasElement.prototype.getContext = vi.fn();
 
+// Mock global Pyodide
+(global as any).loadPyodide = vi.fn().mockResolvedValue({
+  runPython: vi.fn((code: string) => {
+    // Return basic mock results for common operations
+    if (code.includes('import pygame')) {
+      return { success: true };
+    }
+    if (code.includes('2 + 2')) {
+      return 4;
+    }
+    return {};
+  }),
+  runPythonAsync: vi.fn(async (code: string) => {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    return {};
+  }),
+  loadPackage: vi.fn(),
+  globals: {
+    get: vi.fn(),
+    set: vi.fn()
+  }
+});
+
+// Mock PythonRunner from @/lib/python/runner
+vi.mock('@/lib/python/runner', () => ({
+  PythonRunner: vi.fn().mockImplementation(() => ({
+    runSnippet: vi.fn().mockResolvedValue({ output: 'Success', error: '' }),
+    runProject: vi.fn().mockResolvedValue({ output: 'Success', error: '' }),
+    setInputValues: vi.fn()
+  })),
+  createPythonRunner: vi.fn().mockResolvedValue({
+    runSnippet: vi.fn().mockResolvedValue({ output: 'Success', error: '' }),
+    runProject: vi.fn().mockResolvedValue({ output: 'Success', error: '' }),
+    setInputValues: vi.fn()
+  })
+}));
+
+// Mock PythonExecutor (if exists in the codebase)
+vi.mock('@/lib/python-executor', () => ({
+  PythonExecutor: vi.fn().mockImplementation(() => ({
+    execute: vi.fn((code: string) => {
+      // Return mock results based on code patterns
+      if (code.includes('2 + 2')) {
+        return { result: 4 };
+      }
+      if (code.includes('import pygame')) {
+        return { success: true };
+      }
+      return { result: null };
+    }),
+    executeAsync: vi.fn(async (code: string) => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+      return { result: null };
+    })
+  }))
+}));
+
 // Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
@@ -64,4 +121,9 @@ global.cancelAnimationFrame = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+});
+
+// Add afterEach for cleanup
+afterEach(() => {
+  vi.restoreAllMocks();
 });
