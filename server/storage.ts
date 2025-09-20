@@ -46,7 +46,7 @@ export class MemStorage implements IStorage {
     const fundamentalsCurriculum: Lesson[] = [
       // LESSON 1: Python Basics
       {
-        id: "lesson-1",
+        id: "python-basics",
         title: "Python Basics",
         description: "Variables, data types, print, and input",
         order: 1,
@@ -207,7 +207,7 @@ export class MemStorage implements IStorage {
 
       // LESSON 2: Control Flow  
       {
-        id: "lesson-2",
+        id: "control-flow",
         title: "Control Flow",
         description: "if/else statements and comparison operators",
         order: 2,
@@ -351,14 +351,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1"],
+        prerequisites: ["python-basics"],
         difficulty: "Beginner",
         estimatedTime: 30
       },
 
       // LESSON 3: Loops
       {
-        id: "lesson-3", 
+        id: "loops-iteration", 
         title: "Loops",
         description: "for loops, while loops, and iteration",
         order: 3,
@@ -448,14 +448,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2"],
+        prerequisites: ["python-basics", "control-flow"],
         difficulty: "Beginner", 
         estimatedTime: 35
       },
 
       // LESSON 4: Data Structures
       {
-        id: "lesson-4",
+        id: "data-structures",
         title: "Data Structures", 
         description: "Lists, dictionaries, and tuples",
         order: 4,
@@ -544,14 +544,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration"],
         difficulty: "Intermediate",
         estimatedTime: 40
       },
 
       // LESSON 5: Functions
       {
-        id: "lesson-5",
+        id: "functions",
         title: "Functions",
         description: "Defining functions, parameters, and return values", 
         order: 5,
@@ -640,14 +640,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures"],
         difficulty: "Intermediate",
         estimatedTime: 45
       },
 
       // LESSON 6: Object-Oriented Programming  
       {
-        id: "lesson-6",
+        id: "object-oriented-programming",
         title: "Object-Oriented Programming",
         description: "Classes, objects, and methods",
         order: 6,
@@ -736,14 +736,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures", "functions"],
         difficulty: "Intermediate", 
         estimatedTime: 50
       },
 
       // LESSON 7: Error Handling
       {
-        id: "lesson-7",
+        id: "error-handling",
         title: "Error Handling",
         description: "try/except blocks and debugging techniques",
         order: 7,
@@ -836,14 +836,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures", "functions"],
         difficulty: "Intermediate",
         estimatedTime: 40
       },
 
       // LESSON 8: File Operations
       {
-        id: "lesson-8", 
+        id: "file-operations", 
         title: "File Operations",
         description: "Reading and writing files (simulated)",
         order: 8,
@@ -932,14 +932,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5", "lesson-7"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures", "functions", "error-handling"],
         difficulty: "Intermediate",
         estimatedTime: 35
       },
 
       // LESSON 9: Introduction to Pygame
       {
-        id: "lesson-9",
+        id: "pygame-intro",
         title: "Introduction to Pygame", 
         description: "Basic game window and event handling",
         order: 9,
@@ -1028,14 +1028,14 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5", "lesson-6"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures", "functions", "object-oriented-programming"],
         difficulty: "Intermediate",
         estimatedTime: 30
       },
 
       // LESSON 10: Building Your First Game
       {
-        id: "lesson-10",
+        id: "first-game",
         title: "Building Your First Game",
         description: "Combine all concepts to create a complete text-based game",
         order: 10,
@@ -1124,7 +1124,7 @@ export class MemStorage implements IStorage {
             }
           ]
         },
-        prerequisites: ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5", "lesson-6", "lesson-7", "lesson-8"],
+        prerequisites: ["python-basics", "control-flow", "loops-iteration", "data-structures", "functions", "object-oriented-programming", "error-handling", "file-operations"],
         difficulty: "Advanced",
         estimatedTime: 60
       }
