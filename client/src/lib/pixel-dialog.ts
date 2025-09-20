@@ -24,19 +24,19 @@ export const dialogFlows = {
       pixel: "Awesome to meet you, {name}! 🎮 I love that name! So, have you ever made games with Python before?" 
     },
     { 
-      quickReplies: ["I'm new to coding! 🆕", "I know some Python 🐍"] 
+      quickReplies: ["First time! 🆕", "I've tried a bit 📝", "I know Python 🐍", "I'm a pro! 💪"] 
     },
     {
       pixel: "Perfect! I'll make sure we go at just the right pace for you. What kind of games get you most excited?"
     },
     {
-      quickReplies: ["Fast-paced action! 🎮", "Strategic puzzles 🧩"]
+      quickReplies: ["Action/Platformer 🏃", "Puzzle Games 🧩", "Adventure 🗺️", "Racing 🏎️", "Music/Rhythm 🎵", "Creative Sandbox 🎨"]
     },
     {
       pixel: "Excellent choice! I've got some cool templates that match your interests. Ready to start building something awesome?"
     },
     {
-      quickReplies: ["Let's build! 🚀", "Show me around first 📚"]
+      quickReplies: ["Let's do this! 🚀", "Show me around first 👀", "I want to learn Python basics 📚"]
     }
   ] as DialogFlow,
   
@@ -49,7 +49,7 @@ export const dialogFlows = {
       pixel: "Want to continue working on your {currentProject}?"
     },
     {
-      quickReplies: ["Continue my project ▶️", "Start something new ✨"]
+      quickReplies: ["Continue my project ▶️", "Start something new ✨", "Practice Python 📝", "Browse gallery 🖼️"]
     }
   ] as DialogFlow,
   
@@ -59,8 +59,14 @@ export const dialogFlows = {
     },
     {
       quickReplies: [
-        "Action Game 🎮",
-        "Strategy Game 🧩"
+        "Platformer - Jump & Run 🏃",
+        "Puzzle - Brain Teasers 🧩",
+        "Adventure - Explore Worlds 🌍", 
+        "Racing - Speed Thrills 🏎️",
+        "Music - Rhythm & Beats 🎵",
+        "Tower Defense - Strategy 🏰",
+        "Endless Runner - Non-stop Action 🏃‍♂️",
+        "Pet Sim - Virtual Companions 🐾"
       ]
     }
   ] as DialogFlow,
