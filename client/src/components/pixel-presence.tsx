@@ -39,10 +39,10 @@ interface PixelPresenceProps {
 }
 
 export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPresenceProps) {
-  const [state, setState] = useState<PresenceState>('center-stage');
+  const [state, setState] = useState<PresenceState>('waiting-corner');
   const [currentChoices, setCurrentChoices] = useState<Choice[]>([]);
   const [pixelImage, setPixelImage] = useState(pixelWelcoming);
-  const [dialogue, setDialogue] = useState("Hey there! I'm Pixel, your game-building buddy! What would you like to do today?");
+  const [dialogue, setDialogue] = useState("Need help?");
   const [showContent, setShowContent] = useState(false);
   const [showPlayback, setShowPlayback] = useState(false);
 
@@ -106,26 +106,26 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
 
   // Initialize based on current path
   useEffect(() => {
+    // Don't show on home page - home has its own center stage Pixel
     if (currentPath === '/') {
-      setState('center-stage');
-      setCurrentChoices(initialChoices);
+      setState('waiting-corner');
       setShowContent(false);
-    } else if (currentPath?.includes('/lesson')) {
-      setState('waiting-corner');
-      setShowContent(true);
+      return;
+    }
+    
+    // Show corner presence on all other pages
+    setState('waiting-corner');
+    setShowContent(true);
+    
+    if (currentPath?.includes('/lesson')) {
       setPixelImage(pixelTeaching);
-    } else if (currentPath === '/project-builder' || currentPath === '/projects') {
-      setState('waiting-corner');
-      setShowContent(true);
+    } else if (currentPath?.includes('/wizard')) {
       setPixelImage(pixelGaming);
+    } else if (currentPath === '/project-builder' || currentPath === '/projects') {
+      setPixelImage(pixelCoding);
     } else if (currentPath === '/gallery' || currentPath?.includes('/gallery')) {
-      setState('waiting-corner');
-      setShowContent(true);
       setPixelImage(pixelHappy);
     } else {
-      // Default for all other pages
-      setState('waiting-corner');
-      setShowContent(true);
       setPixelImage(pixelWelcoming);
     }
   }, [currentPath]);
@@ -227,6 +227,11 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
     }
   };
 
+  // Don't show on home page
+  if (currentPath === '/') {
+    return null;
+  }
+
   return (
     <>
       <AnimatePresence mode="wait">
@@ -242,79 +247,12 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
             damping: 20,
             duration: 0.6 
           }}
-          className={state === 'center-stage' ? 'pointer-events-auto' : 'pointer-events-auto'}
+          className="pointer-events-auto"
           style={{ position: 'fixed' }}
         >
           {state === 'center-stage' ? (
-            // Center stage - full Pixel with dialogue
-            <Card className="p-8 shadow-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500/20">
-              <div className="flex flex-col items-center space-y-6">
-                {/* Pixel Avatar */}
-                <motion.div 
-                  className="relative"
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                    rotate: [0, 5, -5, 0]
-                  }}
-                  transition={{ 
-                    duration: 4,
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                  }}
-                >
-                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-purple-500/30 shadow-xl">
-                    <img 
-                      src={pixelImage} 
-                      alt="Pixel" 
-                      className="w-full h-full object-cover"
-                      style={{ imageRendering: 'crisp-edges' }}
-                      data-testid="pixel-avatar"
-                    />
-                  </div>
-                  <motion.div
-                    className="absolute -bottom-2 -right-2 bg-purple-500 rounded-full p-2"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </motion.div>
-                </motion.div>
-
-                {/* Dialogue */}
-                <div className="text-center max-w-md">
-                  <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {dialogue}
-                  </h2>
-                </div>
-
-                {/* A/B Choices */}
-                <div className="flex flex-col space-y-3 w-full">
-                  {currentChoices.map((choice, index) => (
-                    <motion.div
-                      key={choice.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Button
-                        onClick={choice.action}
-                        size="lg"
-                        variant={index === 0 ? "default" : "outline"}
-                        className="w-full justify-start text-left h-auto py-4 px-6"
-                        data-testid={index === 0 ? "pixel-choice-a" : "pixel-choice-b"}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-2 text-white">
-                            {choice.icon && <choice.icon className="w-5 h-5" />}
-                          </div>
-                          <span className="text-lg font-semibold">{choice.label}</span>
-                        </div>
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </Card>
+            // Not used anymore - home page handles center stage
+            null
           ) : state === 'waiting-corner' ? (
             // Small corner mode - just the avatar
             <motion.button
@@ -402,17 +340,6 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
         </motion.div>
       </AnimatePresence>
 
-      {/* Background overlay for center stage */}
-      <AnimatePresence>
-        {state === 'center-stage' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999]"
-          />
-        )}
-      </AnimatePresence>
 
       {/* Session Playback Modal */}
       <SessionPlayback
