@@ -17,6 +17,7 @@ export const GAME_TYPE_ICONS: Record<string, any> = {
 export const BREAKPOINTS = {
   MOBILE_MAX_WIDTH: 768,
   TABLET_MIN_WIDTH: 768,
+  TABLET_MAX_WIDTH: 1024,
   DESKTOP_MIN_WIDTH: 1024,
 } as const;
 
