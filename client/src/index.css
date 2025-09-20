@@ -5,27 +5,27 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(220, 26%, 95%);
-  --foreground: hsl(240, 10%, 16%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(240, 10%, 18%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(240, 10%, 16%);
-  --primary: hsl(221, 70%, 55%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(47, 90%, 52%);
-  --secondary-foreground: hsl(240, 10%, 12%);
-  --muted: hsl(30, 10%, 94%);
-  --muted-foreground: hsl(240, 5%, 35%);
-  --accent: hsl(30, 10%, 94%);
-  --accent-foreground: hsl(240, 10%, 18%);
-  --destructive: hsl(0, 75%, 58%);
-  --destructive-foreground: hsl(30, 20%, 98%);
-  --success: hsl(142, 65%, 48%);
-  --success-foreground: hsl(30, 20%, 98%);
-  --border: hsl(30, 10%, 91%);
-  --input: hsl(30, 10%, 91%);
-  --ring: hsl(221, 70%, 55%);
+  --background: hsl(300, 30%, 98%);
+  --foreground: hsl(280, 15%, 25%);
+  --card: hsl(300, 25%, 99%);
+  --card-foreground: hsl(280, 15%, 25%);
+  --popover: hsl(300, 25%, 99%);
+  --popover-foreground: hsl(280, 15%, 25%);
+  --primary: hsl(280, 60%, 60%);
+  --primary-foreground: hsl(300, 30%, 98%);
+  --secondary: hsl(330, 65%, 65%);
+  --secondary-foreground: hsl(300, 30%, 98%);
+  --muted: hsl(280, 20%, 92%);
+  --muted-foreground: hsl(280, 10%, 45%);
+  --accent: hsl(330, 25%, 94%);
+  --accent-foreground: hsl(280, 15%, 25%);
+  --destructive: hsl(0, 55%, 65%);
+  --destructive-foreground: hsl(300, 30%, 98%);
+  --success: hsl(142, 45%, 55%);
+  --success-foreground: hsl(300, 30%, 98%);
+  --border: hsl(280, 15%, 90%);
+  --input: hsl(280, 15%, 90%);
+  --ring: hsl(280, 60%, 60%);
   --chart-1: hsl(221, 70%, 55%);
   --chart-2: hsl(142, 65%, 48%);
   --chart-3: hsl(47, 90%, 52%);
@@ -58,31 +58,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: hsl(240, 10%, 11%);
-    --foreground: hsl(30, 10%, 92%);
-    --card: hsl(240, 10%, 13%);
-    --card-foreground: hsl(30, 10%, 92%);
-    --popover: hsl(240, 10%, 13%);
-    --popover-foreground: hsl(30, 10%, 92%);
-    --primary: hsl(221, 70%, 60%);
-    --primary-foreground: hsl(240, 10%, 11%);
-    --secondary: hsl(47, 85%, 58%);
-    --secondary-foreground: hsl(240, 10%, 11%);
-    --muted: hsl(240, 5%, 18%);
-    --muted-foreground: hsl(240, 5%, 65%);
-    --accent: hsl(240, 5%, 18%);
-    --accent-foreground: hsl(30, 10%, 92%);
-    --destructive: hsl(0, 65%, 60%);
-    --destructive-foreground: hsl(30, 10%, 92%);
-    --success: hsl(142, 65%, 52%);
-    --success-foreground: hsl(240, 10%, 11%);
-    --border: hsl(240, 5%, 22%);
-    --input: hsl(240, 5%, 22%);
-    --ring: hsl(221, 70%, 60%);
-    --lesson-bg: hsl(240, 10%, 9%);
-    --lesson-sidebar-bg: hsl(240, 10%, 11%);
-    --code-editor-header-bg: hsl(221, 70%, 25%);
-    --console-header-bg: hsl(240, 10%, 14%);
+    --background: hsl(280, 20%, 12%);
+    --foreground: hsl(330, 15%, 88%);
+    --card: hsl(280, 18%, 14%);
+    --card-foreground: hsl(330, 15%, 88%);
+    --popover: hsl(280, 18%, 14%);
+    --popover-foreground: hsl(330, 15%, 88%);
+    --primary: hsl(280, 55%, 55%);
+    --primary-foreground: hsl(280, 20%, 12%);
+    --secondary: hsl(330, 60%, 60%);
+    --secondary-foreground: hsl(280, 20%, 12%);
+    --muted: hsl(280, 12%, 22%);
+    --muted-foreground: hsl(280, 8%, 60%);
+    --accent: hsl(280, 12%, 22%);
+    --accent-foreground: hsl(330, 15%, 88%);
+    --destructive: hsl(0, 50%, 55%);
+    --destructive-foreground: hsl(330, 15%, 88%);
+    --success: hsl(142, 45%, 50%);
+    --success-foreground: hsl(280, 20%, 12%);
+    --border: hsl(280, 10%, 25%);
+    --input: hsl(280, 10%, 25%);
+    --ring: hsl(280, 55%, 55%);
+    --lesson-bg: hsl(280, 18%, 10%);
+    --lesson-sidebar-bg: hsl(280, 18%, 12%);
+    --code-editor-header-bg: hsl(280, 45%, 22%);
+    --console-header-bg: hsl(280, 18%, 14%);
   }
 }
 
@@ -101,42 +101,42 @@
   
   /* Ensure text color adapts properly in dark mode */
   body {
-    color: hsl(240, 10%, 20%);
+    color: hsl(280, 15%, 25%);
   }
   
   @media (prefers-color-scheme: dark) {
     body {
-      color: hsl(30, 10%, 88%);
+      color: hsl(330, 15%, 88%);
     }
   }
   
   h1 {
     @apply text-3xl font-bold tracking-tight;
-    color: hsl(240, 10%, 12%);
+    color: hsl(280, 20%, 20%);
     line-height: 1.2;
   }
   
   h2 {
     @apply text-2xl font-semibold tracking-tight;
-    color: hsl(240, 10%, 15%);
+    color: hsl(280, 18%, 22%);
     line-height: 1.3;
   }
   
   h3 {
     @apply text-xl font-semibold;
-    color: hsl(240, 10%, 18%);
+    color: hsl(280, 16%, 25%);
     line-height: 1.4;
   }
   
   h4 {
     @apply text-lg font-medium;
-    color: hsl(240, 10%, 22%);
+    color: hsl(280, 14%, 28%);
     line-height: 1.4;
   }
   
   p {
     @apply text-base leading-relaxed;
-    color: hsl(240, 8%, 28%);
+    color: hsl(280, 12%, 32%);
     line-height: 1.6;
   }
   
