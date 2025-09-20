@@ -76,7 +76,8 @@ export const shouldShowContinue = (
 // Get current dialogue text
 export const getCurrentText = (
   currentNode: WizardNode | null,
-  dialogueStep: number
+  dialogueStep: number,
+  sessionActions?: SessionActions
 ): string => {
   if (!currentNode) return '';
   
@@ -84,7 +85,38 @@ export const getCurrentText = (
     return currentNode.multiStep[dialogueStep];
   }
   
-  return currentNode.text || '';
+  let text = '';
+  
+  // Handle conditional text based on game type
+  if (currentNode.conditionalText && sessionActions?.gameType) {
+    const conditionalTexts = currentNode.conditionalText.gameType;
+    if (conditionalTexts) {
+      text = conditionalTexts[sessionActions.gameType] || conditionalTexts.default || '';
+    }
+  }
+  
+  // Fall back to regular text if no conditional text
+  if (!text) {
+    text = currentNode.text || '';
+  }
+  
+  // Add followUp text if present
+  if (currentNode.followUp) {
+    text = text ? `${text}\n\n${currentNode.followUp}` : currentNode.followUp;
+  }
+  
+  // Add conditional followUp based on game type
+  if (currentNode.conditionalFollowUp && sessionActions?.gameType) {
+    const conditionalFollowUps = currentNode.conditionalFollowUp.gameType;
+    if (conditionalFollowUps) {
+      const followUpText = conditionalFollowUps[sessionActions.gameType] || conditionalFollowUps.default || '';
+      if (followUpText) {
+        text = text ? `${text}\n\n${followUpText}` : followUpText;
+      }
+    }
+  }
+  
+  return text;
 };
 
 // Update session actions based on option selection
@@ -97,13 +129,21 @@ export const updateSessionActionsForOption = (
     choices: [...sessionActions.choices, optionText]
   };
 
-  // Handle special game type actions
-  if (optionText.includes('RPG')) {
-    updatedActions.gameType = 'rpg';
-  } else if (optionText.includes('Platformer')) {
+  // Handle special game type actions based on option text
+  const lowerText = optionText.toLowerCase();
+  
+  if (lowerText.includes('platformer') || lowerText.includes('jumpy') || lowerText.includes('bouncy')) {
     updatedActions.gameType = 'platformer';
-  } else if (optionText.includes('Racing')) {
+  } else if (lowerText.includes('rpg') || lowerText.includes('sword') || lowerText.includes('sorcery') || lowerText.includes('epic')) {
+    updatedActions.gameType = 'rpg';
+  } else if (lowerText.includes('dungeon') || lowerText.includes('creepy')) {
+    updatedActions.gameType = 'dungeon';
+  } else if (lowerText.includes('racing') || lowerText.includes('speed') || lowerText.includes('turbo')) {
     updatedActions.gameType = 'racing';
+  } else if (lowerText.includes('puzzle') || lowerText.includes('brain') || lowerText.includes('tricky')) {
+    updatedActions.gameType = 'puzzle';
+  } else if (lowerText.includes('adventure') || lowerText.includes('explore') || lowerText.includes('point-and-click')) {
+    updatedActions.gameType = 'adventure';
   }
 
   return updatedActions;

@@ -11,9 +11,18 @@ export interface UniversalWizardProps {
 export interface WizardNode {
   id: string;
   text?: string;
+  followUp?: string;
+  conditionalText?: {
+    gameType: Record<string, string>;
+  };
+  conditionalFollowUp?: {
+    gameType: Record<string, string>;
+  };
+  speaker?: string;
   multiStep?: string[];
   options?: WizardOption[];
   action?: string; // Can be 'openWYSIWYGEditor', 'openEditor', 'openLessons', 'showAssets', 'minimizePixel'
+  additionalAction?: string;
   params?: Record<string, any>;
   tags?: string[];
   conditional?: {
