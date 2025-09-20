@@ -520,7 +520,7 @@ export default function UniversalWizard({
     const hasMoreChoices = currentNode.options && currentNode.options.length > 2;
 
     return (
-      <div {...edgeSwipeHandlers.handlers} className="h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+      <div {...edgeSwipeHandlers.handlers} className="h-screen flex flex-col relative bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
         {/* Menu Button - Top Right Corner */}
         <Button
           onClick={() => {
@@ -536,9 +536,9 @@ export default function UniversalWizard({
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Pixel Avatar Section - 1/3 of screen */}
+        {/* Pixel Avatar Section - Flexible sizing */}
         <motion.div 
-          className="flex-none h-[33vh] flex items-center justify-center p-4"
+          className="flex-shrink-0 flex items-center justify-center p-4 min-h-[150px] max-h-[30vh]"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -558,7 +558,7 @@ export default function UniversalWizard({
             <img 
               src={pixelImage}
               alt="Pixel"
-              className="w-40 h-40 object-cover rounded-full shadow-xl"
+              className="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 object-cover rounded-full shadow-xl"
               style={{ imageRendering: 'crisp-edges' }}
             />
             <motion.div 
@@ -569,23 +569,23 @@ export default function UniversalWizard({
           </motion.div>
         </motion.div>
 
-        {/* Dialogue Text Section - 1/4 of screen */}
+        {/* Dialogue Text Section - Flexible sizing */}
         <motion.div 
-          className="flex-none h-[25vh] px-6 flex items-center"
+          className="flex-shrink-0 px-4 sm:px-6 py-2 flex items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="w-full bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 shadow-lg backdrop-blur-sm">
-            <p className="text-center text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+          <div className="w-full bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-4 shadow-lg backdrop-blur-sm">
+            <p className="text-center text-sm sm:text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
               {displayText}
             </p>
           </div>
         </motion.div>
 
-        {/* Choices Section - Remaining screen with scroll */}
+        {/* Choices Section - Flexible remaining space */}
         <motion.div 
-          className="flex-1 overflow-y-auto px-6 pb-safe-or-6"
+          className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 pb-6 pt-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -604,13 +604,13 @@ export default function UniversalWizard({
                     <Button
                       key={index}
                       onClick={() => handleOptionSelect(option)}
-                      className="w-full justify-start text-left py-6 px-6 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                      className="w-full justify-start text-left py-4 sm:py-5 md:py-6 px-4 sm:px-6 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
                       variant="outline"
                       size="lg"
                       data-testid={`dialogue-option-${index}`}
                     >
-                      <Icon className="mr-4 h-6 w-6 flex-shrink-0 text-purple-600" />
-                      <span className="font-medium text-base">{option.text}</span>
+                      <Icon className="mr-3 sm:mr-4 h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 text-purple-600" />
+                      <span className="font-medium text-sm sm:text-base truncate">{option.text}</span>
                     </Button>
                   );
                 })}
@@ -687,7 +687,7 @@ export default function UniversalWizard({
     const hasCarousel = currentNode.options && currentNode.options.length > 2;
 
     return (
-      <div {...edgeSwipeHandlers.handlers} className="h-screen grid grid-cols-2 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+      <div {...edgeSwipeHandlers.handlers} className="h-screen grid grid-cols-[35%,65%] lg:grid-cols-[30%,70%] bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
         {/* Menu Button - Top Right Corner */}
         <Button
           onClick={() => {
@@ -705,7 +705,7 @@ export default function UniversalWizard({
 
         {/* Left Side - Pixel Portrait */}
         <motion.div 
-          className="col-span-1 flex items-center justify-center p-4 border-r-2 border-purple-200/30 dark:border-purple-800/30"
+          className="flex items-center justify-center p-3 sm:p-4 border-r-2 border-purple-200/30 dark:border-purple-800/30"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -725,7 +725,7 @@ export default function UniversalWizard({
             <img 
               src={pixelImage}
               alt="Pixel"
-              className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-full shadow-xl"
+              className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 object-cover rounded-full shadow-xl"
               style={{ imageRendering: 'crisp-edges' }}
             />
             <motion.div 
@@ -737,16 +737,16 @@ export default function UniversalWizard({
         </motion.div>
 
         {/* Right Side - Content */}
-        <div className="col-span-1 flex flex-col">
+        <div className="flex flex-col overflow-hidden">
           {/* Dialogue Text */}
           <motion.div 
-            className="flex-none p-4"
+            className="flex-shrink-0 p-3 sm:p-4"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 shadow-lg backdrop-blur-sm">
-              <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+            <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-4 shadow-lg backdrop-blur-sm">
+              <p className="text-xs sm:text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                 {displayText}
               </p>
             </div>
@@ -754,7 +754,7 @@ export default function UniversalWizard({
 
           {/* Choices Grid */}
           <motion.div 
-            className="flex-1 p-4 overflow-hidden"
+            className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto overflow-x-hidden"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -764,7 +764,7 @@ export default function UniversalWizard({
               <div className="h-full flex flex-col">
                 {!hasCarousel ? (
                   /* 2 or fewer options - simple grid */
-                  <div className="grid grid-cols-2 gap-3 h-full">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 h-full">
                     {currentNode.options.map((option, index) => {
                       const gameTypeMatch = option.text.match(/^(\w+)\s*-/);
                       const gameType = gameTypeMatch ? gameTypeMatch[1].toLowerCase() : null;
@@ -774,12 +774,12 @@ export default function UniversalWizard({
                         <Button
                           key={index}
                           onClick={() => handleOptionSelect(option)}
-                          className="h-full flex flex-col items-center justify-center p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                          className="h-full flex flex-col items-center justify-center p-3 sm:p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
                           variant="outline"
                           data-testid={`dialogue-option-${index}`}
                         >
-                          <Icon className="h-8 w-8 mb-2 text-purple-600" />
-                          <span className="font-medium text-sm text-center">{option.text}</span>
+                          <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 mb-1 sm:mb-2 text-purple-600" />
+                          <span className="font-medium text-xs sm:text-sm text-center leading-tight">{option.text}</span>
                         </Button>
                       );
                     })}
@@ -805,12 +805,12 @@ export default function UniversalWizard({
                             >
                               <Button
                                 onClick={() => handleOptionSelect(option)}
-                                className="w-full h-full flex flex-col items-center justify-center p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
+                                className="w-full h-full flex flex-col items-center justify-center p-3 sm:p-4 bg-white/95 dark:bg-gray-900/95 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all transform active:scale-95"
                                 variant="outline"
                                 data-testid={`dialogue-option-${actualIndex}`}
                               >
-                                <Icon className="h-8 w-8 mb-2 text-purple-600" />
-                                <span className="font-medium text-sm text-center">{option.text}</span>
+                                <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 mb-1 sm:mb-2 text-purple-600" />
+                                <span className="font-medium text-xs sm:text-sm text-center leading-tight">{option.text}</span>
                               </Button>
                             </motion.div>
                           );
@@ -1063,8 +1063,8 @@ export default function UniversalWizard({
   // Desktop and tablet layout
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
-      {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 shadow-sm">
+      {/* Header - Only show on large screens */}
+      <header className="hidden lg:block bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <motion.div 
@@ -1097,6 +1097,18 @@ export default function UniversalWizard({
           </div>
         </div>
       </header>
+
+      {/* Menu button for tablets (no header) */}
+      <Button
+        onClick={() => setPixelMenuOpen(true)}
+        className="lg:hidden fixed top-4 right-4 z-40 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
+        variant="outline"
+        size="icon"
+        data-testid="open-pixel-menu-button"
+        aria-label="Open Pixel Menu"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
 
       <AnimatePresence mode="wait">
         {/* Desktop: Center Stage Dialogue - Mobile: Modal Dialogue */}
