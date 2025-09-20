@@ -102,9 +102,9 @@ export default function UniversalWizard({
       }));
       setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
     } else if (currentNode.action === 'openEditor') {
-      setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
+      setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (currentNode.action === 'openLessons') {
-      setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+      setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (currentNode.action === 'showAssets') {
       // Open asset browser with specific type if provided
       const assetType = currentNode.params?.type || 'all';
@@ -140,9 +140,9 @@ export default function UniversalWizard({
       }));
       setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
     } else if (option.action === 'openEditor') {
-      setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
+      setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (option.action === 'openLessons') {
-      setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+      setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (option.action === 'showAssets') {
       // Open asset browser with specific type if provided
       const assetType = option.actionParams?.type || 'all';
@@ -352,8 +352,8 @@ export default function UniversalWizard({
           onRestore={handleRestorePixel}
           sessionActions={sessionActions}
           isMobile={deviceState.isMobile}
-          currentLesson={sessionActions.currentProject}
-          currentGame={sessionActions.gameType}
+          currentLesson={sessionActions.currentProject || undefined}
+          currentGame={sessionActions.gameType || undefined}
         />
         {uiState.wysiwygEditorOpen && (
           <PygameWysiwygEditor
