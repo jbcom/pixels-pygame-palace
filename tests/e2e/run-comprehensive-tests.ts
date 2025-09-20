@@ -103,11 +103,10 @@ async function runTestSuite(suite: TestSuite, options: { headless?: boolean; pro
 
   let command = `npx playwright test ${suite.file}`;
   
-  if (options.headless !== false) {
-    command += ' --headed=false';
-  } else {
+  if (options.headless === false) {
     command += ' --headed';
   }
+  // Headless is default for Playwright, so no flag needed
   
   if (options.project) {
     command += ` --project=${options.project}`;
@@ -260,7 +259,7 @@ async function runComprehensiveTests(options: {
 }
 
 // CLI interface
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const options: any = { headless: true };
   
