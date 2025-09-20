@@ -7,11 +7,11 @@
       "followUp": "You know what's cool? Every game you've ever played started with someone typing their first line of code, just like you're about to do!",
       "options": [
         {
-          "text": "I'm ready to start coding!",
+          "text": "Let's do this! I'm pumped!",
           "next": "firstPrint"
         },
         {
-          "text": "Will this be hard to learn?",
+          "text": "Uhh... is this gonna be really hard?",
           "next": "reassurance"
         }
       ]
@@ -20,10 +20,10 @@
       "id": "reassurance",
       "speaker": "Pixel",
       "text": "Not at all! Think of it like learning the controls in a new game - seems tricky at first, but soon it becomes second nature!",
-      "followUp": "We'll start super simple. Ready to make Python say hello?",
+      "followUp": "We'll start super simple. Want to make Python say hello?",
       "options": [
         {
-          "text": "Let's do this!",
+          "text": "Yeah! Let's make it talk!",
           "next": "firstPrint"
         }
       ]
@@ -31,16 +31,16 @@
     "firstPrint": {
       "id": "firstPrint",
       "speaker": "Pixel",
-      "text": "Let's start with the magical print() function! It's like a speech bubble for your code!",
+      "text": "Okay, so here's your first superpower - the print() function! It's basically like giving Python a voice!",
       "codeExample": "print('Hello, World!')",
-      "followUp": "When you run this, Python shouts out whatever's inside those quotes. Try it!",
+      "followUp": "See those quotes? That's how Python knows what to say. Which one looks right to you?",
       "options": [
         {
-          "text": "print('Hello, World!')",
+          "text": "The one with quotes looks right!",
           "next": "printSuccess"
         },
         {
-          "text": "print(Hello, World!)",
+          "text": "Maybe without the quotes?",
           "next": "printError"
         }
       ]
@@ -48,16 +48,16 @@
     "printError": {
       "id": "printError",
       "speaker": "Pixel",
-      "text": "Oops! Close, but Python needs those quotes around text, like putting a frame around a picture!",
-      "codeExample": "print('Hello, World!')  # Don't forget the quotes!",
-      "followUp": "The quotes tell Python 'this is text to display, not code to run'. Let's try again!",
+      "text": "Ooh, so close! But Python's a bit picky - it needs those quotes, like putting quotation marks around someone's speech!",
+      "codeExample": "print('Hello, World!')  # The quotes are important!",
+      "followUp": "Without quotes, Python gets confused and thinks you're talking about something that doesn't exist yet!",
       "options": [
         {
-          "text": "print('Hello, World!')",
+          "text": "Ah, got it! With quotes then!",
           "next": "printSuccess"
         },
         {
-          "text": "Why do we need quotes?",
+          "text": "Wait, why the quotes though?",
           "next": "explainQuotes"
         }
       ]
@@ -65,12 +65,12 @@
     "explainQuotes": {
       "id": "explainQuotes",
       "speaker": "Pixel",
-      "text": "Great question! Without quotes, Python thinks you're referring to variables or commands that don't exist yet!",
-      "codeExample": "print(Hello)  # Python looks for a variable named Hello\nprint('Hello')  # Python knows this is text to display",
-      "followUp": "It's like the difference between mentioning a character's name versus having them speak!",
+      "text": "Great question! So here's the thing - without quotes, Python thinks Hello is like... a secret code word it should know!",
+      "codeExample": "print(Hello)  # Python: 'What's Hello? I don't know that!'\nprint('Hello')  # Python: 'Oh! You want me to SAY Hello!'",
+      "followUp": "It's like the difference between saying 'Mario' versus 'Say the word Mario' - totally different!",
       "options": [
         {
-          "text": "That makes sense! Let me try again",
+          "text": "Ohhh that totally makes sense now!",
           "next": "firstPrint"
         }
       ]
@@ -78,15 +78,15 @@
     "printSuccess": {
       "id": "printSuccess",
       "speaker": "Pixel",
-      "text": "🎉 AWESOME! You just wrote your first Python code! You're officially a programmer now!",
-      "followUp": "You can print anything you want - game scores, player names, funny messages... Let's try printing something else!",
+      "text": "🎉 YES! Look at you! You just wrote actual code! You're officially a programmer now!",
+      "followUp": "You can make Python say literally anything - jokes, game messages, whatever! What should we print next?",
       "options": [
         {
-          "text": "print('I love games!')",
+          "text": "Something about games!",
           "next": "morePrints"
         },
         {
-          "text": "print('Python is fun!')",
+          "text": "I want to print my name!",
           "next": "morePrints"
         }
       ]
@@ -94,15 +94,15 @@
     "morePrints": {
       "id": "morePrints",
       "speaker": "Pixel",
-      "text": "You're getting the hang of it! Now, what if I told you we can store text in containers called 'variables'?",
-      "followUp": "Think of variables like treasure chests in a game - you can put stuff in them and use it later!",
+      "text": "Nice! You're a natural! Okay, here's where it gets really cool - we can save stuff to use later!",
+      "followUp": "Imagine having treasure chests in your code where you can store things... that's basically what variables are!",
       "options": [
         {
-          "text": "Show me how variables work!",
+          "text": "Ooh, like inventory slots?",
           "next": "variables"
         },
         {
-          "text": "Can I name them anything?",
+          "text": "Can I call them whatever I want?",
           "next": "variableNames"
         }
       ]
@@ -110,12 +110,12 @@
     "variableNames": {
       "id": "variableNames",
       "speaker": "Pixel",
-      "text": "Almost anything! Like naming your game character - be creative but follow the rules!",
-      "codeExample": "player_name = 'Pixel'  # Good!\nhero123 = 'Link'       # Also good!\n123hero = 'Mario'      # Bad - can't start with numbers!",
-      "followUp": "No spaces allowed, and don't start with numbers. Use underscores instead of spaces!",
+      "text": "Pretty much! It's like creating usernames - you've got freedom but there are a few rules!",
+      "codeExample": "player_name = 'Pixel'  # Perfect!\nhero123 = 'Link'       # Totally works!\n123hero = 'Mario'      # Nope - numbers can't go first!",
+      "followUp": "Just remember: no spaces (use underscores), and numbers can't be first. Easy!",
       "options": [
         {
-          "text": "Got it! Show me more about variables",
+          "text": "Makes sense! Let's make some variables!",
           "next": "variables"
         }
       ]
@@ -123,16 +123,16 @@
     "variables": {
       "id": "variables",
       "speaker": "Pixel",
-      "text": "Let's create your first variable! It's super easy - just pick a name and use = to store something!",
+      "text": "Alright, time to create your first variable! Just pick a name, add an equals sign, and boom - storage!",
       "codeExample": "player_name = 'Pixel'\nprint(player_name)",
-      "followUp": "See how we stored 'Pixel' in player_name, then printed it? The variable remembers what we put in it!",
+      "followUp": "See that? We just stuffed 'Pixel' into a box called player_name! Now we can use it anywhere!",
       "options": [
         {
-          "text": "Let me try: score = 100",
+          "text": "I want to store a number!",
           "next": "numberVariable"
         },
         {
-          "text": "Let me try: game_title = 'My Awesome Game'",
+          "text": "Let me save some text!",
           "next": "stringVariable"
         }
       ]
@@ -140,16 +140,16 @@
     "numberVariable": {
       "id": "numberVariable",
       "speaker": "Pixel",
-      "text": "Perfect! You just stored a number! Notice - no quotes needed for numbers!",
+      "text": "Boom! You just stored a number! And look - no quotes needed this time!",
       "codeExample": "score = 100\nlives = 3\nprint('Score:', score)\nprint('Lives:', lives)",
-      "followUp": "Numbers don't need quotes because Python knows 100 is a number, not text!",
+      "followUp": "Python's smart enough to know 100 is a number. No quotes = it's math time!",
       "options": [
         {
-          "text": "Can I do math with these?",
+          "text": "Wait, can I add them together?",
           "next": "mathPreview"
         },
         {
-          "text": "What else can I store?",
+          "text": "What other stuff can variables hold?",
           "next": "dataTypes"
         }
       ]
@@ -157,16 +157,16 @@
     "stringVariable": {
       "id": "stringVariable",
       "speaker": "Pixel",
-      "text": "Excellent! You created a 'string' variable - that's programmer talk for text!",
+      "text": "Nice! You just made a 'string' variable - fancy programmer word for text!",
       "codeExample": "game_title = 'My Awesome Game'\nprint('Now playing:', game_title)",
-      "followUp": "Strings are perfect for storing names, messages, and any text in your games!",
+      "followUp": "Strings are perfect for all the words in your game - character names, dialogue, everything!",
       "options": [
         {
-          "text": "Can I combine different strings?",
+          "text": "Can I stick strings together?",
           "next": "stringCombine"
         },
         {
-          "text": "What about numbers?",
+          "text": "How do numbers work?",
           "next": "numberVariable"
         }
       ]
@@ -174,12 +174,12 @@
     "stringCombine": {
       "id": "stringCombine",
       "speaker": "Pixel",
-      "text": "Yes! You can add strings together like building blocks! Check this out!",
-      "codeExample": "first = 'Super'\nlast = 'Mario'\nfull_name = first + ' ' + last\nprint(full_name)  # Prints: Super Mario",
-      "followUp": "The + sign glues strings together! Super useful for creating dynamic messages in games!",
+      "text": "Oh yeah! Watch this - strings can stick together like LEGO blocks!",
+      "codeExample": "first = 'Super'\nlast = 'Mario'\nfull_name = first + ' ' + last\nprint(full_name)  # Ta-da! Super Mario!",
+      "followUp": "The plus sign is like glue for words! Perfect for building game messages on the fly!",
       "options": [
         {
-          "text": "That's so cool!",
+          "text": "That's awesome! What else can Python do?",
           "next": "dataTypes"
         }
       ]
@@ -187,12 +187,12 @@
     "mathPreview": {
       "id": "mathPreview",
       "speaker": "Pixel",
-      "text": "Absolutely! Python is like a super calculator! We'll dive deep into math in the next lesson!",
-      "codeExample": "score = 100\nbonus = 50\ntotal = score + bonus\nprint('Total score:', total)  # Prints: Total score: 150",
-      "followUp": "For now, just know that variables can hold numbers and you can do math with them!",
+      "text": "Oh absolutely! Python's basically a calculator on steroids! Watch this!",
+      "codeExample": "score = 100\nbonus = 50\ntotal = score + bonus\nprint('Total score:', total)  # Boom! 150!",
+      "followUp": "Next lesson we'll go crazy with math - for now, just know it works!",
       "options": [
         {
-          "text": "Can't wait to learn more math!",
+          "text": "Math in games? I'm interested!",
           "next": "dataTypes"
         }
       ]
@@ -200,16 +200,16 @@
     "dataTypes": {
       "id": "dataTypes",
       "speaker": "Pixel",
-      "text": "Python can store different types of data - like different power-ups in a game!",
+      "text": "Python's got different types of data - think of them like different items in your inventory!",
       "codeExample": "# Strings (text)\nplayer = 'Hero'\n\n# Integers (whole numbers)  \nlevel = 5\n\n# Floats (decimals)\nhealth = 95.5\n\n# Booleans (true/false)\ngame_over = False",
-      "followUp": "Each type has special powers! We'll explore them all as we build games together!",
+      "followUp": "Each type does different things - we'll use them all to make amazing games!",
       "options": [
         {
-          "text": "This is making sense!",
+          "text": "I think I'm getting it!",
           "next": "practice"
         },
         {
-          "text": "Show me more examples",
+          "text": "Can I see this in action?",
           "next": "moreExamples"
         }
       ]
@@ -217,12 +217,12 @@
     "moreExamples": {
       "id": "moreExamples",
       "speaker": "Pixel",
-      "text": "Let's see variables in action - like stats in an RPG!",
+      "text": "Check this out - variables working together like an RPG character sheet!",
       "codeExample": "# Game character stats\ncharacter_name = 'Shadow Knight'\nhealth = 100\nmana = 50\nlevel = 1\nis_alive = True\n\n# Display the stats\nprint('Character:', character_name)\nprint('HP:', health, '/ MP:', mana)\nprint('Level:', level)",
-      "followUp": "See how variables make it easy to track game state? Super powerful!",
+      "followUp": "See? Variables are basically how games remember everything - scores, lives, player names!",
       "options": [
         {
-          "text": "I want to try this myself!",
+          "text": "This is so cool! Let me try!",
           "next": "practice"
         }
       ]
