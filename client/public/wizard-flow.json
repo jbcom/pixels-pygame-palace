@@ -99,9 +99,14 @@
     "guidedStart": {
       "id": "guidedStart",
       "speaker": "Pixel",
-      "text": "Perfect! I'll guide you through building your complete game step by step. We'll create three essential parts: a title screen to welcome players, the main gameplay, and an ending screen. Ready?",
-      "followUp": "Let's start with your title screen - it's the first thing players see, so we'll make it pop!",
-      "next": "guidedTitleScreen"
+      "text": "Perfect! I'll guide you through building your complete game step by step. We'll create three essential parts: a title screen to welcome players, the main gameplay, and an ending screen.",
+      "followUp": "Let's start with your title screen - it's the first thing players see, so we'll make it pop! Ready?",
+      "options": [
+        {
+          "text": "Yes, let's make it amazing!",
+          "next": "guidedTitleScreen"
+        }
+      ]
     },
     "guidedTitleScreen": {
       "id": "guidedTitleScreen",
