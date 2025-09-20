@@ -34,7 +34,7 @@ export default function WizardWithPreview({ pyodide, className }: WizardWithPrev
   const [alternativeChoice, setAlternativeChoice] = useState<GameChoice | undefined>();
   const [pixelComments, setPixelComments] = useState<string[]>([]);
 
-  const helpers = getDialogueHelpers(dialogueState);
+  const helpers = getDialogueHelpers(dialogueState, sessionActions);
   const { currentNode } = dialogueState;
 
   // Handle option selection with live preview updates

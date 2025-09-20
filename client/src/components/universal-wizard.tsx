@@ -85,7 +85,7 @@ export default function UniversalWizard({
   }, []);
 
   // Get dialogue helper functions
-  const dialogueHelpers = getDialogueHelpers(dialogueState);
+  const dialogueHelpers = getDialogueHelpers(dialogueState, sessionActions);
 
   // Handle action for current node
   useEffect(() => {
@@ -425,6 +425,7 @@ export default function UniversalWizard({
   const layoutProps = {
     currentNode: dialogueState.currentNode,
     dialogueStep: dialogueState.dialogueStep,
+    sessionActions: sessionActions,
     onAdvance: advance,
     onOptionSelect: handleOptionSelectWithAction,
     onOpenMenu: () => setUiState(prev => ({ ...prev, pixelMenuOpen: true }))

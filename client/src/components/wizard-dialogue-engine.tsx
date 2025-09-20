@@ -205,11 +205,11 @@ export function DialogueBox({
 }
 
 // Helper functions for dialogue state
-export function getDialogueHelpers(dialogueState: DialogueState) {
+export function getDialogueHelpers(dialogueState: DialogueState, sessionActions?: SessionActions) {
   const { currentNode, dialogueStep } = dialogueState;
   
   return {
-    getCurrentText: () => getCurrentText(currentNode, dialogueStep),
+    getCurrentText: () => getCurrentText(currentNode, dialogueStep, sessionActions),
     shouldShowOptions: () => shouldShowOptions(currentNode, dialogueStep),
     shouldShowContinue: () => shouldShowContinue(currentNode, dialogueStep),
   };
