@@ -173,8 +173,390 @@
     "learnPath": {
       "id": "learnPath",
       "speaker": "Pixel",
-      "text": "Perfect! Learning Python is the best way to really understand game development. Let me show you our lessons!",
-      "action": "openLessons"
+      "text": "Perfect! Learning Python is the best way to really understand game development!",
+      "followUp": "I've created 10 fun lessons that will take you from zero to game hero! Each one builds on the last.",
+      "options": [
+        {
+          "text": "Start with Lesson 1 - Hello World!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 1 }
+        },
+        {
+          "text": "Show me all lessons",
+          "next": "lessonMenu"
+        },
+        {
+          "text": "I know some Python already",
+          "next": "lessonSkillCheck"
+        }
+      ]
+    },
+    "lessonMenu": {
+      "id": "lessonMenu",
+      "speaker": "Pixel",
+      "text": "Here are all 10 Python lessons! Each one unlocks new game-making powers! 🎮",
+      "followUp": "Start from the beginning or jump to any lesson you want!",
+      "options": [
+        {
+          "text": "Lesson 1: Hello World - Variables & Print",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 1 }
+        },
+        {
+          "text": "Lesson 2: Math & Operations",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 2 }
+        },
+        {
+          "text": "Lesson 3: Conditionals (if/else)",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 3 }
+        },
+        {
+          "text": "Lesson 4: Loops & Repetition",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 4 }
+        },
+        {
+          "text": "More lessons →",
+          "next": "lessonMenuPage2"
+        },
+        {
+          "text": "Back to main menu",
+          "next": "start"
+        }
+      ]
+    },
+    "lessonMenuPage2": {
+      "id": "lessonMenuPage2",
+      "speaker": "Pixel",
+      "text": "More Python powers await! These lessons get into the really fun stuff!",
+      "options": [
+        {
+          "text": "Lesson 5: Lists & Collections",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 5 }
+        },
+        {
+          "text": "Lesson 6: Functions",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 6 }
+        },
+        {
+          "text": "Lesson 7: Dictionaries",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 7 }
+        },
+        {
+          "text": "Lesson 8: Classes & Objects",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 8 }
+        },
+        {
+          "text": "Advanced lessons →",
+          "next": "lessonMenuPage3"
+        },
+        {
+          "text": "← Previous lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "lessonMenuPage3": {
+      "id": "lessonMenuPage3",
+      "speaker": "Pixel",
+      "text": "The final lessons - where Python becomes PyGame! 🚀",
+      "followUp": "These teach you actual game development!",
+      "options": [
+        {
+          "text": "Lesson 9: PyGame Introduction",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 9 }
+        },
+        {
+          "text": "Lesson 10: Build Your First Game!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 10 }
+        },
+        {
+          "text": "← Previous lessons",
+          "next": "lessonMenuPage2"
+        },
+        {
+          "text": "Back to main menu",
+          "next": "start"
+        }
+      ]
+    },
+    "lessonSkillCheck": {
+      "id": "lessonSkillCheck",
+      "speaker": "Pixel",
+      "text": "Great! Let me help you find the right starting point!",
+      "followUp": "What Python concepts are you already comfortable with?",
+      "options": [
+        {
+          "text": "Variables and basic math",
+          "next": "suggestLesson3"
+        },
+        {
+          "text": "If statements and loops",
+          "next": "suggestLesson5"
+        },
+        {
+          "text": "Functions and lists",
+          "next": "suggestLesson7"
+        },
+        {
+          "text": "Classes and objects",
+          "next": "suggestLesson9"
+        },
+        {
+          "text": "Let me see all lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "suggestLesson3": {
+      "id": "suggestLesson3",
+      "speaker": "Pixel",
+      "text": "Perfect! You know the basics. I suggest starting with Lesson 3 - Conditionals!",
+      "followUp": "This will teach you how games make decisions - super important for game logic!",
+      "options": [
+        {
+          "text": "Start Lesson 3!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 3 }
+        },
+        {
+          "text": "Show me all lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "suggestLesson5": {
+      "id": "suggestLesson5",
+      "speaker": "Pixel",
+      "text": "Nice! You've got good foundations. Jump into Lesson 5 - Lists!",
+      "followUp": "Lists are how games track enemies, inventory, high scores - everything!",
+      "options": [
+        {
+          "text": "Start Lesson 5!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 5 }
+        },
+        {
+          "text": "Show me all lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "suggestLesson7": {
+      "id": "suggestLesson7",
+      "speaker": "Pixel",
+      "text": "Wow, you know your stuff! Try Lesson 7 - Dictionaries!",
+      "followUp": "Perfect for game stats, settings, and complex data structures!",
+      "options": [
+        {
+          "text": "Start Lesson 7!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 7 }
+        },
+        {
+          "text": "Show me all lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "suggestLesson9": {
+      "id": "suggestLesson9",
+      "speaker": "Pixel",
+      "text": "You're ready for the good stuff! Jump straight into PyGame!",
+      "followUp": "Lesson 9 will show you how to turn Python into real games!",
+      "options": [
+        {
+          "text": "Start Lesson 9 - PyGame!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 9 }
+        },
+        {
+          "text": "Start Lesson 10 - Build a Game!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 10 }
+        },
+        {
+          "text": "Show me all lessons",
+          "next": "lessonMenu"
+        }
+      ]
+    },
+    "lessonComplete": {
+      "id": "lessonComplete",
+      "speaker": "Pixel",
+      "text": "🎉 Lesson Complete! You're getting stronger! 💪",
+      "followUp": "What would you like to do next?",
+      "conditionalOptions": {
+        "lessonNumber": {
+          "1": [
+            {
+              "text": "Continue to Lesson 2 - Math & Operations",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 2 }
+            },
+            {
+              "text": "Try making a simple game!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "2": [
+            {
+              "text": "Continue to Lesson 3 - Conditionals",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 3 }
+            },
+            {
+              "text": "Try making a game with math!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "3": [
+            {
+              "text": "Continue to Lesson 4 - Loops",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 4 }
+            },
+            {
+              "text": "Make a game with choices!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "4": [
+            {
+              "text": "Continue to Lesson 5 - Lists",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 5 }
+            },
+            {
+              "text": "Build a game with loops!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "5": [
+            {
+              "text": "Continue to Lesson 6 - Functions",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 6 }
+            },
+            {
+              "text": "Make an inventory game!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "6": [
+            {
+              "text": "Continue to Lesson 7 - Dictionaries",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 7 }
+            },
+            {
+              "text": "Build a modular game!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "7": [
+            {
+              "text": "Continue to Lesson 8 - Classes",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 8 }
+            },
+            {
+              "text": "Create a data-driven game!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "8": [
+            {
+              "text": "Continue to Lesson 9 - PyGame Intro",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 9 }
+            },
+            {
+              "text": "Start building with classes!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "9": [
+            {
+              "text": "Final Lesson - Build a Complete Game!",
+              "action": "loadLesson",
+              "actionParams": { "lesson": 10 }
+            },
+            {
+              "text": "Start my own PyGame project!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Back to lesson menu",
+              "next": "lessonMenu"
+            }
+          ],
+          "10": [
+            {
+              "text": "🎮 Build my dream game!",
+              "next": "gamePath"
+            },
+            {
+              "text": "Review any lesson",
+              "next": "lessonMenu"
+            },
+            {
+              "text": "Open the game editor",
+              "action": "openWYSIWYGEditor"
+            }
+          ],
+          "default": [
+            {
+              "text": "Continue learning",
+              "next": "lessonMenu"
+            },
+            {
+              "text": "Start making games",
+              "next": "gamePath"
+            }
+          ]
+        }
+      }
     },
     "assetSelected": {
       "id": "assetSelected",
