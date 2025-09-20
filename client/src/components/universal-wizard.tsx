@@ -66,7 +66,16 @@ export default function UniversalWizard({
     const loadDialogue = async () => {
       try {
         const response = await fetch(dialoguePath);
+        if (!response.ok) {
+          throw new Error(`Failed to load dialogue: ${response.status}`);
+        }
         const text = await response.text();
+        
+        if (!text || text.trim().length === 0) {
+          throw new Error('Dialogue file is empty');
+        }
+        
+        console.log('Initializing YarnBound with dialogue text length:', text.length);
         
         const yarn = new (YarnBound as any)({
           dialogue: text,
@@ -120,11 +129,20 @@ export default function UniversalWizard({
         setYarnBound(yarn);
         yarn.jump(startNode);
         const node = yarn.currentNode();
+        console.log('Initial dialogue node:', node);
         setCurrentNode(node);
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to load dialogue:', error);
         setIsLoading(false);
+        // Fallback to a basic start
+        setCurrentNode({
+          text: 'Pixel: Hey there! Welcome to Pixel\'s PyGame Palace! I\'m Pixel, your game-making buddy! 🎮',
+          options: [
+            { text: 'Build a game!', index: 0 },
+            { text: 'Learn Python first', index: 1 }
+          ]
+        });
       }
     };
 
@@ -167,12 +185,68 @@ export default function UniversalWizard({
   }, [yarnBound, updatePixelImage]);
 
   // Handle option selection
-  const selectOption = useCallback((index: number) => {
-    if (!yarnBound || !currentNode) return;
+  const handleOptionSelect = useCallback((index: number) => {
+    if (!yarnBound) {
+      console.error('Cannot select option: yarnBound is null');
+      return;
+    }
+    
+    if (!currentNode || !currentNode.options) {
+      console.error('Cannot select option: no currentNode or options');
+      return;
+    }
 
-    yarnBound.selectOption(index);
-    advance();
-  }, [yarnBound, currentNode, advance]);
+    console.log('=== Option Selection ===');
+    console.log('Selecting option index:', index);
+    console.log('Option text:', currentNode.options[index]?.text);
+    console.log('Current node before selection:', currentNode);
+    
+    try {
+      // For YarnBound, we need to call selectOption with the index
+      // This should automatically advance to the next node
+      yarnBound.selectOption(index);
+      
+      // After selecting, we need to manually advance if it doesn't auto-advance
+      // Some versions of YarnBound require this
+      if (!yarnBound.currentNode()) {
+        console.log('No node after selectOption, trying advance()');
+        yarnBound.advance();
+      }
+      
+      // Get the new node after selection
+      const newNode = yarnBound.currentNode();
+      console.log('New node after selection:', newNode);
+      
+      if (newNode) {
+        setCurrentNode(newNode);
+        
+        // Update variables from YarnBound
+        const updatedVars = yarnBound.variables;
+        console.log('Updated variables:', updatedVars);
+        setVariables(updatedVars);
+        
+        // Update Pixel image based on text
+        if (newNode.text) {
+          updatePixelImage(newNode.text);
+        }
+      } else {
+        console.error('Failed to get new node after option selection');
+        // Try to recover by jumping to a fallback node
+        console.log('Attempting to recover...');
+        yarnBound.advance();
+        const recoveredNode = yarnBound.currentNode();
+        if (recoveredNode) {
+          setCurrentNode(recoveredNode);
+        }
+      }
+    } catch (error) {
+      console.error('Error selecting option:', error);
+      console.error('Error stack:', error.stack);
+    }
+  }, [yarnBound, currentNode, updatePixelImage]);
+  
+  // Keep the old name for backward compatibility but use the new function
+  const selectOption = handleOptionSelect;
 
   // Handle returning from embedded component
   const returnToDialogue = useCallback(() => {
@@ -448,6 +522,7 @@ export default function UniversalWizard({
                       console.log('Asset selected:', asset);
                       returnToDialogue();
                     }}
+                    onClose={() => returnToDialogue()}
                   />
                 </Card>
               </div>
