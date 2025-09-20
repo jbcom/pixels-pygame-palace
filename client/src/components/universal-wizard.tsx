@@ -17,6 +17,9 @@ import {
 } from './wizard-layout-manager';
 import WizardCodeRunner from './wizard-code-runner';
 import PygameWysiwygEditor from './pygame-wysiwyg-editor';
+import AssetBrowserWizard from './asset-browser-wizard';
+import { GameAsset } from '@/lib/asset-library/asset-types';
+import { assetManager } from '@/lib/asset-library/asset-manager';
 import { ICON_SIZES, STYLES } from './wizard-constants';
 
 export default function UniversalWizard({ 
@@ -44,8 +47,14 @@ export default function UniversalWizard({
     pixelMenuOpen: false,
     embeddedComponent: 'none',
     pixelState: 'center-stage',
-    wysiwygEditorOpen: false
+    wysiwygEditorOpen: false,
+    assetBrowserOpen: false,
+    assetBrowserType: 'all',
+    selectedGameType: undefined
   });
+  
+  // Selected assets state
+  const [selectedAssets, setSelectedAssets] = useState<GameAsset[]>([]);
 
   // Responsive detection
   useEffect(() => {
@@ -80,6 +89,16 @@ export default function UniversalWizard({
       setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
     } else if (currentNode.action === 'openLessons') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+    } else if (currentNode.action === 'showAssets') {
+      // Open asset browser with specific type if provided
+      const assetType = currentNode.params?.type || 'all';
+      const gameType = currentNode.params?.gameType || dialogueState.currentNode?.params?.gameType;
+      setUiState(prev => ({ 
+        ...prev, 
+        assetBrowserOpen: true,
+        assetBrowserType: assetType,
+        selectedGameType: gameType
+      }));
     }
   }, [dialogueState.currentNode]);
 
@@ -93,11 +112,21 @@ export default function UniversalWizard({
       setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
     } else if (option.action === 'openLessons') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+    } else if (option.action === 'showAssets') {
+      // Open asset browser with specific type if provided
+      const assetType = option.actionParams?.type || 'all';
+      const gameType = option.actionParams?.gameType || dialogueState.currentNode?.params?.gameType;
+      setUiState(prev => ({ 
+        ...prev, 
+        assetBrowserOpen: true,
+        assetBrowserType: assetType,
+        selectedGameType: gameType
+      }));
     }
     
     // Call the original handler
     handleOptionSelect(option);
-  }, [handleOptionSelect]);
+  }, [handleOptionSelect, dialogueState.currentNode]);
 
   // Render dialogue content for desktop/tablet
   const renderDialogue = useCallback(() => {
@@ -171,6 +200,36 @@ export default function UniversalWizard({
     setUiState(prev => ({ ...prev, embeddedComponent: component }));
   }, []);
 
+  // Handle asset selection from browser
+  const handleAssetSelection = useCallback((assets: GameAsset | GameAsset[]) => {
+    const assetsArray = Array.isArray(assets) ? assets : [assets];
+    setSelectedAssets(assetsArray);
+    
+    // Store selected assets in session for later use
+    assetsArray.forEach(asset => {
+      if (asset.type === 'sprite') {
+        const spriteAsset = asset as any;
+        if (spriteAsset.category === 'characters') {
+          assetManager.selectPlayerSprite(asset.id);
+        } else if (spriteAsset.category === 'enemies') {
+          assetManager.addEnemySprite(asset.id);
+        } else if (spriteAsset.category === 'items') {
+          assetManager.addItemSprite(asset.id);
+        }
+      } else if (asset.type === 'background') {
+        assetManager.selectBackground(asset.id);
+      } else if (asset.type === 'music') {
+        assetManager.selectMusic(asset.id);
+      } else if (asset.type === 'sound') {
+        assetManager.addSound(asset.id);
+      }
+    });
+    
+    // Close browser and continue dialogue
+    setUiState(prev => ({ ...prev, assetBrowserOpen: false }));
+    advance();
+  }, [advance]);
+
   // Loading state
   if (isLoading) {
     return (
@@ -201,6 +260,19 @@ export default function UniversalWizard({
     return (
       <PygameWysiwygEditor
         onClose={() => setUiState(prev => ({ ...prev, wysiwygEditorOpen: false }))}
+      />
+    );
+  }
+
+  // Show asset browser if it's open
+  if (uiState.assetBrowserOpen) {
+    return (
+      <AssetBrowserWizard
+        assetType={uiState.assetBrowserType === 'all' ? undefined : uiState.assetBrowserType}
+        gameType={uiState.selectedGameType}
+        onSelect={handleAssetSelection}
+        onClose={() => setUiState(prev => ({ ...prev, assetBrowserOpen: false }))}
+        showPixelSuggestions={true}
       />
     );
   }

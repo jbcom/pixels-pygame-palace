@@ -11,6 +11,7 @@ import Home from "@/pages/home";
 import LessonPage from "@/pages/lesson";
 import PixelPresence from "@/components/pixel-presence";
 import UniversalWizard from "@/components/universal-wizard";
+import AssetLibraryTest from "@/pages/AssetLibraryTest";
 
 function Router() {
   return (
@@ -28,6 +29,11 @@ function Router() {
       <Route path="/wizard" component={() => (
         <PageErrorBoundary context="Universal Wizard">
           <UniversalWizard />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/asset-test" component={() => (
+        <PageErrorBoundary context="Asset Library Test">
+          <AssetLibraryTest />
         </PageErrorBoundary>
       )} />
       <Route component={() => (
