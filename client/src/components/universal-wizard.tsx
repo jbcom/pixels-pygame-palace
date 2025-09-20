@@ -59,7 +59,9 @@ export default function UniversalWizard({
     assetBrowserType: 'all',
     selectedGameType: undefined,
     isMinimizing: false,
-    minimizeMessage: undefined
+    minimizeMessage: undefined,
+    previewMode: undefined,
+    viewMode: undefined
   });
   
   // Selected assets state
@@ -123,6 +125,35 @@ export default function UniversalWizard({
         isMinimizing: true,
         minimizeMessage: message
       }));
+    } else if (currentNode.action === 'showTitlePreset' || currentNode.action === 'previewScene') {
+      // Preview the title screen
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'title'
+      }));
+    } else if (currentNode.action === 'loadGameplayPreset' || currentNode.action === 'launchPlaytest') {
+      // Preview gameplay
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'gameplay'
+      }));
+    } else if (currentNode.action === 'showEndingPreset' || currentNode.action === 'previewEnding') {
+      // Preview ending
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'ending'
+      }));
+    } else if (currentNode.action === 'assembleFullGame' || currentNode.action === 'previewFullGame') {
+      // Assemble and preview full game
+      setSessionActions(prev => ({ ...prev, gameAssembled: true }));
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'full'
+      }));
     }
   }, [dialogueState.currentNode, setSessionActions]);
 
@@ -168,6 +199,72 @@ export default function UniversalWizard({
         ...prev, 
         isMinimizing: true,
         minimizeMessage: message
+      }));
+    } else if (option.action === 'showTitlePreset' || option.action === 'cycleTitlePreset') {
+      // Show title screen preview for selected game type
+      const gameType = sessionActions.gameType || 'platformer';
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'title'
+      }));
+    } else if (option.action === 'applyTitlePreset') {
+      // Save the title preset choice
+      setSessionActions(prev => ({ ...prev, titlePresetApplied: true }));
+    } else if (option.action === 'loadGameplayPreset') {
+      // Load gameplay mechanics for the game type
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'gameplay'
+      }));
+    } else if (option.action === 'launchPlaytest' || option.action === 'extendPlaytest') {
+      // Launch gameplay testing mode
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'playtest'
+      }));
+    } else if (option.action === 'saveGameplay') {
+      // Save gameplay configuration
+      setSessionActions(prev => ({ ...prev, gameplayConfigured: true }));
+    } else if (option.action === 'showEndingPreset' || option.action === 'cycleEndingPreset') {
+      // Show ending screen preview
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'ending'
+      }));
+    } else if (option.action === 'applyEndingPreset') {
+      // Save ending configuration
+      setSessionActions(prev => ({ ...prev, endingConfigured: true }));
+    } else if (option.action === 'assembleFullGame') {
+      // Compile all components into complete game
+      setSessionActions(prev => ({ ...prev, gameAssembled: true }));
+    } else if (option.action === 'launchFullGame') {
+      // Launch the complete game
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'full'
+      }));
+    } else if (option.action === 'viewGeneratedCode') {
+      // Show the generated Python code
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'code-editor',
+        viewMode: 'generated'
+      }));
+    } else if (option.action === 'tweakDifficulty') {
+      // Adjust game difficulty settings  
+      console.log('Adjusting difficulty');
+    } else if (option.action === 'previewScene' || option.action === 'previewGameplay' || option.action === 'previewEnding' || option.action === 'previewFullGame') {
+      // Handle various preview actions
+      const previewType = option.action.replace('preview', '').toLowerCase();
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: previewType
       }));
     }
     
