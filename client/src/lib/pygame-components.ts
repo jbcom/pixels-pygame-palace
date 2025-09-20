@@ -61,6 +61,9 @@ export const pygameComponents: PyGameComponent[] = [
   healthBarComponent
 ];
 
+// Export as allComponents for backward compatibility
+export const allComponents = pygameComponents;
+
 // ============================================================================
 // Component Registry and Helper Functions
 // ============================================================================
