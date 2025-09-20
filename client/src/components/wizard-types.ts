@@ -81,6 +81,9 @@ export interface UIState {
   embeddedComponent: EmbeddedComponentType;
   pixelState: PixelState;
   wysiwygEditorOpen?: boolean;
+  assetBrowserOpen?: boolean;
+  assetBrowserType?: 'sprite' | 'sound' | 'music' | 'background' | 'all';
+  selectedGameType?: string;
 }
 
 // Edge swipe handler options
