@@ -2,7 +2,7 @@
 // Compiles selected components and assets into a playable Python game
 
 import { PygameComponent } from '@/lib/pygame-components/types';
-import { allComponents } from '@/lib/pygame-components';
+import { pygameComponents } from '@/lib/pygame-components';
 import { GameAsset } from '@/lib/asset-library/asset-types';
 
 export function compilePythonGame(
@@ -159,7 +159,7 @@ function generateGameplay(components: Record<string, string>, assets: GameAsset[
 
   // Add selected component behaviors
   Object.entries(components).forEach(([componentId, variant]) => {
-    const component = allComponents.find(c => c.id === componentId);
+    const component = pygameComponents.find(c => c.id === componentId);
     if (component) {
       // Add simplified version of component behavior
       if (componentId === 'jump' && variant === 'A') {

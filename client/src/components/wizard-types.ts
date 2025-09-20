@@ -84,6 +84,7 @@ export interface SessionActions {
   gameAssembled?: boolean;
   selectedComponents?: Record<string, string>; // componentId -> variant (A or B)
   compiledScenes?: Record<string, boolean>; // scene -> compiled status
+  selectedGameType?: string; // The specific game type (platformer, rpg, racing, dungeon, etc.)
 }
 
 // Session action for PixelMenu
