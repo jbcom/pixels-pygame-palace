@@ -18,6 +18,8 @@ import {
 import WizardCodeRunner from './wizard-code-runner';
 import PygameWysiwygEditor from './pygame-wysiwyg-editor';
 import AssetBrowserWizard from './asset-browser-wizard';
+import PixelMinimizeAnimation from './pixel-minimize-animation';
+import PixelMinimized from './pixel-minimized';
 import { GameAsset } from '@/lib/asset-library/asset-types';
 import { assetManager } from '@/lib/asset-library/asset-manager';
 import { ICON_SIZES, STYLES } from './wizard-constants';
@@ -55,7 +57,9 @@ export default function UniversalWizard({
     wysiwygEditorOpen: false,
     assetBrowserOpen: false,
     assetBrowserType: 'all',
-    selectedGameType: undefined
+    selectedGameType: undefined,
+    isMinimizing: false,
+    minimizeMessage: undefined
   });
   
   // Selected assets state
@@ -86,9 +90,16 @@ export default function UniversalWizard({
     const { currentNode } = dialogueState;
     if (!currentNode) return;
     
-    // Check if the current node has an action that should open the editor
+    // Check if the current node has an action
     if (currentNode.action === 'openWYSIWYGEditor') {
-      setUiState(prev => ({ ...prev, wysiwygEditorOpen: true }));
+      // Minimize when opening editor
+      const message = "You've got this! I'm here if you need me!";
+      setUiState(prev => ({ 
+        ...prev, 
+        wysiwygEditorOpen: true,
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
       setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
     } else if (currentNode.action === 'openEditor') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
@@ -104,14 +115,29 @@ export default function UniversalWizard({
         assetBrowserType: assetType,
         selectedGameType: gameType
       }));
+    } else if (currentNode.action === 'minimizePixel') {
+      // Get the minimize message from node params or use default
+      const message = currentNode.params?.message || "I'll be right here if you need me!";
+      setUiState(prev => ({ 
+        ...prev, 
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
     }
-  }, [dialogueState.currentNode]);
+  }, [dialogueState.currentNode, setSessionActions]);
 
   // Wrap handleOptionSelect to handle actions
   const handleOptionSelectWithAction = useCallback((option: any) => {
     // Check if option has an action
     if (option.action === 'openWYSIWYGEditor') {
-      setUiState(prev => ({ ...prev, wysiwygEditorOpen: true }));
+      // Different messages based on context
+      const message = "You've got this! I'm here if you need me!";
+      setUiState(prev => ({ 
+        ...prev, 
+        wysiwygEditorOpen: true,
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
       setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
     } else if (option.action === 'openEditor') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
@@ -127,11 +153,37 @@ export default function UniversalWizard({
         assetBrowserType: assetType,
         selectedGameType: gameType
       }));
+    } else if (option.action === 'minimizePixel') {
+      // Handle minimize from option
+      const message = option.actionParams?.message || "Have fun creating! Click me if you need help!";
+      setUiState(prev => ({ 
+        ...prev, 
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
+    } else if (option.action === 'buildGame') {
+      // When entering game builder
+      const message = "Have fun creating! Click me if you need help!";
+      setUiState(prev => ({ 
+        ...prev, 
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
+    }
+    
+    // Check for lesson completion
+    if (option.text && (option.text.includes('complete') || option.text.includes('finished'))) {
+      const message = "Great job! I'll watch from here while you practice!";
+      setUiState(prev => ({ 
+        ...prev, 
+        isMinimizing: true,
+        minimizeMessage: message
+      }));
     }
     
     // Call the original handler
     handleOptionSelect(option);
-  }, [handleOptionSelect, dialogueState.currentNode]);
+  }, [handleOptionSelect, dialogueState.currentNode, setSessionActions]);
 
   // Render dialogue content for desktop/tablet
   const renderDialogue = useCallback(() => {
@@ -168,7 +220,7 @@ export default function UniversalWizard({
         )}
       </div>
     );
-  }, [dialogueState, dialogueHelpers, handleOptionSelect, advance, deviceState.isMobile]);
+  }, [dialogueState, dialogueHelpers, handleOptionSelectWithAction, advance, deviceState.isMobile]);
 
   // Pixel Menu action handlers
   const handlePixelMenuAction = useCallback((action: string) => {
@@ -203,6 +255,27 @@ export default function UniversalWizard({
   // Handle embedded component changes
   const handleEmbeddedComponentChange = useCallback((component: UIState['embeddedComponent']) => {
     setUiState(prev => ({ ...prev, embeddedComponent: component }));
+  }, []);
+
+  // Handle minimize animation complete
+  const handleMinimizeComplete = useCallback(() => {
+    setUiState(prev => ({ 
+      ...prev, 
+      pixelState: 'minimized',
+      isMinimizing: false 
+    }));
+  }, []);
+
+  // Handle restore from minimized state
+  const handleRestorePixel = useCallback(() => {
+    setUiState(prev => ({ 
+      ...prev, 
+      pixelState: 'center-stage',
+      minimizeMessage: undefined,
+      wysiwygEditorOpen: false,
+      assetBrowserOpen: false,
+      embeddedComponent: 'none'
+    }));
   }, []);
 
   // Handle asset selection from browser
@@ -260,8 +333,48 @@ export default function UniversalWizard({
     onOpenMenu: () => setUiState(prev => ({ ...prev, pixelMenuOpen: true }))
   };
 
-  // Show WYSIWYG editor if it's open
-  if (uiState.wysiwygEditorOpen) {
+  // Show minimize animation if minimizing
+  if (uiState.isMinimizing) {
+    return (
+      <PixelMinimizeAnimation
+        message={uiState.minimizeMessage}
+        onAnimationComplete={handleMinimizeComplete}
+        isMobile={deviceState.isMobile}
+      />
+    );
+  }
+
+  // Show minimized Pixel if in minimized state
+  if (uiState.pixelState === 'minimized') {
+    return (
+      <>
+        <PixelMinimized
+          onRestore={handleRestorePixel}
+          sessionActions={sessionActions}
+          isMobile={deviceState.isMobile}
+          currentLesson={sessionActions.currentProject}
+          currentGame={sessionActions.gameType}
+        />
+        {uiState.wysiwygEditorOpen && (
+          <PygameWysiwygEditor
+            onClose={() => setUiState(prev => ({ ...prev, wysiwygEditorOpen: false }))}
+          />
+        )}
+        {uiState.assetBrowserOpen && (
+          <AssetBrowserWizard
+            assetType={uiState.assetBrowserType === 'all' ? undefined : uiState.assetBrowserType}
+            gameType={uiState.selectedGameType}
+            onSelect={handleAssetSelection}
+            onClose={() => setUiState(prev => ({ ...prev, assetBrowserOpen: false }))}
+            showPixelSuggestions={true}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Show WYSIWYG editor if it's open (when not minimized)
+  if (uiState.wysiwygEditorOpen && uiState.pixelState === 'center-stage') {
     return (
       <PygameWysiwygEditor
         onClose={() => setUiState(prev => ({ ...prev, wysiwygEditorOpen: false }))}
