@@ -1,5 +1,16 @@
 // PyGame Enemy Component
-import { PyGameComponent, EnemyProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+interface EnemyProperties {
+  x: number;
+  y: number;
+  patternType: 'patrol' | 'chase' | 'circle' | 'random';
+  speed: number;
+  width: number;
+  height: number;
+  color: string;
+  health?: number;
+}
 
 export const enemyComponent: PyGameComponent = {
   type: 'enemy',

@@ -1,5 +1,16 @@
 // PyGame Platform Component
-import { PyGameComponent, PlatformProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+interface PlatformProperties {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  isMoving?: boolean;
+  moveSpeed?: number;
+  moveRange?: number;
+}
 
 export const platformComponent: PyGameComponent = {
   type: 'platform',

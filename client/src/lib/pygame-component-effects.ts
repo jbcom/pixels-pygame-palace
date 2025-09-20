@@ -1,5 +1,25 @@
 // PyGame Effect Components (ParticleEffect, Background)
-import { PyGameComponent, ParticleEffectProperties, BackgroundProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+// Define ParticleEffectProperties locally to avoid import issues
+interface ParticleEffectProperties {
+  x: number;
+  y: number;
+  type: 'explosion' | 'sparkle' | 'smoke' | 'confetti';
+  duration: number;
+  particleCount: number;
+  color: string;
+  spread?: number;
+}
+
+// Define BackgroundProperties locally to avoid import issues
+interface BackgroundProperties {
+  imagePath?: string;
+  color?: string;
+  scrollSpeed: number;
+  parallax?: boolean;
+  tileMode?: boolean;
+}
 
 export const particleEffectComponent: PyGameComponent = {
   type: 'particleEffect',

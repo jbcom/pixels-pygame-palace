@@ -1,8 +1,17 @@
 // Scene Generator for Pygame Components
 // Combines selected components into a complete pygame game script
 
-import { ComponentSelection, PygameComponent } from './pygame-components/types';
+// Import necessary types and functions
 import { getComponentById } from './pygame-components';
+import type { ComponentType } from './pygame-component-types';
+
+// Define ComponentSelection interface locally
+export interface ComponentSelection {
+  componentId: string;
+  variant: string;
+  assets: Record<string, string>;
+  parameters: Record<string, any>;
+}
 
 export interface SceneConfig {
   name: string;
@@ -37,6 +46,25 @@ function replaceTemplateParams(code: string, params: Record<string, any>, assets
   return result;
 }
 
+// Helper function to determine component category
+function determineComponentCategory(type: ComponentType): string {
+  const categoryMap: Record<ComponentType, string> = {
+    'sprite': 'movement',
+    'platform': 'world',
+    'ball': 'movement',
+    'paddle': 'movement',
+    'enemy': 'combat',
+    'collectible': 'world',
+    'background': 'world',
+    'scoreText': 'ui',
+    'button': 'ui',
+    'particleEffect': 'ui',
+    'timer': 'ui',
+    'healthBar': 'ui'
+  };
+  return categoryMap[type] || 'world';
+}
+
 // Main scene generator function
 export function generatePygameScene(options: GeneratorOptions): string {
   const { sceneConfig, selectedComponents } = options;
@@ -54,21 +82,17 @@ export function generatePygameScene(options: GeneratorOptions): string {
     const component = getComponentById(selection.componentId);
     if (!component) return;
     
-    // Get the selected variant code
-    const variantCode = component.variants[selection.variant].pythonCode;
+    // Generate code using the component's generateCode method
+    const componentCode = component.generateCode({
+      ...component.defaultProperties,
+      ...selection.parameters
+    });
     
-    // Merge parameters and assets with selection overrides
-    const mergedParams = { ...component.parameters, ...selection.parameters };
-    const mergedAssets = { ...selection.assets };
+    // Determine category based on component type
+    const category = determineComponentCategory(component.type);
     
-    // Replace template parameters and assets
-    const processedCode = replaceTemplateParams(
-      variantCode,
-      mergedParams,
-      mergedAssets
-    );
-    
-    componentSystems[component.category].push(processedCode);
+    // Add the generated code to the appropriate system
+    componentSystems[category].push(componentCode);
   });
   
   // Generate the complete pygame script
