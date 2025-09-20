@@ -1,9 +1,7 @@
-import { describe, it, expect, beforeEach, vi, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
-import express, { type Express } from 'express';
-import { registerRoutes } from '../../../server/routes';
+import { app } from '../../../server/index';
 import { storage } from '../../../server/storage';
-import type { Server } from 'http';
 import type { User, Lesson, UserProgress, Project } from '@shared/schema';
 
 // Mock the storage module
@@ -34,25 +32,9 @@ vi.mock('../../../server/storage', () => {
 });
 
 describe('API Routes', () => {
-  let app: Express;
-  let server: Server;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
-    // Create fresh Express app
-    app = express();
-    app.use(express.json());
-    
-    // Register routes
-    server = await registerRoutes(app);
-  });
-
-  afterAll(() => {
-    if (server) {
-      server.close();
-    }
   });
 
   describe('Lesson Endpoints', () => {
