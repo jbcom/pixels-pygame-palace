@@ -19,19 +19,19 @@ export interface GeneratorOptions {
 }
 
 // Template parameter replacer
-function replaceTemplateParams(code: string, params: Record<string, any>, assets: Record<string, string>): string {
+function replaceTemplateParams(code: string, params: Record<string, any>, assets: Record<string, string> = {}): string {
   let result = code;
   
   // Replace parameters
   Object.entries(params).forEach(([key, value]) => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
+    const regex = new RegExp(`\{\{${key}\}\}`, 'g');
     result = result.replace(regex, String(value));
   });
   
   // Replace asset references
   Object.entries(assets).forEach(([key, path]) => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
-    result = result.replace(regex, path);
+    const regex = new RegExp(`\{\{${key}\}\}`, 'g');
+    result = result.replace(regex, `"${path}"`);
   });
   
   return result;
@@ -57,11 +57,15 @@ export function generatePygameScene(options: GeneratorOptions): string {
     // Get the selected variant code
     const variantCode = component.variants[selection.variant].pythonCode;
     
+    // Merge parameters and assets with selection overrides
+    const mergedParams = { ...component.parameters, ...selection.parameters };
+    const mergedAssets = { ...selection.assets };
+    
     // Replace template parameters and assets
     const processedCode = replaceTemplateParams(
       variantCode,
-      { ...component.parameters, ...selection.parameters },
-      { ...component.assetSlots, ...selection.assets }
+      mergedParams,
+      mergedAssets
     );
     
     componentSystems[component.category].push(processedCode);
@@ -79,6 +83,7 @@ import sys
 import math
 import random
 import json
+import time
 
 # Initialize Pygame
 pygame.init()
@@ -96,7 +101,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("${sceneConfig.name}")
 clock = pygame.time.Clock()
 
-# Player class
+# Player class with all required attributes
 class Player:
     def __init__(self, x, y):
         self.x = x
@@ -110,10 +115,12 @@ class Player:
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.health = 100
         self.max_health = 100
+        self.mass = 1.0
+        self.elasticity = 0.8
         
     def update(self):
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
         
     def draw(self, screen):
         color = (0, 100, 255)
@@ -121,10 +128,10 @@ class Player:
         # Draw facing direction indicator
         if self.facing_right:
             pygame.draw.rect(screen, (255, 255, 255), 
-                           (self.x + self.width - 10, self.y + 10, 5, 20))
+                           (int(self.x + self.width - 10), int(self.y + 10), 5, 20))
         else:
             pygame.draw.rect(screen, (255, 255, 255),
-                           (self.x + 5, self.y + 10, 5, 20))
+                           (int(self.x + 5), int(self.y + 10), 5, 20))
     
     def play_sound(self, sound_path):
         # Placeholder for sound playing
@@ -146,6 +153,8 @@ class Enemy:
         self.velocity_y = 0
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.health = 50
+        self.mass = 0.8
+        self.elasticity = 0.5
         
     def take_damage(self, amount):
         self.health -= amount
@@ -155,8 +164,8 @@ class Enemy:
         pass
         
     def update(self):
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
         
     def draw(self, screen):
         color = (200, 50, 50)
@@ -165,6 +174,10 @@ class Enemy:
 # Platform class
 class Platform:
     def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
         self.rect = pygame.Rect(x, y, width, height)
         
     def draw(self, screen):
@@ -181,13 +194,10 @@ platforms = [
 ]
 
 # Component Systems
-${componentSystems.movement.length > 0 ? '# Movement Systems\n' + componentSystems.movement.join('\n\n') : ''}
-
-${componentSystems.combat.length > 0 ? '# Combat Systems\n' + componentSystems.combat.join('\n\n') : ''}
-
-${componentSystems.ui.length > 0 ? '# UI Systems\n' + componentSystems.ui.join('\n\n') : ''}
-
-${componentSystems.world.length > 0 ? '# World Systems\n' + componentSystems.world.join('\n\n') : ''}
+${componentSystems.movement.length > 0 ? '# Movement Systems\n' + componentSystems.movement.join('\n') : ''}
+${componentSystems.combat.length > 0 ? '\n# Combat Systems\n' + componentSystems.combat.join('\n') : ''}
+${componentSystems.ui.length > 0 ? '\n# UI Systems\n' + componentSystems.ui.join('\n') : ''}
+${componentSystems.world.length > 0 ? '\n# World Systems\n' + componentSystems.world.join('\n') : ''}
 
 # Initialize component systems
 ${selectedComponents.map(sel => {
@@ -209,9 +219,14 @@ ${selectedComponents.map(sel => {
     case 'score':
       return 'score_system = ScoreSystem()';
     case 'gravity':
-      return 'gravity_system = GravitySystem()\\ngravity_system.add_entity(player)';
+      return 'gravity_system = GravitySystem()\ngravity_system.add_entity(player)';
     case 'collision':
-      return 'collision_system = CollisionSystem()\\nfor platform in platforms:\\n    collision_system.add_static_object(platform)';
+      // Check variant to use correct method name
+      if (sel.variant === 'B') {
+        return 'collision_system = CollisionSystem()\nfor platform in platforms:\n    collision_system.add_static_object(platform)';
+      } else {
+        return 'collision_system = CollisionSystem()\nfor platform in platforms:\n    collision_system.add_solid(platform)';
+      }
     default:
       return '';
   }
@@ -255,7 +270,7 @@ ${selectedComponents.map(sel => {
     case 'health':
       return '    health_system.update(dt)';
     case 'score':
-      return '    score_system.update(dt)\\n    score_system.collect_item(player.rect)';
+      return '    score_system.update(dt)\n    score_system.collect_item(player.rect)';
     case 'gravity':
       return '    gravity_system.update(dt, platforms)';
     case 'collision':
@@ -265,8 +280,11 @@ ${selectedComponents.map(sel => {
   }
 }).filter(line => line).join('\n')}
     
-    # Update player
-    player.x += player.velocity_x * dt
+    # Update player position
+    if hasattr(player, 'velocity_x'):
+        player.x += player.velocity_x * dt
+    if hasattr(player, 'velocity_y'):
+        player.y += player.velocity_y * dt
     player.update()
     
     # Update enemies
@@ -330,7 +348,7 @@ export function generateTestScene(): string {
         componentId: 'walk',
         variant: 'A',
         assets: {},
-        parameters: { max_speed: 5 }
+        parameters: { max_speed: 200 }
       },
       {
         componentId: 'jump',
@@ -346,6 +364,18 @@ export function generateTestScene(): string {
       },
       {
         componentId: 'collision',
+        variant: 'A',
+        assets: {},
+        parameters: {}
+      },
+      {
+        componentId: 'health',
+        variant: 'A',
+        assets: {},
+        parameters: { max_health: 100 }
+      },
+      {
+        componentId: 'score',
         variant: 'A',
         assets: {},
         parameters: {}
