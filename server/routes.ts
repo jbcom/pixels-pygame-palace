@@ -1,10 +1,9 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { InsertProject } from "@shared/schema";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export function registerRoutes(app: Express): void {
   // Get all lessons
   app.get("/api/lessons", async (req, res) => {
     try {
@@ -252,7 +251,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to unpublish project" });
     }
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }
