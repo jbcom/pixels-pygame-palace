@@ -82,6 +82,8 @@ export interface SessionActions {
   gameplayConfigured?: boolean;
   endingConfigured?: boolean;
   gameAssembled?: boolean;
+  selectedComponents?: Record<string, string>; // componentId -> variant (A or B)
+  compiledScenes?: Record<string, boolean>; // scene -> compiled status
 }
 
 // Session action for PixelMenu
@@ -127,7 +129,7 @@ export interface UIState {
   pixelState: PixelState;
   wysiwygEditorOpen?: boolean;
   assetBrowserOpen?: boolean;
-  assetBrowserType?: 'sprite' | 'sound' | 'music' | 'background' | 'all';
+  assetBrowserType?: 'sprite' | 'sound' | 'music' | 'background' | 'font' | 'all';
   selectedGameType?: string;
   showLivePreview?: boolean;
   livePreviewLoading?: boolean;
@@ -135,6 +137,11 @@ export interface UIState {
   isMinimizing?: boolean;
   previewMode?: string;
   viewMode?: string;
+  curatedMode?: boolean;
+  componentChoiceOpen?: boolean;
+  currentComponentId?: string;
+  currentComponentCategory?: string;
+  pyodideMode?: boolean;
 }
 
 // Edge swipe handler options

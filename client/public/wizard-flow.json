@@ -111,112 +111,313 @@
     "guidedTitleScreen": {
       "id": "guidedTitleScreen",
       "speaker": "Pixel",
-      "conditionalText": {
-        "gameType": {
-          "platformer": "Here's an energetic title screen for your platformer! Big bouncy letters, your character doing a jump animation, and a pulsing 'Press Start' button. The background has floating platforms to hint at the gameplay!",
-          "rpg": "Behold! An epic fantasy title screen! Scrolling parchment texture, golden medieval font, your hero's silhouette against a dramatic sunset, and mystical particle effects. Very quest-worthy!",
-          "dungeon": "Dark and atmospheric! Stone wall texture, torches with flickering flame effects, the title etched in ancient stone, and a mysterious dungeon entrance looming in the background!",
-          "racing": "SPEED AND CHROME! Metallic letters with motion blur effects, checkered flag patterns, a sleek vehicle revving with exhaust particles, and speedometer graphics. Pure adrenaline!",
-          "puzzle": "Clean and clever! Geometric patterns animating in the background, crisp modern typography, puzzle pieces that slide together to form the title. Smart and inviting!",
-          "adventure": "Cinematic beauty! A sweeping landscape panorama, title that fades in with dramatic timing, subtle ambient particles floating by, and adventure gear scattered around the edges!",
-          "default": "A classic game title! Bold colorful letters with a subtle animation, inviting 'Start' button, and atmospheric background. Simple but effective!"
-        }
+      "text": "Let's design your title screen! First, pick a background style for your game.",
+      "followUp": "Each style sets the mood for your entire game!",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "background",
+        "curated": true,
+        "gameType": "title"
       },
       "options": [
         {
-          "text": "This looks perfect! Let's continue",
-          "next": "guidedGameplay"
-        },
-        {
-          "text": "Show me a different style",
-          "next": "guidedTitleScreen"
+          "text": "I've chosen my background!",
+          "next": "guidedTitleFont"
         }
       ]
     },
-    "guidedGameplay": {
-      "id": "guidedGameplay",
+    "guidedTitleFont": {
+      "id": "guidedTitleFont",
       "speaker": "Pixel",
-      "text": "Excellent! Now for the heart of your game - the actual gameplay! I've prepared everything you need.",
-      "conditionalFollowUp": {
-        "gameType": {
-          "platformer": "Your hero can run with arrow keys, jump with spacebar, and collect shiny coins! I've added moving platforms, spiky obstacles to avoid, and power-ups that make you jump higher. Try it out!",
-          "rpg": "Your adventurer moves with WASD, interacts with E, and battles with the mouse! I've added a village to explore, friendly NPCs with quests, enemies to fight, and treasure chests to discover!",
-          "dungeon": "Navigate with arrow keys through procedurally generated rooms! I've added torch lighting that follows you, traps that activate when you're near, monsters lurking in shadows, and glittering treasure to collect!",
-          "racing": "Full throttle action! Up arrow accelerates, down brakes, left/right to steer! I've added a twisting track with corners, speed boosts on straightaways, a lap timer, and rival cars to race against!",
-          "puzzle": "Click and drag to interact! I've set up a satisfying match-3 grid where pieces fall naturally, combos trigger cascades, points rack up with multipliers, and special pieces clear whole rows!",
-          "adventure": "Point and click to explore! Your character pathfinds to clicked locations, examines objects for clues, collects items to your inventory, and solves environmental puzzles to progress!",
-          "default": "Basic but fun gameplay! Move your character, interact with the environment, collect items, and avoid obstacles. All the fundamentals are working!"
-        }
+      "text": "Great choice! Now let's pick a font for your game title.",
+      "followUp": "The right font makes your title pop!",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "font",
+        "curated": true
       },
+      "options": [
+        {
+          "text": "Font selected!",
+          "next": "guidedTitleSound"
+        }
+      ]
+    },
+    "guidedTitleSound": {
+      "id": "guidedTitleSound",
+      "speaker": "Pixel",
+      "text": "Now for the music! Pick a track that matches your game's vibe.",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "music",
+        "curated": true,
+        "category": "title"
+      },
+      "options": [
+        {
+          "text": "Perfect music!",
+          "next": "guidedGameplayMovement"
+        }
+      ]
+    },
+    "guidedGameplayMovement": {
+      "id": "guidedGameplayMovement",
+      "speaker": "Pixel",
+      "text": "Time for gameplay! First big choice - how should movement feel in your game?",
+      "action": "showComponentChoice",
+      "actionParams": {
+        "componentId": "jump",
+        "category": "movement"
+      },
+      "options": [
+        {
+          "text": "A: Floaty Jump - Hold to jump higher with air control",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "jump", "variant": "A" },
+          "next": "guidedGameplayCharacter"
+        },
+        {
+          "text": "B: Realistic Jump - Fixed arc with no air control",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "jump", "variant": "B" },
+          "next": "guidedGameplayCharacter"
+        }
+      ]
+    },
+    "guidedGameplayCharacter": {
+      "id": "guidedGameplayCharacter",
+      "speaker": "Pixel",
+      "text": "Nice! Now pick your main character sprite.",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "sprite",
+        "category": "characters",
+        "curated": true
+      },
+      "options": [
+        {
+          "text": "Character selected!",
+          "next": "guidedGameplayCombat"
+        }
+      ]
+    },
+    "guidedGameplayCombat": {
+      "id": "guidedGameplayCombat",
+      "speaker": "Pixel",
+      "text": "How should combat work? Shooting projectiles or melee attacks?",
+      "options": [
+        {
+          "text": "Shooting - Ranged attacks with projectiles!",
+          "next": "guidedGameplayShootingChoice"
+        },
+        {
+          "text": "Melee - Close combat with sword swings!",
+          "next": "guidedGameplayMeleeChoice"
+        }
+      ]
+    },
+    "guidedGameplayShootingChoice": {
+      "id": "guidedGameplayShootingChoice",
+      "speaker": "Pixel",
+      "text": "Shooting it is! How should projectiles behave?",
+      "action": "showComponentChoice",
+      "actionParams": {
+        "componentId": "shooting",
+        "category": "combat"
+      },
+      "options": [
+        {
+          "text": "A: Rapid Fire - Hold to spray bullets!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "shooting", "variant": "A" },
+          "next": "guidedGameplayEnemies"
+        },
+        {
+          "text": "B: Charged Shot - Hold to power up!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "shooting", "variant": "B" },
+          "next": "guidedGameplayEnemies"
+        }
+      ]
+    },
+    "guidedGameplayMeleeChoice": {
+      "id": "guidedGameplayMeleeChoice",
+      "speaker": "Pixel",
+      "text": "Melee combat! How should sword attacks work?",
+      "action": "showComponentChoice",
+      "actionParams": {
+        "componentId": "melee",
+        "category": "combat"
+      },
+      "options": [
+        {
+          "text": "A: Quick Slash - Fast combo attacks!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "melee", "variant": "A" },
+          "next": "guidedGameplayEnemies"
+        },
+        {
+          "text": "B: Heavy Strike - Powerful charged swings!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "melee", "variant": "B" },
+          "next": "guidedGameplayEnemies"
+        }
+      ]
+    },
+    "guidedGameplayEnemies": {
+      "id": "guidedGameplayEnemies",
+      "speaker": "Pixel",
+      "text": "Every hero needs challenges! Pick some enemies.",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "sprite",
+        "category": "enemies",
+        "curated": true,
+        "multiple": true
+      },
+      "options": [
+        {
+          "text": "Enemies chosen!",
+          "next": "guidedGameplayItems"
+        }
+      ]
+    },
+    "guidedGameplayItems": {
+      "id": "guidedGameplayItems",
+      "speaker": "Pixel",
+      "text": "What should players collect? Choose some items!",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "sprite",
+        "category": "items",
+        "curated": true,
+        "multiple": true
+      },
+      "options": [
+        {
+          "text": "Items selected!",
+          "next": "guidedGameplaySound"
+        }
+      ]
+    },
+    "guidedGameplaySound": {
+      "id": "guidedGameplaySound",
+      "speaker": "Pixel",
+      "text": "Let's add sound effects for actions like jumping and collecting items!",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "sound",
+        "curated": true,
+        "multiple": true
+      },
+      "options": [
+        {
+          "text": "Sounds good!",
+          "action": "compileGameplayScene",
+          "next": "guidedGameplayPreview"
+        }
+      ]
+    },
+    "guidedGameplayPreview": {
+      "id": "guidedGameplayPreview",
+      "speaker": "Pixel",
+      "text": "Let's see your gameplay in action! I've assembled all your choices.",
+      "action": "launchPyodidePreview",
+      "actionParams": { "scene": "gameplay" },
       "options": [
         {
           "text": "This plays great! On to the ending",
           "next": "guidedEndScreen"
         },
         {
-          "text": "Let me play around more",
-          "next": "guidedGameplayTest"
+          "text": "Let me tweak it",
+          "next": "guidedGameplayTweak"
         }
       ]
     },
-    "guidedGameplayTest": {
-      "id": "guidedGameplayTest",
+    "guidedGameplayTweak": {
+      "id": "guidedGameplayTweak",
       "speaker": "Pixel",
-      "text": "Take your time! Test out all the mechanics. When you're ready, we'll move on to creating your ending screen.",
+      "text": "What would you like to adjust?",
       "options": [
         {
-          "text": "I'm satisfied! Let's continue",
-          "next": "guidedEndScreen"
+          "text": "Change jump physics",
+          "next": "guidedGameplayMovement"
         },
         {
-          "text": "Can I adjust the difficulty?",
-          "next": "guidedGameplayTest"
+          "text": "Swap character sprite",
+          "next": "guidedGameplayCharacter"
+        },
+        {
+          "text": "Adjust combat style",
+          "next": "guidedGameplayCombat"
+        },
+        {
+          "text": "Actually, it's perfect!",
+          "next": "guidedEndScreen"
         }
       ]
     },
     "guidedEndScreen": {
       "id": "guidedEndScreen",
       "speaker": "Pixel",
-      "text": "Final piece - the ending! Every great game needs a satisfying conclusion, whether you win or lose.",
-      "conditionalFollowUp": {
-        "gameType": {
-          "platformer": "Victory celebration! Confetti rains down, your score displays with coin bonus, time taken shows for speedrunners, and a 'New Game+' option appears with harder levels!",
-          "rpg": "Quest complete! A grand scroll unfurls showing your journey stats - monsters slain, quests completed, gold earned, experience gained. Your hero stands triumphant!",
-          "dungeon": "Treasure chamber reached! Gold coins spill everywhere, rare artifacts you collected display prominently, dungeon completion percentage shows, and mysterious 'Deeper Dungeon?' option teases more!",
-          "racing": "Championship podium! You stand with a trophy as confetti flies, lap times display with records highlighted, rival positions show, and 'Next Circuit' unlocks!",
-          "puzzle": "Puzzle mastered! Fireworks explode in patterns, final score with combo multipliers tallied, brain rating calculated, and next puzzle set unlocks!",
-          "adventure": "Journey's end! Story epilogue plays out, showing consequences of your choices, items you collected displayed like trophies, and 'New Adventure' beckons!",
-          "default": "Game complete! Your final score in big numbers, achievements you unlocked listed, statistics tracked, and options to play again or return to menu!"
-        }
+      "text": "Final scene! How should we show the score?",
+      "action": "showComponentChoice",
+      "actionParams": {
+        "componentId": "score",
+        "category": "ui"
       },
       "options": [
         {
-          "text": "Perfect ending! We're done!",
-          "next": "guidedComplete"
+          "text": "A: Animated Counter - Numbers tick up dramatically!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "score", "variant": "A" },
+          "next": "guidedEndMusic"
         },
         {
-          "text": "Try a different ending style",
-          "next": "guidedEndScreen"
+          "text": "B: Instant Display - Show final score immediately!",
+          "action": "selectComponentVariant",
+          "actionParams": { "componentId": "score", "variant": "B" },
+          "next": "guidedEndMusic"
+        }
+      ]
+    },
+    "guidedEndMusic": {
+      "id": "guidedEndMusic",
+      "speaker": "Pixel",
+      "text": "Choose victory music to celebrate the win!",
+      "action": "showAssets",
+      "actionParams": {
+        "type": "music",
+        "category": "victory",
+        "curated": true
+      },
+      "options": [
+        {
+          "text": "Victory music selected!",
+          "action": "compileEndScene",
+          "next": "guidedComplete"
         }
       ]
     },
     "guidedComplete": {
       "id": "guidedComplete",
       "speaker": "Pixel",
-      "text": "🎉 CONGRATULATIONS! You've built a COMPLETE game! Title screen ✓ Gameplay ✓ Ending ✓ Everything connects perfectly!",
-      "followUp": "Want to see your masterpiece in action? I can show you the full experience from start to finish!",
+      "text": "🎉 CONGRATULATIONS! You've built a COMPLETE game! Title ✓ Gameplay ✓ Ending ✓ All using the components and assets you chose!",
+      "followUp": "Ready to play your creation or export it?",
+      "action": "compileFullGame",
       "options": [
         {
           "text": "Play my complete game!",
-          "action": "openEditor"
+          "action": "launchPyodideGame"
         },
         {
-          "text": "Show me the Python code behind it",
-          "action": "openEditor"
+          "text": "Export as Python file",
+          "action": "exportPyodideGame"
         },
         {
-          "text": "Let me customize it more",
-          "action": "openEditor"
+          "text": "Open in Pro Editor",
+          "action": "openWYSIWYGEditor"
         }
       ]
     },
