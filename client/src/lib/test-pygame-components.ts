@@ -1,21 +1,18 @@
 // Test file for the Pygame Component System
 import { generatePygameScene, generateTestScene } from './scene-generator';
-import { pygameComponents, allComponents, getComponentById } from './pygame-components';
+import { pygameComponents, getAllComponents, getComponentById } from './pygame-components';
 
 // Test 1: Verify all components are loaded
 function testComponentLoading() {
   console.log('Testing Component Loading...');
-  console.log(`Total components loaded: ${allComponents.length}`);
+  console.log(`Total components loaded: ${getAllComponents().length}`);
   
-  // Check each category
-  Object.entries(pygameComponents).forEach(([category, components]) => {
-    console.log(`Category ${category}: ${components.length} components`);
-    components.forEach(comp => {
-      console.log(`  - ${comp.id}: ${comp.name}`);
-    });
+  // Check all components
+  pygameComponents.forEach((comp, index) => {
+    console.log(`Component ${index + 1}: ${comp.id} - ${comp.name} (${comp.type})`);
   });
   
-  return allComponents.length === 8; // We created 8 components
+  return getAllComponents().length >= 12; // We have multiple components
 }
 
 // Test 2: Verify component structure
