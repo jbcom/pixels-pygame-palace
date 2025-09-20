@@ -15,7 +15,7 @@ export function useEdgeSwipe({
   const isSwipingRef = useRef(false);
   
   const checkEdgeSwipe = (eventData: SwipeEventData, direction: 'up' | 'down' | 'left' | 'right') => {
-    if (!enabled || !onEdgeSwipe) return;
+    if (!enabled || !onEdgeSwipe || !eventData || !eventData.initial) return;
     
     const [startX, startY] = eventData.initial;
     const screenWidth = window.innerWidth;
