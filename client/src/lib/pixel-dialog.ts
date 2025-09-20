@@ -24,19 +24,19 @@ export const dialogFlows = {
       pixel: "Awesome to meet you, {name}! 🎮 I love that name! So, have you ever made games with Python before?" 
     },
     { 
-      quickReplies: ["First time! 🆕", "I've tried a bit 📝", "I know Python 🐍", "I'm a pro! 💪"] 
+      quickReplies: ["I'm new to coding! 🆕", "I know some Python 🐍"] 
     },
     {
       pixel: "Perfect! I'll make sure we go at just the right pace for you. What kind of games get you most excited?"
     },
     {
-      quickReplies: ["Action/Platformer 🏃", "Puzzle Games 🧩", "Adventure 🗺️", "Racing 🏎️", "Music/Rhythm 🎵", "Creative Sandbox 🎨"]
+      quickReplies: ["Fast-paced action! 🎮", "Strategic puzzles 🧩"]
     },
     {
       pixel: "Excellent choice! I've got some cool templates that match your interests. Ready to start building something awesome?"
     },
     {
-      quickReplies: ["Let's do this! 🚀", "Show me around first 👀", "I want to learn Python basics 📚"]
+      quickReplies: ["Let's build! 🚀", "Show me around first 📚"]
     }
   ] as DialogFlow,
   
@@ -49,7 +49,7 @@ export const dialogFlows = {
       pixel: "Want to continue working on your {currentProject}?"
     },
     {
-      quickReplies: ["Continue my project ▶️", "Start something new ✨", "Practice Python 📝", "Browse gallery 🖼️"]
+      quickReplies: ["Continue my project ▶️", "Start something new ✨"]
     }
   ] as DialogFlow,
   
@@ -59,14 +59,8 @@ export const dialogFlows = {
     },
     {
       quickReplies: [
-        "Platformer - Jump & Run 🏃",
-        "Puzzle - Brain Teasers 🧩",
-        "Adventure - Explore Worlds 🌍", 
-        "Racing - Speed Thrills 🏎️",
-        "Music - Rhythm & Beats 🎵",
-        "Tower Defense - Strategy 🏰",
-        "Endless Runner - Non-stop Action 🏃‍♂️",
-        "Pet Sim - Virtual Companions 🐾"
+        "Action Game 🎮",
+        "Strategy Game 🧩"
       ]
     }
   ] as DialogFlow,
@@ -76,7 +70,7 @@ export const dialogFlows = {
       pixel: "I noticed you're working with {concept}. Would you like me to show you some cool tricks with that?"
     },
     {
-      quickReplies: ["Yes, show me! 📚", "Maybe later ⏰", "I got this 💪"]
+      quickReplies: ["Yes, show me! 📚", "I got this 💪"]
     }
   ] as DialogFlow,
   
@@ -94,7 +88,7 @@ export const dialogFlows = {
       pixel: "Want to share it with others or keep building?"
     },
     {
-      quickReplies: ["Publish to gallery 🌐", "Add more features ➕", "Start a new game 🆕", "Take a break 😌"]
+      quickReplies: ["Share it! 🌐", "Keep building ➕"]
     }
   ] as DialogFlow,
   
@@ -103,7 +97,7 @@ export const dialogFlows = {
       pixel: "Looks like you might be stuck. No worries - happens to all of us! Want some help?"
     },
     {
-      quickReplies: ["Yes please! 🆘", "Let me try more 💭", "Show me an example 📖"]
+      quickReplies: ["Yes please! 🆘", "Let me try more 💭"]
     }
   ] as DialogFlow,
   
