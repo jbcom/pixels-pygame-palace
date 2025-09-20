@@ -13,7 +13,7 @@ export interface WizardNode {
   text?: string;
   multiStep?: string[];
   options?: WizardOption[];
-  action?: string;
+  action?: string; // Can be 'openWYSIWYGEditor', 'openEditor', 'openLessons', 'showAssets', 'minimizePixel'
   params?: Record<string, any>;
   tags?: string[];
   conditional?: {
@@ -51,6 +51,8 @@ export interface WizardOption {
   setVariable?: Record<string, any>;
   updatePreview?: GameChoice;
   previewComment?: string;
+  action?: string; // Option can also have an action
+  actionParams?: Record<string, any>;
 }
 
 // Session Actions for tracking user progress
@@ -116,6 +118,8 @@ export interface UIState {
   selectedGameType?: string;
   showLivePreview?: boolean;
   livePreviewLoading?: boolean;
+  minimizeMessage?: string;
+  isMinimizing?: boolean;
 }
 
 // Edge swipe handler options

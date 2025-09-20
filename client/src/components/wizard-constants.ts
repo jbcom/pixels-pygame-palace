@@ -46,6 +46,26 @@ export const ANIMATIONS = {
     duration: 0.3,
     delay: 0.1,
   },
+  MINIMIZE_ANIMATION: {
+    messageDuration: 2000,
+    animationDuration: 1200,
+    totalDuration: 3500,
+    springConfig: {
+      damping: 15,
+      stiffness: 100,
+    },
+  },
+  IDLE_ANIMATIONS: {
+    blinkDuration: 200,
+    waveDuration: 500,
+    minDelay: 10000,
+    maxDelay: 20000,
+  },
+  ENCOURAGEMENT: {
+    showDuration: 4000,
+    firstShowDelay: 30000,
+    interval: 120000,
+  },
 } as const;
 
 // Edge swipe configuration
@@ -76,6 +96,14 @@ export const AVATAR_SIZES = {
     widthSm: 'sm:w-24',
     heightSm: 'sm:h-24',
   },
+  MINIMIZED_DESKTOP: {
+    width: 'w-14',
+    height: 'h-14',
+  },
+  MINIMIZED_MOBILE: {
+    width: 'w-12',
+    height: 'h-12',
+  },
 } as const;
 
 // Style configurations
@@ -86,6 +114,8 @@ export const STYLES = {
   BUTTON_GRADIENT: 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700',
   HEADER_BG: 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg',
   PIXEL_STATUS_INDICATOR: 'bg-green-400 rounded-full border-4 border-white shadow-lg',
+  MINIMIZED_RING: 'ring-2 ring-purple-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900',
+  SPEECH_BUBBLE: 'bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-purple-200 dark:border-purple-800',
 } as const;
 
 // Button styles based on context
