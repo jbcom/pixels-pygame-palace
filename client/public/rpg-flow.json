@@ -1,0 +1,337 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Pixel",
+    "text": "An RPG! Time to craft an epic adventure with story, characters, and battles!",
+    "followUp": "Let's build your world scene by scene, starting with the title.",
+    "next": "titleFantasyTheme"
+  },
+  "titleFantasyTheme": {
+    "id": "titleFantasyTheme",
+    "speaker": "Pixel",
+    "text": "First, what fantasy setting calls to you?",
+    "options": [
+      {
+        "text": "Medieval kingdom with castles and dragons",
+        "next": "titleMedievalAssets"
+      },
+      {
+        "text": "Mystical forest with magic and elves",
+        "next": "titleForestAssets"
+      },
+      {
+        "text": "Dark dungeon with monsters and treasure",
+        "next": "titleDungeonAssets"
+      }
+    ]
+  },
+  "titleMedievalAssets": {
+    "id": "titleMedievalAssets",
+    "speaker": "Pixel",
+    "text": "Medieval it is! Let's pick a majestic castle background.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["castle", "medieval", "kingdom"]
+    },
+    "next": "titleHeroSilhouette"
+  },
+  "titleForestAssets": {
+    "id": "titleForestAssets",
+    "speaker": "Pixel",
+    "text": "Mystical forest! Choose an enchanted woodland background.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["forest", "mystical", "nature"]
+    },
+    "next": "titleHeroSilhouette"
+  },
+  "titleDungeonAssets": {
+    "id": "titleDungeonAssets",
+    "speaker": "Pixel",
+    "text": "Dark and mysterious! Pick a dungeon entrance background.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["dungeon", "cave", "dark"]
+    },
+    "next": "titleHeroSilhouette"
+  },
+  "titleHeroSilhouette": {
+    "id": "titleHeroSilhouette",
+    "speaker": "Pixel",
+    "text": "Your hero's silhouette will appear dramatically on the title. Choose your protagonist!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "characters",
+      "curated": true,
+      "tags": ["hero", "rpg", "protagonist"]
+    },
+    "next": "titleEpicMusic"
+  },
+  "titleEpicMusic": {
+    "id": "titleEpicMusic",
+    "speaker": "Pixel",
+    "text": "RPGs need epic orchestral music! Pick your main theme.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["epic", "orchestral", "fantasy"]
+    },
+    "next": "characterCreation"
+  },
+  "characterCreation": {
+    "id": "characterCreation",
+    "speaker": "Pixel",
+    "text": "Character creation time! What class system should we use?",
+    "options": [
+      {
+        "text": "Classic trinity: Warrior, Mage, Rogue",
+        "next": "characterStats"
+      },
+      {
+        "text": "Expanded: Knight, Wizard, Archer, Cleric, Thief",
+        "next": "characterStats"
+      }
+    ]
+  },
+  "characterStats": {
+    "id": "characterStats",
+    "speaker": "Pixel",
+    "text": "Stats define your hero! Which system works best?",
+    "options": [
+      {
+        "text": "Simple: Health, Magic, Strength",
+        "next": "villageHub"
+      },
+      {
+        "text": "Complex: STR, DEX, INT, WIS, CON, CHA",
+        "next": "villageHub"
+      }
+    ]
+  },
+  "villageHub": {
+    "id": "villageHub",
+    "speaker": "Pixel",
+    "text": "Every RPG needs a home village! This is where adventures begin.",
+    "followUp": "Let's build your village hub with NPCs and shops.",
+    "next": "villageBackground"
+  },
+  "villageBackground": {
+    "id": "villageBackground",
+    "speaker": "Pixel",
+    "text": "Pick a cozy village setting for your hub world.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["village", "town", "peaceful"]
+    },
+    "next": "villageNPCs"
+  },
+  "villageNPCs": {
+    "id": "villageNPCs",
+    "speaker": "Pixel",
+    "text": "Villages need NPCs! Choose townspeople sprites.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "characters",
+      "curated": true,
+      "multiple": true,
+      "tags": ["npc", "villager", "merchant"]
+    },
+    "next": "villageShops"
+  },
+  "villageShops": {
+    "id": "villageShops",
+    "speaker": "Pixel",
+    "text": "What shops should your village have?",
+    "options": [
+      {
+        "text": "Weapon Shop, Item Shop, Inn",
+        "next": "questSystem"
+      },
+      {
+        "text": "Blacksmith, Alchemist, Magic Shop, Inn, Guild",
+        "next": "questSystem"
+      }
+    ]
+  },
+  "questSystem": {
+    "id": "questSystem",
+    "speaker": "Pixel",
+    "text": "Quest time! How should players receive missions?",
+    "options": [
+      {
+        "text": "Quest board with posted missions",
+        "next": "battleSystem"
+      },
+      {
+        "text": "NPCs with speech bubbles and requests",
+        "next": "battleSystem"
+      }
+    ]
+  },
+  "battleSystem": {
+    "id": "battleSystem",
+    "speaker": "Pixel",
+    "text": "Combat is crucial in RPGs! Pick your battle style.",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "shooting",
+      "category": "combat"
+    },
+    "options": [
+      {
+        "text": "A: Real-time action combat",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "shooting", "variant": "A" },
+        "next": "battleEnemies"
+      },
+      {
+        "text": "B: Turn-based strategic combat",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "shooting", "variant": "B" },
+        "next": "battleEnemies"
+      }
+    ]
+  },
+  "battleEnemies": {
+    "id": "battleEnemies",
+    "speaker": "Pixel",
+    "text": "Choose enemies for random encounters!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "enemies",
+      "curated": true,
+      "multiple": true,
+      "tags": ["monster", "rpg", "enemy"]
+    },
+    "next": "battleMusic"
+  },
+  "battleMusic": {
+    "id": "battleMusic",
+    "speaker": "Pixel",
+    "text": "Battle music gets the blood pumping! Pick your combat theme.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["battle", "intense", "combat"]
+    },
+    "next": "dungeonExploration"
+  },
+  "dungeonExploration": {
+    "id": "dungeonExploration",
+    "speaker": "Pixel",
+    "text": "Time to explore dungeons! How should they generate?",
+    "options": [
+      {
+        "text": "Pre-designed levels with secrets",
+        "next": "dungeonTreasure"
+      },
+      {
+        "text": "Randomly generated mazes",
+        "next": "dungeonTreasure"
+      }
+    ]
+  },
+  "dungeonTreasure": {
+    "id": "dungeonTreasure",
+    "speaker": "Pixel",
+    "text": "Dungeons need treasure! Pick loot to discover.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["treasure", "loot", "chest"]
+    },
+    "next": "bossBattle"
+  },
+  "bossBattle": {
+    "id": "bossBattle",
+    "speaker": "Pixel",
+    "text": "Every quest needs a final boss! Choose your big bad.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "enemies",
+      "curated": true,
+      "tags": ["boss", "dragon", "demon"]
+    },
+    "next": "bossStrategy"
+  },
+  "bossStrategy": {
+    "id": "bossStrategy",
+    "speaker": "Pixel",
+    "text": "How should the boss fight work?",
+    "options": [
+      {
+        "text": "Multiple phases with increasing difficulty",
+        "next": "endingChoice"
+      },
+      {
+        "text": "Puzzle-based with weak points",
+        "next": "endingChoice"
+      }
+    ]
+  },
+  "endingChoice": {
+    "id": "endingChoice",
+    "speaker": "Pixel",
+    "text": "Your epic needs an ending! How should the story conclude?",
+    "options": [
+      {
+        "text": "Hero returns home as a legend",
+        "next": "endingCredits"
+      },
+      {
+        "text": "Sets up for a sequel adventure",
+        "next": "endingCredits"
+      }
+    ]
+  },
+  "endingCredits": {
+    "id": "endingCredits",
+    "speaker": "Pixel",
+    "text": "Pick triumphant ending music for your credits!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["ending", "credits", "peaceful"]
+    },
+    "next": "complete"
+  },
+  "complete": {
+    "id": "complete",
+    "speaker": "Pixel",
+    "text": "⚔️ LEGENDARY! Your RPG is complete! Title ✓ Character ✓ Village ✓ Quests ✓ Battles ✓ Boss ✓ Ending ✓",
+    "followUp": "An epic adventure awaits! Ready to embark?",
+    "action": "compileFullGame",
+    "options": [
+      {
+        "text": "Play my RPG!",
+        "action": "launchPyodideGame"
+      },
+      {
+        "text": "Export as Python file",
+        "action": "exportPyodideGame"
+      },
+      {
+        "text": "Open in Pro Editor",
+        "action": "openWYSIWYGEditor"
+      }
+    ]
+  }
+}
