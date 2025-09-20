@@ -1,0 +1,257 @@
+{
+  "nodes": {
+    "start": {
+      "id": "start",
+      "speaker": "Pixel",
+      "text": "Level 3 - Time to give your code a BRAIN! 🧠 We're learning how to make decisions!",
+      "followUp": "This is where games get interesting - your code can now react to different situations!",
+      "options": [
+        {
+          "text": "Teach me decision-making!",
+          "next": "ifStatement"
+        },
+        {
+          "text": "Like choices in a game?",
+          "next": "gameAnalogy"
+        }
+      ]
+    },
+    "gameAnalogy": {
+      "id": "gameAnalogy",
+      "speaker": "Pixel",
+      "text": "Exactly! Like 'IF health is zero, THEN game over' or 'IF you have a key, THEN open the door'!",
+      "followUp": "Every game is full of these IF-THEN decisions. Let's learn to code them!",
+      "options": [
+        {
+          "text": "Show me how!",
+          "next": "ifStatement"
+        }
+      ]
+    },
+    "ifStatement": {
+      "id": "ifStatement",
+      "speaker": "Pixel",
+      "text": "The 'if' statement is your decision maker! It checks if something is true, then acts!",
+      "codeExample": "player_health = 25\n\nif player_health < 30:\n    print('Warning: Low health!')\n    print('Find a health potion!')",
+      "followUp": "See the colon and indentation? That's Python's way of grouping code that runs together!",
+      "options": [
+        {
+          "text": "What if health is above 30?",
+          "next": "elseStatement"
+        },
+        {
+          "text": "Why the indentation?",
+          "next": "explainIndent"
+        }
+      ]
+    },
+    "explainIndent": {
+      "id": "explainIndent",
+      "speaker": "Pixel",
+      "text": "Indentation is SUPER important in Python! It shows what code belongs to the if statement!",
+      "codeExample": "if player_has_key:\n    print('Opening door...')  # This runs if true\n    print('You enter the room!')  # This too!\nprint('Game continues...')  # This ALWAYS runs",
+      "followUp": "Think of indentation like putting code in a box - everything in the box runs together!",
+      "options": [
+        {
+          "text": "Makes sense! What about else?",
+          "next": "elseStatement"
+        }
+      ]
+    },
+    "elseStatement": {
+      "id": "elseStatement",
+      "speaker": "Pixel",
+      "text": "The 'else' statement handles what happens when the if condition is FALSE!",
+      "codeExample": "coins = 45\nitem_cost = 50\n\nif coins >= item_cost:\n    print('Purchase successful!')\n    coins = coins - item_cost\nelse:\n    print('Not enough coins!')\n    print('You need', item_cost - coins, 'more coins')",
+      "followUp": "It's like a two-way path - if THIS, do that, OTHERWISE do something else!",
+      "options": [
+        {
+          "text": "Can I have more than two options?",
+          "next": "elifStatement"
+        },
+        {
+          "text": "Let me try one!",
+          "next": "tryCondition"
+        }
+      ]
+    },
+    "elifStatement": {
+      "id": "elifStatement",
+      "speaker": "Pixel",
+      "text": "Yes! Use 'elif' (else-if) for multiple choices - like a dialogue tree in an RPG!",
+      "codeExample": "score = 850\n\nif score >= 1000:\n    print('PERFECT! S-Rank!')\nelif score >= 800:\n    print('Great job! A-Rank!')\nelif score >= 600:\n    print('Good! B-Rank!')\nelif score >= 400:\n    print('Not bad! C-Rank!')\nelse:\n    print('Try again! D-Rank')",
+      "followUp": "Python checks each condition in order and runs the FIRST one that's true!",
+      "options": [
+        {
+          "text": "What if multiple are true?",
+          "next": "multipleTrue"
+        },
+        {
+          "text": "Show me more examples!",
+          "next": "moreExamples"
+        }
+      ]
+    },
+    "multipleTrue": {
+      "id": "multipleTrue",
+      "speaker": "Pixel",
+      "text": "Only the FIRST true condition runs! It's like a waterfall - once you fall in a bucket, you stop!",
+      "codeExample": "age = 15\n\nif age >= 10:  # True - this runs!\n    print('You can play rated E10+ games')\nelif age >= 13:  # Also true, but SKIPPED\n    print('You can play Teen games')\nelif age >= 17:  # False\n    print('You can play Mature games')",
+      "followUp": "To check multiple conditions independently, use separate if statements!",
+      "options": [
+        {
+          "text": "Show me separate ifs",
+          "next": "separateIfs"
+        }
+      ]
+    },
+    "separateIfs": {
+      "id": "separateIfs",
+      "speaker": "Pixel",
+      "text": "Separate if statements check ALL conditions, not just the first true one!",
+      "codeExample": "# Multiple power-ups can be active!\nhas_speed_boost = True\nhas_shield = True\nhas_double_points = False\n\nif has_speed_boost:\n    print('Speed x2!')  # Runs\n    \nif has_shield:\n    print('Protected!')  # Also runs\n    \nif has_double_points:\n    print('Double points!')  # Doesn't run",
+      "followUp": "See? Each if is independent - perfect for checking multiple status effects!",
+      "options": [
+        {
+          "text": "Can I combine conditions?",
+          "next": "logicalOperators"
+        }
+      ]
+    },
+    "tryCondition": {
+      "id": "tryCondition",
+      "speaker": "Pixel",
+      "text": "Let's code a simple battle decision! Choose your approach!",
+      "followUp": "Enemy has 50 HP. You have 30 attack power. What should your code check?",
+      "options": [
+        {
+          "text": "if enemy_hp <= attack_power: print('One-shot victory!')",
+          "next": "trySuccess"
+        },
+        {
+          "text": "if enemy_hp > 100: print('Boss battle!')",
+          "next": "tryLogic"
+        }
+      ]
+    },
+    "trySuccess": {
+      "id": "trySuccess",
+      "speaker": "Pixel",
+      "text": "Smart thinking! You're checking if you can defeat the enemy in one hit!",
+      "codeExample": "enemy_hp = 50\nattack_power = 30\n\nif enemy_hp <= attack_power:\n    print('One-shot victory!')\nelse:\n    hits_needed = enemy_hp // attack_power + 1\n    print(f'Need {hits_needed} hits to win!')",
+      "followUp": "Great combat logic! Now let's learn about combining conditions!",
+      "options": [
+        {
+          "text": "Show me combinations!",
+          "next": "logicalOperators"
+        }
+      ]
+    },
+    "tryLogic": {
+      "id": "tryLogic",
+      "speaker": "Pixel",
+      "text": "That would never trigger since enemy_hp is 50! Remember to check your logic!",
+      "codeExample": "enemy_hp = 50\n\n# This is always False with enemy_hp = 50\nif enemy_hp > 100:\n    print('Boss battle!')  # Never runs!\n    \n# Better approach:\nif enemy_hp > 75:\n    print('Strong enemy!')\nelif enemy_hp > 40:\n    print('Regular enemy!')\nelse:\n    print('Weak enemy!')",
+      "followUp": "Always test your conditions with the actual values! Now let's combine conditions!",
+      "options": [
+        {
+          "text": "Teach me combinations!",
+          "next": "logicalOperators"
+        }
+      ]
+    },
+    "moreExamples": {
+      "id": "moreExamples",
+      "speaker": "Pixel",
+      "text": "Here's a complete game menu system using conditionals!",
+      "codeExample": "menu_choice = 2\n\nif menu_choice == 1:\n    print('Starting new game...')\n    print('Welcome to the adventure!')\nelif menu_choice == 2:\n    print('Loading saved game...')\n    print('Welcome back, hero!')\nelif menu_choice == 3:\n    print('Opening settings...')\nelse:\n    print('Invalid choice! Try again.')",
+      "followUp": "Perfect for game menus, dialogue options, and any multi-choice situation!",
+      "options": [
+        {
+          "text": "Can I check multiple things at once?",
+          "next": "logicalOperators"
+        }
+      ]
+    },
+    "logicalOperators": {
+      "id": "logicalOperators",
+      "speaker": "Pixel",
+      "text": "Yes! Use 'and', 'or', and 'not' to combine conditions - like combo requirements!",
+      "codeExample": "# AND - both must be true\nhas_key = True\ndoor_unlocked = False\n\nif has_key and not door_unlocked:\n    print('Use key to unlock door!')\n\n# OR - at least one must be true\nhealth = 15\nhas_potion = True\n\nif health < 20 or has_potion:\n    print('Healing available!')",
+      "followUp": "'and' needs ALL conditions true, 'or' needs just ONE true, 'not' flips true/false!",
+      "options": [
+        {
+          "text": "Show me a complex example!",
+          "next": "complexConditions"
+        },
+        {
+          "text": "What about nested ifs?",
+          "next": "nestedIfs"
+        }
+      ]
+    },
+    "complexConditions": {
+      "id": "complexConditions",
+      "speaker": "Pixel",
+      "text": "Let's build a complex combat system decision tree!",
+      "codeExample": "player_hp = 45\nenemy_hp = 80\nmana = 20\nhas_sword = True\nhas_magic = True\n\nif enemy_hp > 50 and player_hp < 30:\n    if mana >= 30 and has_magic:\n        print('Cast healing spell!')\n    elif has_sword:\n        print('Defensive stance!')\n    else:\n        print('Retreat!')\nelif enemy_hp <= 50 and player_hp > 30:\n    print('All-out attack!')\nelse:\n    print('Balanced approach!')",
+      "followUp": "See how we can nest conditions inside each other for complex logic?",
+      "options": [
+        {
+          "text": "Nested ifs are powerful!",
+          "next": "nestedIfs"
+        }
+      ]
+    },
+    "nestedIfs": {
+      "id": "nestedIfs",
+      "speaker": "Pixel",
+      "text": "Nested ifs are like Russian dolls - conditions inside conditions!",
+      "codeExample": "inventory_slots = 10\nitems_count = 8\nis_premium = True\n\nif items_count < inventory_slots:\n    print('Space available!')\n    if is_premium:\n        print('Premium bonus: +2 extra slots!')\n        inventory_slots += 2\nelse:\n    print('Inventory full!')\n    if is_premium:\n        print('Premium feature: Auto-organize!')",
+      "followUp": "Each inner if only runs if its parent if is true. Great for detailed decision trees!",
+      "options": [
+        {
+          "text": "Time to practice!",
+          "next": "finalChallenge"
+        }
+      ]
+    },
+    "finalChallenge": {
+      "id": "finalChallenge",
+      "speaker": "Pixel",
+      "text": "Boss challenge! Create a treasure chest opening system!",
+      "followUp": "Rules: Need a key OR lockpicks. If level > 10, guaranteed rare item. Otherwise, 50% chance.",
+      "codeExample": "has_key = False\nhas_lockpicks = True\nplayer_level = 12\nimport random\nluck = random.randint(1, 100)\n\n# Your code here!\nif has_key or has_lockpicks:\n    print('Opening chest...')\n    if player_level > 10:\n        print('Rare item found!')\n    elif luck > 50:\n        print('Common item found!')\n    else:\n        print('Chest was empty!')\nelse:\n    print('Cannot open chest!')",
+      "options": [
+        {
+          "text": "I understand conditionals now!",
+          "next": "lessonComplete"
+        }
+      ]
+    },
+    "lessonComplete": {
+      "id": "lessonComplete",
+      "speaker": "Pixel",
+      "text": "🎊 LEVEL 3 COMPLETE! Your code can now think and make decisions! 🤖",
+      "followUp": "You've mastered the foundation of game logic! Every game mechanic uses these concepts!",
+      "action": "completeLesson",
+      "actionParams": { "lesson": 3, "nextLesson": 4 },
+      "options": [
+        {
+          "text": "Continue to Lesson 4 - Loops & Repetition!",
+          "action": "loadLesson",
+          "actionParams": { "lesson": 4 }
+        },
+        {
+          "text": "I'm ready to make a game!",
+          "action": "startGameMode"
+        },
+        {
+          "text": "Back to lesson menu",
+          "action": "openLessons"
+        }
+      ]
+    }
+  },
+  "startNode": "start"
+}
