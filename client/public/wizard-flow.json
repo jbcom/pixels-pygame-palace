@@ -7,16 +7,12 @@
       "followUp": "So... what brings you to my coding workshop today?",
       "options": [
         {
-          "text": "I want to jump straight into making a game!",
+          "text": "Let's build a game! 🎮",
           "next": "gamePath"
         },
         {
-          "text": "Actually, could we learn Python together first? I'm new to this",
+          "text": "Teach me Python first 📚",
           "next": "learnPath"
-        },
-        {
-          "text": "I know my way around code already",
-          "next": "experienceCheck"
         }
       ]
     },
@@ -27,17 +23,12 @@
       "followUp": "Tell me a bit more - what's your experience like?",
       "options": [
         {
-          "text": "PyGame and I are old friends!",
+          "text": "I'm experienced, unlock everything!",
           "next": "unlockEditor",
           "setVariable": { "experience": "advanced" }
         },
         {
-          "text": "I've built stuff in Unity, Godot, that sort of thing... but PyGame is new",
-          "next": "hybridMode",
-          "setVariable": { "experience": "intermediate" }
-        },
-        {
-          "text": "Hmm, actually I might be overconfident. Guide me!",
+          "text": "Guide me through it",
           "next": "gamePath",
           "setVariable": { "experience": "beginner" }
         }
@@ -98,34 +89,14 @@
       "text": "Alright, time for the fun part! What kind of game is bouncing around in your head right now?",
       "options": [
         {
-          "text": "Something with swords and magic and epic quests!",
+          "text": "Fast action game! 🎮",
           "next": "workStyle",
-          "setVariable": { "gameType": "rpg" }
+          "setVariable": { "gameType": "action" }
         },
         {
-          "text": "A jumpy, bouncy platformer!",
-          "next": "workStyle",
-          "setVariable": { "gameType": "platformer" }
-        },
-        {
-          "text": "Ooh, dark dungeons and treasure hunting",
-          "next": "workStyle",
-          "setVariable": { "gameType": "dungeon" }
-        },
-        {
-          "text": "SPEED! I want to go fast!",
-          "next": "workStyle",
-          "setVariable": { "gameType": "racing" }
-        },
-        {
-          "text": "Something that makes people think",
+          "text": "Strategic puzzle game 🧩",
           "next": "workStyle",
           "setVariable": { "gameType": "puzzle" }
-        },
-        {
-          "text": "A story-driven adventure would be cool",
-          "next": "workStyle",
-          "setVariable": { "gameType": "adventure" }
         }
       ]
     },
@@ -564,16 +535,12 @@
       "text": "Nice pick! Okay, so we've got the basics... what feels most important to nail down next?",
       "options": [
         {
-          "text": "How the player moves around!",
+          "text": "Player movement first!",
           "next": "playerControls"
         },
         {
-          "text": "Building the actual game world",
+          "text": "Build the world first",
           "next": "worldSetup"
-        },
-        {
-          "text": "Let's figure out how to win!",
-          "next": "gameRules"
         }
       ]
     },
