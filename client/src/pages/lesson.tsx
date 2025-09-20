@@ -9,7 +9,7 @@ import GameCanvas from "@/components/game-canvas";
 import FloatingFeedback from "@/components/floating-feedback";
 import LessonIntroModal from "@/components/lesson-intro-modal";
 import type { Lesson, UserProgress } from "@shared/schema";
-import { usePyodide } from "@/hooks/use-pyodide";
+// Pyodide removed - new pygame component system coming
 import { createPythonRunner, type PythonRunner } from "@/lib/python/runner";
 import { gradeCode, type GradingContext } from "@/lib/grading";
 
@@ -29,7 +29,12 @@ export default function LessonPage() {
     actualOutput?: string;
   } | null>(null);
 
-  const { pyodide, isLoading: pyodideLoading, error: pyodideError, executeWithEnhancedErrors, isEnhancedReady } = usePyodide();
+  // Pyodide temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
+  const pyodideError = null;
+  const executeWithEnhancedErrors = async () => ({});
+  const isEnhancedReady = false;
   
   // Create PythonRunner instance when pyodide is ready
   const pythonRunner = useMemo(() => {

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import CodeEditor from "@/components/code-editor";
 import GameCanvas from "@/components/game-canvas";
-import { usePyodide } from "@/hooks/use-pyodide";
+// Pyodide removed - new pygame component system coming
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import { motion } from "framer-motion";
@@ -23,15 +23,13 @@ export default function ProjectViewer() {
   const [match, params] = useRoute("/gallery/:id");
   const projectId = params?.id;
   const { toast } = useToast();
-  const { 
-    pyodide, 
-    isLoading: pyodideLoading, 
-    executeWithEnhancedErrors, 
-    isEnhancedReady,
-    verifyPygame,
-    getPygameStatus,
-    isPygameReady
-  } = usePyodide();
+  // Pyodide functionality temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
+  const isEnhancedReady = false;
+  const isPygameReady = false;
+  const verifyPygame = () => false;
+  const getPygameStatus = () => ({ isAvailable: false, errors: ['Pyodide disabled'] });
 
   // Project state
   const [activeFileIndex, setActiveFileIndex] = useState(0);

@@ -280,3 +280,51 @@ export interface ConversationMessage {
   quickReplies?: string[];
   actionType?: 'lesson' | 'create' | 'explore';
 }
+
+// Component System Types
+export interface ComponentManifest {
+  id: string;
+  name: string;
+  category: 'movement' | 'combat' | 'ui' | 'world';
+  description: string;
+  slots: SlotSpec[];
+  params: ParamSpec[];
+  variants: VariantSpec[];
+}
+
+export interface SlotSpec {
+  id: string;
+  type: 'sprite' | 'sound' | 'tileset';
+  accepts: string[]; // asset tags
+  default?: string;
+}
+
+export interface ParamSpec {
+  id: string;
+  type: 'number' | 'boolean' | 'select';
+  default: any;
+  min?: number;
+  max?: number;
+  options?: string[];
+}
+
+export interface VariantSpec {
+  id: string;
+  label: string;
+  module: string; // filename without .py
+  description: string;
+}
+
+export interface ComponentConfig {
+  category: string;
+  id: string;
+  variant: string;
+  assets: Record<string, string>;
+  params: Record<string, any>;
+}
+
+export interface ComponentInstance {
+  update: (dt: number, events: string[]) => void;
+  draw: (surface: any, x: number, y: number) => void;
+  [key: string]: any; // Allow additional methods
+}

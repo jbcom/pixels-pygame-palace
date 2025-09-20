@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { globalErrorHandler, type GlobalError } from "@/lib/global-error-handler";
-import { usePyodide } from "@/hooks/use-pyodide";
+// Pyodide removed - new pygame component system coming
 
 interface DebugPanelProps {
   isOpen: boolean;
@@ -66,13 +66,12 @@ export default function DebugPanel({ isOpen, onClose }: DebugPanelProps) {
   const [debugMode, setDebugMode] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const { 
-    pyodide, 
-    isLoading: pyodideLoading, 
-    isPygameReady, 
-    getPygameStatus,
-    verifyPygame 
-  } = usePyodide();
+  // Pyodide temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
+  const isPygameReady = false;
+  const getPygameStatus = () => ({ isAvailable: false, errors: ['Pyodide disabled'] });
+  const verifyPygame = () => false;
 
   // Initialize debug mode state
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
   MousePointer, Maximize2, RotateCw, Copy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePyodide } from '@/hooks/use-pyodide';
+// Pyodide removed - new pygame component system coming
 import { useToast } from '@/hooks/use-toast';
 import type { Entity, Scene, GameConfig } from '@shared/schema';
 import type { DraggableAsset } from './draggable-asset-library';
@@ -32,7 +32,9 @@ export default function InteractiveGameCanvas({
   currentScene = 'main'
 }: InteractiveGameCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const { pyodide, isLoading: pyodideLoading } = usePyodide();
+  // Pyodide temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
   const { toast } = useToast();
 
   const [isPlaying, setIsPlaying] = useState(false);

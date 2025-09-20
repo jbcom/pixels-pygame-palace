@@ -21,7 +21,7 @@ import ComponentSwitcher from "@/components/component-switcher";
 import DraggableAssetLibrary from "@/components/draggable-asset-library";
 import ExportDialog from "@/components/export-dialog";
 import PublishDialog from "@/components/publish-dialog";
-import { usePyodide } from "@/hooks/use-pyodide";
+// Pyodide removed - new pygame component system coming
 import { gameTemplates } from "@/lib/game-templates";
 import { generateGameTemplate, gameComponents } from "@/lib/game-building-blocks";
 import type { 
@@ -161,7 +161,9 @@ function createDefaultGameConfig(projectName: string): GameConfig {
 export default function ProjectBuilder() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading } = usePyodide();
+  // Pyodide temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
 
   // Project state
   const [currentProject, setCurrentProject] = useState<Project | null>(null);

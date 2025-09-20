@@ -28,7 +28,7 @@ import EditorToolbar from "@/components/editor-toolbar";
 import ExportDialog from "@/components/export-dialog";
 import PublishDialog from "@/components/publish-dialog";
 
-import { usePyodide } from "@/hooks/use-pyodide";
+// Pyodide removed - new pygame component system coming
 import { useEditorHistory } from "@/hooks/use-editor-history";
 import { gameTemplates } from "@/lib/game-templates";
 import { generateGameTemplate, gameComponents } from "@/lib/game-building-blocks";
@@ -169,7 +169,9 @@ function createDefaultGameConfig(projectName: string): GameConfig {
 export default function ProjectBuilderEnhanced() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { pyodide, isLoading: pyodideLoading } = usePyodide();
+  // Pyodide temporarily disabled
+  const pyodide = null;
+  const pyodideLoading = false;
   const {
     canUndo,
     canRedo,
