@@ -233,10 +233,13 @@ export default function ComponentTestPage() {
           <CardContent>
             <div className="h-96 overflow-auto">
               <CodeEditor
-                value={generatedCode}
+                code={generatedCode}
                 onChange={() => {}}
-                readOnly
-                theme="dark"
+                onExecute={() => {}}
+                output=""
+                error=""
+                isExecuting={false}
+                gradingResult={null}
               />
             </div>
           </CardContent>

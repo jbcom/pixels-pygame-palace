@@ -13,7 +13,7 @@ interface SimulationResult {
 
 // Frame buffer for accumulating pygame draw commands
 interface DrawCommand {
-  type: 'circle' | 'rect' | 'line' | 'fill' | 'blit' | 'clear';
+  type: 'circle' | 'rect' | 'line' | 'fill' | 'blit' | 'clear' | 'text';
   args: any[];
 }
 
