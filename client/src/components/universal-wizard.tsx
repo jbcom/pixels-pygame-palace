@@ -8,12 +8,13 @@ import {
   Car, Trophy, Zap, Brain, Castle
 } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
-import useEdgeSwipe from '@/hooks/use-edge-swipe';
-import { PixelMenu } from './pixel-menu';
-import { WizardCodeEditor } from './wizard-code-editor';
-import { ProfessionalEditor } from './professional-editor';
-import { CodeBlockBuilder } from './code-block-builder';
-import pixelImage from '@assets/pixel-avatar.jpg';
+import { useEdgeSwipe } from '@/hooks/use-edge-swipe';
+import PixelMenu from './pixel-menu';
+// Embedded components - will be implemented
+// import { WizardCodeEditor } from './wizard-code-editor';
+// import { ProfessionalEditor } from './professional-editor';
+// import { CodeBlockBuilder } from './code-block-builder';
+import pixelImage from '@assets/pixel/Pixel_happy_excited_expression_22a41625.png';
 
 interface UniversalWizardProps {
   className?: string;
@@ -57,7 +58,17 @@ interface SessionActions {
   unlockedEditor: boolean;
 }
 
-export function UniversalWizard({ 
+// Convert to SessionAction array for PixelMenu
+interface SessionAction {
+  id: string;
+  type: 'game_created' | 'lesson_completed' | 'asset_selected' | 'code_generated' | 'settings_changed';
+  title: string;
+  description?: string;
+  timestamp: Date;
+  icon: React.ComponentType<any>;
+}
+
+export default function UniversalWizard({ 
   className = '', 
   assetMode = 'curated',
   editorLocked = true 
@@ -123,17 +134,18 @@ export function UniversalWizard({
     }
   }, [currentNodeId, wizardData]);
 
-  // Responsive detection
+  // Responsive detection - only check for phone mode
   useEffect(() => {
     const checkDevice = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      const mobile = width < 768;
+      // Only phones need special layout (< 600px width)
+      const isPhone = width < 600;
       const landscape = width > height;
       
       setScreenWidth(width);
       setScreenHeight(height);
-      setIsMobile(mobile);
+      setIsMobile(isPhone);
       setIsLandscape(landscape);
     };
     
@@ -215,25 +227,25 @@ export function UniversalWizard({
     return false;
   };
 
-  // Determine layout mode
+  // Determine layout mode - simplified
   const getLayoutMode = () => {
-    if (!isMobile) return 'desktop';
-    if (isLandscape) return 'mobile-landscape';
-    return 'mobile-portrait';
+    if (!isMobile) return 'desktop'; // Tablets and up use desktop
+    if (isLandscape) return 'phone-landscape';
+    return 'phone-portrait';
   };
 
   // Edge swipe handlers
   const edgeSwipeHandlers = useEdgeSwipe({
-    onSwipe: () => {
+    onEdgeSwipe: () => {
       console.log('Edge swipe detected');
       setPixelMenuOpen(true);
     },
-    threshold: 30,
-    edgeWidth: 20
+    edgeThreshold: 30,
+    enabled: true
   });
 
-  // Mobile Portrait Layout Component
-  const MobilePortraitLayout = () => {
+  // Phone Portrait Layout Component
+  const PhonePortraitLayout = () => {
     if (!currentNode) return null;
     const displayText = getCurrentText();
     const showOptions = shouldShowOptions();
@@ -343,8 +355,8 @@ export function UniversalWizard({
     );
   };
 
-  // Mobile Landscape Layout Component
-  const MobileLandscapeLayout = () => {
+  // Phone Landscape Layout Component
+  const PhoneLandscapeLayout = () => {
     if (!currentNode) return null;
     const displayText = getCurrentText();
     const showOptions = shouldShowOptions();
@@ -604,8 +616,8 @@ export function UniversalWizard({
   // Determine which layout to use
   const layoutMode = getLayoutMode();
 
-  // Render mobile layouts if on mobile device
-  if (layoutMode === 'mobile-portrait') {
+  // Render phone layouts if on phone device
+  if (layoutMode === 'phone-portrait') {
     return (
       <>
         <PixelMenu
@@ -616,14 +628,14 @@ export function UniversalWizard({
           onExportGame={() => handlePixelMenuAction('exportGame')}
           onViewProgress={() => handlePixelMenuAction('viewProgress')}
           onReturnCurrent={() => handlePixelMenuAction('returnCurrent')}
-          sessionActions={sessionActions}
+          sessionActions={[]}
         />
-        <MobilePortraitLayout />
+        <PhonePortraitLayout />
       </>
     );
   }
 
-  if (layoutMode === 'mobile-landscape') {
+  if (layoutMode === 'phone-landscape') {
     return (
       <>
         <PixelMenu
@@ -634,9 +646,9 @@ export function UniversalWizard({
           onExportGame={() => handlePixelMenuAction('exportGame')}
           onViewProgress={() => handlePixelMenuAction('viewProgress')}
           onReturnCurrent={() => handlePixelMenuAction('returnCurrent')}
-          sessionActions={sessionActions}
+          sessionActions={[]}
         />
-        <MobileLandscapeLayout />
+        <PhoneLandscapeLayout />
       </>
     );
   }
@@ -679,10 +691,22 @@ export function UniversalWizard({
         </div>
       </header>
 
+      {/* Pixel Menu for all desktop/tablet modes */}
+      <PixelMenu
+        isOpen={pixelMenuOpen}
+        onClose={() => setPixelMenuOpen(false)}
+        onChangeGame={() => handlePixelMenuAction('changeGame')}
+        onSwitchLesson={() => handlePixelMenuAction('switchLesson')}
+        onExportGame={() => handlePixelMenuAction('exportGame')}
+        onViewProgress={() => handlePixelMenuAction('viewProgress')}
+        onReturnCurrent={() => handlePixelMenuAction('returnCurrent')}
+        sessionActions={[]}
+      />
+
       {/* Menu button for tablets (no header) */}
       <Button
         onClick={() => setPixelMenuOpen(true)}
-        className="lg:hidden fixed top-4 right-4 z-40 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
+        className="lg:hidden fixed top-4 right-4 z-50 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
         variant="outline"
         size="icon"
         data-testid="open-pixel-menu-button"
@@ -692,15 +716,15 @@ export function UniversalWizard({
       </Button>
 
       <AnimatePresence mode="wait">
-        {/* Desktop: Center Stage Dialogue - Mobile: Modal Dialogue */}
-        {!isMobile && pixelState === 'center-stage' && embeddedComponent === 'none' && (
+        {/* Desktop: Center Stage Dialogue */}
+        {pixelState === 'center-stage' && embeddedComponent === 'none' && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none px-4"
+            className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none px-4 pt-20 lg:pt-4"
           >
-            <Card className="relative max-w-2xl w-full p-8 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-2 border-purple-500/20 pointer-events-auto">
+            <Card className="relative max-w-2xl w-full p-6 sm:p-8 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-2 border-purple-500/20 pointer-events-auto">
               {/* Pixel Avatar */}
               <motion.div 
                 className="flex justify-center mb-6"
@@ -735,38 +759,7 @@ export function UniversalWizard({
           </motion.div>
         )}
 
-        {/* Embedded Components */}
-        {embeddedComponent === 'code-editor' && (
-          <WizardCodeEditor
-            onClose={() => {
-              setEmbeddedComponent('none');
-              setPixelState('center-stage');
-            }}
-            projectType={sessionActions.gameType || 'rpg'}
-            assetMode={assetMode}
-          />
-        )}
-
-        {embeddedComponent === 'professional-editor' && !editorLocked && (
-          <ProfessionalEditor
-            onClose={() => {
-              setEmbeddedComponent('none');
-              setPixelState('center-stage');
-            }}
-            projectType={sessionActions.gameType || 'rpg'}
-          />
-        )}
-
-        {embeddedComponent === 'block-builder' && (
-          <CodeBlockBuilder
-            onClose={() => {
-              setEmbeddedComponent('none');
-              setPixelState('center-stage');
-            }}
-            projectType={sessionActions.gameType || 'rpg'}
-            assetMode={assetMode}
-          />
-        )}
+        {/* Embedded Components - To be implemented */}
       </AnimatePresence>
     </div>
   );
