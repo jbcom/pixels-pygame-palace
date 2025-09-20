@@ -4,30 +4,30 @@
       "id": "start",
       "speaker": "Pixel",
       "text": "Hey there, game creator! Ready to make something amazing? 🎮✨",
-      "followUp": "What kind of game shall we make today? I've got all the tools and assets ready for you!",
+      "followUp": "So what's the game idea that's been bouncing around in your head?",
       "options": [
         {
-          "text": "Platformer - Jump and run adventure!",
+          "text": "Something jumpy and bouncy!",
           "next": "platformerIntro",
           "setVariable": { "gameType": "platformer" }
         },
         {
-          "text": "Space Shooter - Battle in the cosmos!",
+          "text": "Pew pew! Space battles!",
           "next": "spaceIntro",
           "setVariable": { "gameType": "space" }
         },
         {
-          "text": "Puzzle Game - Brain-teasing challenges!",
+          "text": "I want to make people think",
           "next": "puzzleIntro",
           "setVariable": { "gameType": "puzzle" }
         },
         {
-          "text": "Racing Game - Speed and thrills!",
+          "text": "SPEED! Going really, really fast!",
           "next": "racingIntro",
           "setVariable": { "gameType": "racing" }
         },
         {
-          "text": "Adventure RPG - Epic quests await!",
+          "text": "An epic adventure with heroes and quests",
           "next": "rpgIntro",
           "setVariable": { "gameType": "rpg" }
         }
@@ -37,13 +37,13 @@
     "platformerIntro": {
       "id": "platformerIntro",
       "speaker": "Pixel",
-      "text": "Awesome choice! Platformers are classics - running, jumping, and collecting treasures! 🏃‍♂️💎",
-      "followUp": "Let's start with your main character. They'll be the hero of your game!",
+      "text": "Awesome! I LOVE platformers! There's something so satisfying about nailing that perfect jump! 🏃‍♂️💎",
+      "followUp": "First things first - who's gonna be bouncing around in your game?",
       "action": "showPreview",
       "actionParams": { "type": "platformer", "stage": "intro" },
       "options": [
         {
-          "text": "Let's pick a character!",
+          "text": "Show me some cool characters!",
           "next": "platformerCharacterSelect"
         }
       ]
@@ -52,13 +52,13 @@
     "spaceIntro": {
       "id": "spaceIntro",
       "speaker": "Pixel",
-      "text": "Space shooter! Blast off into adventure! 🚀 We'll have aliens, asteroids, and awesome battles!",
-      "followUp": "First, let's choose your spaceship or space hero!",
+      "text": "YES! Space shooters are so cool! I'm already imagining the laser sounds... pew pew! 🚀",
+      "followUp": "Who's gonna be flying through the stars blasting aliens?",
       "action": "showPreview",
       "actionParams": { "type": "space", "stage": "intro" },
       "options": [
         {
-          "text": "Show me the space heroes!",
+          "text": "Let me see the space heroes!",
           "next": "spaceCharacterSelect"
         }
       ]
@@ -67,21 +67,21 @@
     "puzzleIntro": {
       "id": "puzzleIntro",
       "speaker": "Pixel",
-      "text": "Brain power time! 🧩 Puzzle games are all about clever thinking and satisfying solutions!",
-      "followUp": "What style of puzzle game should we create?",
+      "text": "Ooh, smart choice! There's nothing like that 'aha!' moment when you solve a tricky puzzle! 🧩",
+      "followUp": "What kind of brain-teasers are we talking about here?",
       "options": [
         {
-          "text": "Match-3 style with colorful gems",
+          "text": "You know those games where you match colorful things? Like that!",
           "next": "puzzleMatch3Setup",
           "setVariable": { "puzzleType": "match3" }
         },
         {
-          "text": "Block-pushing sokoban style",
+          "text": "I'm thinking boxes you push around to solve levels",
           "next": "puzzleSokobanSetup",
           "setVariable": { "puzzleType": "sokoban" }
         },
         {
-          "text": "Physics-based puzzles",
+          "text": "Something with realistic physics - balls rolling, things falling",
           "next": "puzzlePhysicsSetup",
           "setVariable": { "puzzleType": "physics" }
         }
@@ -91,16 +91,16 @@
     "racingIntro": {
       "id": "racingIntro",
       "speaker": "Pixel",
-      "text": "Start your engines! 🏎️ Time for some high-speed action!",
-      "followUp": "Will this be a top-down racer or a side-scrolling speed challenge?",
+      "text": "VROOM VROOM! I can already feel the adrenaline! 🏎️",
+      "followUp": "How do you want to see the action - from above or from the side?",
       "options": [
         {
-          "text": "Top-down racing action",
+          "text": "From above - I want to see the whole track!",
           "next": "racingTopDownSetup",
           "setVariable": { "racingView": "topdown" }
         },
         {
-          "text": "Side-scrolling speed run",
+          "text": "Side view - like those endless runner games!",
           "next": "racingSideScrollSetup",
           "setVariable": { "racingView": "sidescroll" }
         }
@@ -110,21 +110,21 @@
     "rpgIntro": {
       "id": "rpgIntro",
       "speaker": "Pixel",
-      "text": "Epic quest time! ⚔️ Every great adventure starts with a hero!",
-      "followUp": "Your RPG needs a brave protagonist. What kind of hero will lead this adventure?",
+      "text": "Ooh, an epic adventure! I'm getting goosebumps already! ⚔️",
+      "followUp": "Every legend needs a hero... who's yours going to be?",
       "options": [
         {
-          "text": "A brave knight",
+          "text": "Someone noble with shining armor!",
           "next": "rpgCharacterSelect",
           "setVariable": { "heroType": "knight" }
         },
         {
-          "text": "A clever wizard",
+          "text": "A mysterious figure who knows ancient magic",
           "next": "rpgCharacterSelect",
           "setVariable": { "heroType": "wizard" }
         },
         {
-          "text": "A stealthy rogue",
+          "text": "Quick and sneaky - they stick to the shadows",
           "next": "rpgCharacterSelect",
           "setVariable": { "heroType": "rogue" }
         }
@@ -134,8 +134,8 @@
     "platformerCharacterSelect": {
       "id": "platformerCharacterSelect",
       "speaker": "Pixel",
-      "text": "Here are some awesome characters perfect for platforming! Each one has their own style!",
-      "followUp": "Click on any character to see them in action!",
+      "text": "Check out these awesome characters! They're all ready to jump into action!",
+      "followUp": "Which one speaks to you?",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "sprite",
@@ -150,28 +150,28 @@
       },
       "options": [
         {
-          "text": "Blue Robot - Balanced and friendly!",
+          "text": "The blue one looks friendly!",
           "next": "platformerMovementType",
           "setVariable": { "playerAsset": "robot-blue" },
           "action": "selectAsset",
           "actionParams": { "assetId": "robot-blue", "role": "player" }
         },
         {
-          "text": "Red Robot - Fast and agile!",
+          "text": "Ooh, red means fast, right?",
           "next": "platformerMovementType",
           "setVariable": { "playerAsset": "robot-red" },
           "action": "selectAsset",
           "actionParams": { "assetId": "robot-red", "role": "player" }
         },
         {
-          "text": "Green Robot - Strong jumper!",
+          "text": "Green! I bet they can jump super high!",
           "next": "platformerMovementType",
           "setVariable": { "playerAsset": "robot-green" },
           "action": "selectAsset",
           "actionParams": { "assetId": "robot-green", "role": "player" }
         },
         {
-          "text": "Grey Robot - Stealthy and cool!",
+          "text": "That grey one looks mysterious and cool",
           "next": "platformerMovementType",
           "setVariable": { "playerAsset": "robot-grey" },
           "action": "selectAsset",
@@ -183,7 +183,7 @@
     "spaceCharacterSelect": {
       "id": "spaceCharacterSelect",
       "speaker": "Pixel",
-      "text": "Space heroes ready for action! Each one brings unique abilities to your cosmic adventure!",
+      "text": "Here are our space heroes! Each one's got their own special thing going on!",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "sprite",
@@ -198,14 +198,14 @@
       },
       "options": [
         {
-          "text": "Grey Space Robot - Built for zero gravity!",
+          "text": "That grey one looks like they were born for space!",
           "next": "spaceMovementType",
           "setVariable": { "playerAsset": "robot-grey" },
           "action": "selectAsset",
           "actionParams": { "assetId": "robot-grey", "role": "player" }
         },
         {
-          "text": "Blue Space Robot - Shield specialist!",
+          "text": "Blue! I bet they have awesome shields!",
           "next": "spaceMovementType",
           "setVariable": { "playerAsset": "robot-blue" },
           "action": "selectAsset",
@@ -217,13 +217,13 @@
     "platformerMovementType": {
       "id": "platformerMovementType",
       "speaker": "Pixel",
-      "text": "Great choice! Now, how should your character move?",
-      "followUp": "Different movement styles make for different gameplay experiences!",
+      "text": "Perfect! Now the fun part - how's your hero gonna move around?",
+      "followUp": "This totally changes how your game feels to play!",
       "action": "showLivePreview",
       "actionParams": { "showPlayer": true, "testMovement": true },
       "options": [
         {
-          "text": "Classic run and jump - like Mario!",
+          "text": "Just good old running and jumping!",
           "next": "platformerEnemyChoice",
           "setVariable": { "movementType": "classic" },
           "action": "setComponent",
@@ -238,7 +238,7 @@
           }
         },
         {
-          "text": "Double jump - reach higher places!",
+          "text": "Double jumping would be cool!",
           "next": "platformerEnemyChoice",
           "setVariable": { "movementType": "doubleJump" },
           "action": "setComponent",
@@ -254,7 +254,7 @@
           }
         },
         {
-          "text": "Wall jump - bounce off walls!",
+          "text": "Ooh! Bouncing off walls like a ninja!",
           "next": "platformerEnemyChoice",
           "setVariable": { "movementType": "wallJump" },
           "action": "setComponent",
@@ -275,12 +275,12 @@
     "spaceMovementType": {
       "id": "spaceMovementType",
       "speaker": "Pixel",
-      "text": "How should your space hero navigate the cosmos?",
+      "text": "How's your space hero gonna fly around up there?",
       "action": "showLivePreview",
       "actionParams": { "showPlayer": true, "testMovement": true },
       "options": [
         {
-          "text": "Free floating - 360° movement",
+          "text": "Floating freely in every direction!",
           "next": "spaceEnemyChoice",
           "setVariable": { "movementType": "freeFloat" },
           "action": "setComponent",
@@ -294,7 +294,7 @@
           }
         },
         {
-          "text": "Vertical scrolling - classic arcade style",
+          "text": "Up and down, old-school arcade style!",
           "next": "spaceEnemyChoice",
           "setVariable": { "movementType": "vertical" },
           "action": "setComponent",
@@ -313,21 +313,21 @@
     "platformerEnemyChoice": {
       "id": "platformerEnemyChoice",
       "speaker": "Pixel",
-      "text": "Every hero needs challenges! What should the player watch out for?",
-      "followUp": "Enemies make your game exciting and give players something to overcome!",
+      "text": "Now, what's gonna make this challenging? Every hero needs something to overcome!",
+      "followUp": "This is what makes your game exciting!",
       "action": "showLivePreview",
       "actionParams": { "showPlayer": true, "showPlatforms": true },
       "options": [
         {
-          "text": "Add some enemies to avoid!",
+          "text": "Definitely need some baddies to dodge!",
           "next": "platformerEnemySelect"
         },
         {
-          "text": "Just hazards and obstacles",
+          "text": "Just tricky jumps and dangerous stuff",
           "next": "platformerHazardSelect"
         },
         {
-          "text": "Keep it peaceful - no enemies",
+          "text": "Nah, let's keep it chill and peaceful",
           "next": "platformerCollectibleChoice",
           "setVariable": { "hasEnemies": false }
         }
@@ -337,22 +337,22 @@
     "spaceEnemyChoice": {
       "id": "spaceEnemyChoice",
       "speaker": "Pixel",
-      "text": "Space can be dangerous! What threats await in the cosmos?",
+      "text": "Space isn't empty - it's full of danger! What's out there waiting?",
       "action": "showLivePreview",
       "actionParams": { "showPlayer": true, "showBackground": "space" },
       "options": [
         {
-          "text": "Alien invaders!",
+          "text": "Angry aliens coming to get us!",
           "next": "spaceEnemySelect",
           "setVariable": { "enemyType": "aliens" }
         },
         {
-          "text": "Asteroids and space debris",
+          "text": "Giant space rocks flying everywhere!",
           "next": "spaceHazardSelect",
           "setVariable": { "enemyType": "asteroids" }
         },
         {
-          "text": "Both aliens and asteroids!",
+          "text": "Why not both? Maximum chaos!",
           "next": "spaceEnemySelect",
           "setVariable": { "enemyType": "both" }
         }
@@ -362,7 +362,7 @@
     "platformerEnemySelect": {
       "id": "platformerEnemySelect",
       "speaker": "Pixel",
-      "text": "Here are some enemies perfect for your platformer! Each behaves differently!",
+      "text": "Let's pick some troublemakers for your game! They all act differently!",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "sprite",
@@ -378,25 +378,25 @@
       },
       "options": [
         {
-          "text": "Floating Ghost - Spooky and unpredictable!",
+          "text": "Ooh, spooky ghosts that float around!",
           "next": "platformerEnemyBehavior",
           "action": "selectAsset",
           "actionParams": { "assetId": "ghost-floating", "role": "enemy" }
         },
         {
-          "text": "Spikey - Dangerous to touch!",
+          "text": "Those spiky things that hurt when you touch them!",
           "next": "platformerEnemyBehavior",
           "action": "selectAsset",
           "actionParams": { "assetId": "spikey-hazard", "role": "enemy" }
         },
         {
-          "text": "Walker - Patrols platforms!",
+          "text": "Little guys that walk back and forth",
           "next": "platformerEnemyBehavior",
           "action": "selectAsset",
           "actionParams": { "assetId": "walker-enemy", "role": "enemy" }
         },
         {
-          "text": "All of them - maximum challenge!",
+          "text": "Throw them all in! I want chaos!",
           "next": "platformerEnemyBehavior",
           "action": "selectMultipleAssets",
           "actionParams": { 
@@ -437,8 +437,8 @@
     "platformerEnemyBehavior": {
       "id": "platformerEnemyBehavior",
       "speaker": "Pixel",
-      "text": "How should your enemies behave? This changes how challenging your game is!",
-      "followUp": "Different behaviors create different gameplay strategies!",
+      "text": "How should these troublemakers act? This is what makes your game easy or super hard!",
+      "followUp": "Think about what would be fun to dodge!",
       "action": "showLivePreview",
       "actionParams": { 
         "showPlayer": true,
@@ -447,19 +447,19 @@
       },
       "options": [
         {
-          "text": "Patrol - They move back and forth",
+          "text": "Just walking back and forth, predictable",
           "next": "platformerCollectibleChoice",
           "action": "setEnemyBehavior",
           "actionParams": { "pattern": "patrol", "speed": 2 }
         },
         {
-          "text": "Chase - They follow the player!",
+          "text": "They chase after me? Scary!",
           "next": "platformerCollectibleChoice",
           "action": "setEnemyBehavior",
           "actionParams": { "pattern": "chase", "speed": 1.5 }
         },
         {
-          "text": "Random - Unpredictable movement!",
+          "text": "Totally random - keeps me guessing!",
           "next": "platformerCollectibleChoice",
           "action": "setEnemyBehavior",
           "actionParams": { "pattern": "random", "speed": 2.5 }
@@ -496,8 +496,8 @@
     "platformerCollectibleChoice": {
       "id": "platformerCollectibleChoice",
       "speaker": "Pixel",
-      "text": "Time for treasures! What should players collect in your game?",
-      "followUp": "Collectibles give players goals and rewards!",
+      "text": "Ooh, the shiny stuff! What treasures should players hunt for?",
+      "followUp": "Everyone loves collecting things!",
       "action": "showLivePreview",
       "actionParams": { 
         "showPlayer": true,
@@ -506,11 +506,11 @@
       },
       "options": [
         {
-          "text": "Yes! Add some collectibles!",
+          "text": "Yeah! Gotta have stuff to collect!",
           "next": "platformerCollectibleSelect"
         },
         {
-          "text": "No collectibles needed",
+          "text": "Nah, let's skip the collectibles",
           "next": "platformerGoalSetup",
           "setVariable": { "hasCollectibles": false }
         }
@@ -520,7 +520,7 @@
     "platformerCollectibleSelect": {
       "id": "platformerCollectibleSelect",
       "speaker": "Pixel",
-      "text": "Pick your treasures! Each type of collectible can do different things!",
+      "text": "What kind of shiny stuff should we scatter around?",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "sprite",
@@ -535,7 +535,7 @@
       },
       "options": [
         {
-          "text": "Gems - Valuable and shiny!",
+          "text": "Sparkly gems! Everyone loves gems!",
           "next": "platformerCollectiblePurpose",
           "action": "selectMultipleAssets",
           "actionParams": { 
@@ -544,13 +544,13 @@
           }
         },
         {
-          "text": "Coins - Classic collecting!",
+          "text": "Good old coins - can't go wrong!",
           "next": "platformerCollectiblePurpose",
           "action": "selectAsset",
           "actionParams": { "assetId": "coin-gold", "role": "collectible" }
         },
         {
-          "text": "Keys - Opens new areas!",
+          "text": "Keys that unlock secret doors!",
           "next": "platformerCollectiblePurpose",
           "action": "selectMultipleAssets",
           "actionParams": { 
@@ -559,7 +559,7 @@
           }
         },
         {
-          "text": "Mix of everything!",
+          "text": "A little bit of everything!",
           "next": "platformerCollectiblePurpose",
           "action": "selectMultipleAssets",
           "actionParams": { 
@@ -573,7 +573,7 @@
     "platformerCollectiblePurpose": {
       "id": "platformerCollectiblePurpose",
       "speaker": "Pixel",
-      "text": "What happens when players collect these items?",
+      "text": "So what's the reward for grabbing all this stuff?",
       "action": "showLivePreview",
       "actionParams": { 
         "showPlayer": true,
@@ -582,19 +582,19 @@
       },
       "options": [
         {
-          "text": "Score points - Classic arcade style!",
+          "text": "Points! Gotta chase that high score!",
           "next": "platformerGoalSetup",
           "action": "setCollectibleBehavior",
           "actionParams": { "type": "score", "value": 10 }
         },
         {
-          "text": "Extra lives - More chances!",
+          "text": "They give me extra lives!",
           "next": "platformerGoalSetup",
           "action": "setCollectibleBehavior",
           "actionParams": { "type": "life", "value": 1 }
         },
         {
-          "text": "Power-ups - Temporary abilities!",
+          "text": "Ooh! Special powers would be cool!",
           "next": "platformerPowerUpSelect"
         }
       ]
@@ -603,22 +603,22 @@
     "platformerPowerUpSelect": {
       "id": "platformerPowerUpSelect",
       "speaker": "Pixel",
-      "text": "Power-ups are awesome! What special abilities should they give?",
+      "text": "Yes! Power-ups are the best! What superpower should we add?",
       "options": [
         {
-          "text": "Super speed - Zoom across levels!",
+          "text": "SUPER SPEED! Zoom zoom!",
           "next": "platformerGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "speed", "duration": 5, "multiplier": 2 }
         },
         {
-          "text": "Invincibility - Can't be hurt!",
+          "text": "Nothing can hurt me!",
           "next": "platformerGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "invincible", "duration": 3 }
         },
         {
-          "text": "Super jump - Reach new heights!",
+          "text": "I want to jump to the moon!",
           "next": "platformerGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "superJump", "duration": 5, "multiplier": 1.5 }
@@ -629,22 +629,22 @@
     "spaceWeaponChoice": {
       "id": "spaceWeaponChoice",
       "speaker": "Pixel",
-      "text": "Time to arm your space hero! What weapons should they have?",
+      "text": "Can't fight aliens without weapons! What's your style?",
       "options": [
         {
-          "text": "Laser blaster - Rapid fire!",
+          "text": "Pew pew pew! Rapid lasers!",
           "next": "spaceCollectibleChoice",
           "action": "setWeapon",
           "actionParams": { "type": "laser", "fireRate": "rapid" }
         },
         {
-          "text": "Plasma cannon - Powerful shots!",
+          "text": "Big powerful blasts that pack a punch!",
           "next": "spaceCollectibleChoice",
           "action": "setWeapon",
           "actionParams": { "type": "plasma", "fireRate": "slow", "damage": 3 }
         },
         {
-          "text": "Missile launcher - Homing projectiles!",
+          "text": "Missiles that follow enemies around!",
           "next": "spaceCollectibleChoice",
           "action": "setWeapon",
           "actionParams": { "type": "missile", "homing": true }
@@ -655,14 +655,14 @@
     "spaceCollectibleChoice": {
       "id": "spaceCollectibleChoice",
       "speaker": "Pixel",
-      "text": "Should we add power-ups and collectibles to your space adventure?",
+      "text": "Want some power-ups floating around in space?",
       "options": [
         {
-          "text": "Yes! Power-ups make it exciting!",
+          "text": "Absolutely! I love power-ups!",
           "next": "spaceCollectibleSelect"
         },
         {
-          "text": "Just focus on combat",
+          "text": "Nah, just pure shooting action",
           "next": "spaceGoalSetup",
           "setVariable": { "hasCollectibles": false }
         }
@@ -672,22 +672,22 @@
     "spaceCollectibleSelect": {
       "id": "spaceCollectibleSelect",
       "speaker": "Pixel",
-      "text": "Space power-ups incoming! What should they do?",
+      "text": "Sweet! What kind of boost are we talking?",
       "options": [
         {
-          "text": "Weapon upgrades - More firepower!",
+          "text": "Make my weapons even more awesome!",
           "next": "spaceGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "weaponUpgrade" }
         },
         {
-          "text": "Shield boosts - Extra protection!",
+          "text": "Shields to keep me safe!",
           "next": "spaceGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "shield" }
         },
         {
-          "text": "Speed boosts - Dodge faster!",
+          "text": "Super speed for dodging!",
           "next": "spaceGoalSetup",
           "action": "setPowerUp",
           "actionParams": { "type": "speed" }
@@ -698,31 +698,31 @@
     "platformerGoalSetup": {
       "id": "platformerGoalSetup",
       "speaker": "Pixel",
-      "text": "Almost done! How does the player win your game?",
-      "followUp": "Every great game needs a clear goal!",
+      "text": "Alright, almost there! What's the victory condition?",
+      "followUp": "How do you know when you've won?",
       "action": "showLivePreview",
       "actionParams": { "showFullGame": true },
       "options": [
         {
-          "text": "Reach the end of each level",
+          "text": "Get to the finish line!",
           "next": "platformerLevelDesign",
           "action": "setGoal",
           "actionParams": { "type": "reach", "target": "endpoint" }
         },
         {
-          "text": "Collect all the treasures",
+          "text": "Grab every last treasure!",
           "next": "platformerLevelDesign",
           "action": "setGoal",
           "actionParams": { "type": "collect", "target": "all" }
         },
         {
-          "text": "Defeat all enemies",
+          "text": "Beat all the bad guys!",
           "next": "platformerLevelDesign",
           "action": "setGoal",
           "actionParams": { "type": "defeat", "target": "all" }
         },
         {
-          "text": "Beat the timer",
+          "text": "Race against the clock!",
           "next": "platformerLevelDesign",
           "action": "setGoal",
           "actionParams": { "type": "time", "limit": 60 }
@@ -733,22 +733,22 @@
     "spaceGoalSetup": {
       "id": "spaceGoalSetup",
       "speaker": "Pixel",
-      "text": "What's the mission objective for your space game?",
+      "text": "What's your mission out there in space?",
       "options": [
         {
-          "text": "Survive waves of enemies",
+          "text": "Just survive as long as I can!",
           "next": "spaceDifficultySetup",
           "action": "setGoal",
           "actionParams": { "type": "survival", "waves": 5 }
         },
         {
-          "text": "Reach a high score",
+          "text": "Get the highest score ever!",
           "next": "spaceDifficultySetup",
           "action": "setGoal",
           "actionParams": { "type": "score", "target": 1000 }
         },
         {
-          "text": "Defeat the boss",
+          "text": "Take down the big bad boss!",
           "next": "spaceBossSetup"
         }
       ]
@@ -757,16 +757,16 @@
     "spaceBossSetup": {
       "id": "spaceBossSetup",
       "speaker": "Pixel",
-      "text": "Boss battle! This will be epic! What kind of boss should we create?",
+      "text": "BOSS FIGHT TIME! This is gonna be epic! Who's the big baddie?",
       "options": [
         {
-          "text": "Giant alien mothership",
+          "text": "A massive alien mothership!",
           "next": "spaceDifficultySetup",
           "action": "setBoss",
           "actionParams": { "type": "mothership", "health": 100 }
         },
         {
-          "text": "Space dragon",
+          "text": "A terrifying space dragon!",
           "next": "spaceDifficultySetup",
           "action": "setBoss",
           "actionParams": { "type": "dragon", "health": 75, "phases": 2 }
@@ -777,22 +777,22 @@
     "platformerLevelDesign": {
       "id": "platformerLevelDesign",
       "speaker": "Pixel",
-      "text": "Let's design your level! How challenging should it be?",
+      "text": "Time to set the difficulty! How tough do you want this?",
       "options": [
         {
-          "text": "Easy - Perfect for beginners",
+          "text": "Nice and easy, I want to have fun!",
           "next": "platformerBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "easy", "lives": 5 }
         },
         {
-          "text": "Medium - A good challenge",
+          "text": "Challenging but not frustrating",
           "next": "platformerBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "medium", "lives": 3 }
         },
         {
-          "text": "Hard - For experts only!",
+          "text": "Make it super tough! I like pain!",
           "next": "platformerBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "hard", "lives": 1 }
@@ -803,22 +803,22 @@
     "spaceDifficultySetup": {
       "id": "spaceDifficultySetup",
       "speaker": "Pixel",
-      "text": "How intense should the space action be?",
+      "text": "How crazy should things get out there?",
       "options": [
         {
-          "text": "Casual - Relaxed pace",
+          "text": "Keep it chill and relaxed",
           "next": "spaceBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "casual", "enemySpeed": 1 }
         },
         {
-          "text": "Arcade - Classic challenge",
+          "text": "That classic arcade feel!",
           "next": "spaceBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "arcade", "enemySpeed": 1.5 }
         },
         {
-          "text": "Intense - Non-stop action!",
+          "text": "CHAOS! Enemies everywhere!",
           "next": "spaceBackgroundChoice",
           "action": "setDifficulty",
           "actionParams": { "level": "intense", "enemySpeed": 2 }
@@ -829,7 +829,7 @@
     "platformerBackgroundChoice": {
       "id": "platformerBackgroundChoice",
       "speaker": "Pixel",
-      "text": "Let's set the scene! Where does your adventure take place?",
+      "text": "Where's all this action happening? Pick your world!",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "background",
@@ -842,25 +842,25 @@
       },
       "options": [
         {
-          "text": "Forest - Nature adventure!",
+          "text": "In a lush green forest!",
           "next": "platformerMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-forest", "role": "background" }
         },
         {
-          "text": "City - Urban exploration!",
+          "text": "Jumping across city rooftops!",
           "next": "platformerMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-city", "role": "background" }
         },
         {
-          "text": "Desert - Sandy challenges!",
+          "text": "Through hot desert sands!",
           "next": "platformerMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-desert", "role": "background" }
         },
         {
-          "text": "Dungeon - Dark and mysterious!",
+          "text": "Deep in a spooky dungeon!",
           "next": "platformerMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-dungeon-stone", "role": "background" }
@@ -871,7 +871,7 @@
     "spaceBackgroundChoice": {
       "id": "spaceBackgroundChoice",
       "speaker": "Pixel",
-      "text": "Choose your cosmic battlefield!",
+      "text": "Which part of space are we battling in?",
       "action": "showAssetBrowser",
       "actionParams": { 
         "type": "background",
@@ -880,19 +880,19 @@
       },
       "options": [
         {
-          "text": "Deep space with stars",
+          "text": "The vast emptiness with twinkling stars",
           "next": "spaceMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-space-stars", "role": "background" }
         },
         {
-          "text": "Nebula clouds",
+          "text": "Colorful nebula clouds everywhere!",
           "next": "spaceMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-space-nebula", "role": "background" }
         },
         {
-          "text": "Asteroid field",
+          "text": "Dodging through asteroid fields!",
           "next": "spaceMusicChoice",
           "action": "selectAsset",
           "actionParams": { "assetId": "bg-space-asteroids", "role": "background" }
@@ -903,28 +903,28 @@
     "platformerMusicChoice": {
       "id": "platformerMusicChoice",
       "speaker": "Pixel",
-      "text": "Music makes everything better! What mood should we set?",
+      "text": "Every game needs a good soundtrack! What vibe are we going for?",
       "options": [
         {
-          "text": "Upbeat adventure theme",
+          "text": "Something upbeat and adventurous!",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-adventure", "role": "music" }
         },
         {
-          "text": "Mysterious exploration",
+          "text": "Mysterious and atmospheric",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-mystery", "role": "music" }
         },
         {
-          "text": "Fast-paced action",
+          "text": "Heart-pumping action music!",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-action", "role": "music" }
         },
         {
-          "text": "No music for now",
+          "text": "Let's skip the music",
           "next": "gamePreview",
           "setVariable": { "hasMusic": false }
         }
@@ -934,28 +934,28 @@
     "spaceMusicChoice": {
       "id": "spaceMusicChoice",
       "speaker": "Pixel",
-      "text": "Space needs an epic soundtrack! What style fits your game?",
+      "text": "Space games need epic music! What's your jam?",
       "options": [
         {
-          "text": "Epic space orchestra",
+          "text": "Big orchestral space epic!",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-epic", "role": "music" }
         },
         {
-          "text": "Electronic synth waves",
+          "text": "Retro synth vibes!",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-electronic", "role": "music" }
         },
         {
-          "text": "Intense boss battle",
+          "text": "Boss battle intensity!",
           "next": "gamePreview",
           "action": "selectAsset",
           "actionParams": { "assetId": "music-boss", "role": "music" }
         },
         {
-          "text": "Silent space",
+          "text": "The eerie silence of space",
           "next": "gamePreview",
           "setVariable": { "hasMusic": false }
         }
@@ -965,8 +965,8 @@
     "gamePreview": {
       "id": "gamePreview",
       "speaker": "Pixel",
-      "text": "🎉 Amazing! Your game is ready! Let me show you what we've created together!",
-      "followUp": "Press PLAY to test your game right now! Use arrow keys or WASD to move!",
+      "text": "🎉 WOW! Look what we made together! This is YOUR game!",
+      "followUp": "Ready to play it? Just hit play and use the arrow keys!",
       "action": "showFullGamePreview",
       "actionParams": { 
         "playable": true,
@@ -975,16 +975,16 @@
       },
       "options": [
         {
-          "text": "Play my game!",
+          "text": "Let me play it RIGHT NOW!",
           "next": "gameTestPhase",
           "action": "startGame"
         },
         {
-          "text": "Show me the Python code",
+          "text": "I want to see the code behind this!",
           "next": "codeGeneration"
         },
         {
-          "text": "I want to change something",
+          "text": "Hmm, let me tweak something",
           "next": "editChoice"
         }
       ]
@@ -993,25 +993,25 @@
     "gameTestPhase": {
       "id": "gameTestPhase",
       "speaker": "Pixel",
-      "text": "Have fun playing! Remember - you made this! 🎮",
-      "followUp": "How does it feel? Want to make any adjustments?",
+      "text": "Go ahead, play YOUR creation! This is all you! 🎮",
+      "followUp": "Pretty cool, right? How's it feeling?",
       "action": "runGame",
       "actionParams": { "fullscreen": false },
       "options": [
         {
-          "text": "It's perfect! Generate the code!",
+          "text": "It's PERFECT! Show me the code!",
           "next": "codeGeneration"
         },
         {
-          "text": "Let me tweak some things",
+          "text": "I want to adjust a few things",
           "next": "editChoice"
         },
         {
-          "text": "I want to add more features",
+          "text": "This needs MORE features!",
           "next": "advancedFeatures"
         },
         {
-          "text": "Start a completely new game",
+          "text": "Actually, let's make something totally different",
           "next": "start"
         }
       ]
@@ -1020,7 +1020,7 @@
     "editChoice": {
       "id": "editChoice",
       "speaker": "Pixel",
-      "text": "No problem! What would you like to change?",
+      "text": "Sure thing! What's not quite right?"
       "options": [
         {
           "text": "Change the character",
