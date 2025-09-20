@@ -69,6 +69,10 @@ export interface SessionActions {
     choice: GameChoice;
     timestamp: Date;
   }>;
+  titlePresetApplied?: boolean;
+  gameplayConfigured?: boolean;
+  endingConfigured?: boolean;
+  gameAssembled?: boolean;
 }
 
 // Session action for PixelMenu
@@ -85,7 +89,7 @@ export interface SessionAction {
 export type LayoutMode = 'desktop' | 'phone-portrait' | 'phone-landscape';
 
 // Embedded component types
-export type EmbeddedComponentType = 'none' | 'code-editor' | 'professional-editor' | 'block-builder';
+export type EmbeddedComponentType = 'none' | 'code-editor' | 'professional-editor' | 'block-builder' | 'pygame-runner';
 
 // Pixel state
 export type PixelState = 'center-stage' | 'minimized';
@@ -120,6 +124,8 @@ export interface UIState {
   livePreviewLoading?: boolean;
   minimizeMessage?: string;
   isMinimizing?: boolean;
+  previewMode?: string;
+  viewMode?: string;
 }
 
 // Edge swipe handler options
