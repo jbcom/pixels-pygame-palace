@@ -1,0 +1,212 @@
+{
+  "nodes": {
+    "start": {
+      "id": "start",
+      "speaker": "Pixel",
+      "text": "Hey there! Welcome to Pixel's PyGame Palace! I'm Pixel, your game-making buddy! 🎮",
+      "followUp": "Before we dive in, I want to make sure I'm not telling you anything you already know...",
+      "options": [
+        {
+          "text": "You want me to throw together a basic framework for your game so you can get started right away?",
+          "next": "gamePath"
+        },
+        {
+          "text": "Would you like to take the opportunity to learn some Python together first?",
+          "next": "learnPath"
+        }
+      ]
+    },
+    "gamePath": {
+      "id": "gamePath",
+      "speaker": "Pixel",
+      "text": "Great, we've got ourselves a game cooking here! But it needs a direction. What are you thinking? I can do a few!",
+      "options": [
+        {
+          "text": "RPG - Epic quests and adventures!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "rpg" }
+        },
+        {
+          "text": "Platformer - Jump and run fun!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "platformer" }
+        },
+        {
+          "text": "Dungeon Crawler - Explore dark depths!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "dungeon" }
+        },
+        {
+          "text": "Racing - Speed and thrills!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "racing" }
+        },
+        {
+          "text": "Puzzle - Brain-teasing challenges!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "puzzle" }
+        },
+        {
+          "text": "Adventure - Story-driven exploration!",
+          "next": "workStyle",
+          "setVariable": { "gameType": "adventure" }
+        }
+      ]
+    },
+    "workStyle": {
+      "id": "workStyle",
+      "speaker": "Pixel",
+      "text": "Awesome! Love it! Hey I'm just here to help, how do you like to work?",
+      "options": [
+        {
+          "text": "Full editor - I got this!",
+          "action": "openEditor"
+        },
+        {
+          "text": "Walk me through it!",
+          "next": "wizardMode"
+        }
+      ]
+    },
+    "wizardMode": {
+      "id": "wizardMode",
+      "speaker": "Pixel",
+      "conditionalText": {
+        "gameType": {
+          "platformer": "Alright, great! What do you think for a title screen? Got these great assets that work perfect in a platformer!",
+          "rpg": "Awesome! Okay hey, in an RPG you know what you need? A character selection screen! Let's design that first!",
+          "dungeon": "Perfect choice! Dungeon crawlers need that spooky atmosphere. Let's start with your dungeon entrance!",
+          "racing": "Speed demon! I like it! Every racing game needs a cool car selection screen. Let's build that first!",
+          "puzzle": "Brain teasers! Nice! Let's design your main menu where players can choose levels!",
+          "adventure": "Adventure awaits! These games are all about the story. Let's create your opening scene!",
+          "default": "Interesting choice! Let's start with the basics - your main menu!"
+        }
+      },
+      "conditionalAction": {
+        "gameType": {
+          "platformer": { "action": "showAssets", "params": { "type": "platformer", "scene": "title" } },
+          "rpg": { "action": "showAssets", "params": { "type": "rpg", "scene": "character" } },
+          "dungeon": { "action": "showAssets", "params": { "type": "dungeon", "scene": "entrance" } },
+          "racing": { "action": "showAssets", "params": { "type": "racing", "scene": "garage" } },
+          "puzzle": { "action": "showAssets", "params": { "type": "puzzle", "scene": "menu" } },
+          "adventure": { "action": "showAssets", "params": { "type": "adventure", "scene": "opening" } },
+          "default": { "action": "showAssets", "params": { "type": "generic", "scene": "menu" } }
+        }
+      }
+    },
+    "learnPath": {
+      "id": "learnPath",
+      "speaker": "Pixel",
+      "text": "Perfect! Learning Python is the best way to really understand game development. Let me show you our lessons!",
+      "action": "openLessons"
+    },
+    "assetSelected": {
+      "id": "assetSelected",
+      "speaker": "Pixel",
+      "text": "Great choice! Now let's add some interactivity. What should happen when the player starts?",
+      "options": [
+        {
+          "text": "Add player controls",
+          "next": "playerControls"
+        },
+        {
+          "text": "Set up the game world",
+          "next": "worldSetup"
+        },
+        {
+          "text": "Configure game rules",
+          "next": "gameRules"
+        }
+      ]
+    },
+    "playerControls": {
+      "id": "playerControls",
+      "speaker": "Pixel",
+      "conditionalText": {
+        "gameType": {
+          "platformer": "In platformers, movement is everything! Let's set up jumping and running mechanics!",
+          "rpg": "RPG controls are about exploration and interaction. Let's configure your character movement!",
+          "racing": "Racing is all about speed and precision! Let's tune your vehicle controls!",
+          "default": "Let's get your controls set up so you can interact with the game!"
+        }
+      },
+      "conditionalAction": {
+        "gameType": {
+          "platformer": { "action": "setupControls", "params": { "type": "platformer" } },
+          "rpg": { "action": "setupControls", "params": { "type": "rpg" } },
+          "racing": { "action": "setupControls", "params": { "type": "racing" } },
+          "default": { "action": "setupControls", "params": { "type": "default" } }
+        }
+      },
+      "next": "projectComplete"
+    },
+    "worldSetup": {
+      "id": "worldSetup",
+      "speaker": "Pixel",
+      "text": "Time to build your game world! This is where the magic happens!",
+      "conditionalFollowUp": {
+        "gameType": {
+          "platformer": "Platformers need great level design with platforms, obstacles, and collectibles!",
+          "rpg": "RPG worlds are vast and full of stories. Let's create your first area!"
+        }
+      },
+      "action": "buildWorld",
+      "next": "projectComplete"
+    },
+    "gameRules": {
+      "id": "gameRules",
+      "speaker": "Pixel",
+      "text": "Every game needs rules! Let's define how players win, lose, and progress!",
+      "options": [
+        {
+          "text": "Simple rules - Just the basics",
+          "action": "setRules",
+          "actionParams": { "complexity": "simple" },
+          "next": "projectComplete"
+        },
+        {
+          "text": "Complex rules - Full game mechanics",
+          "action": "setRules",
+          "actionParams": { "complexity": "complex" },
+          "next": "projectComplete"
+        }
+      ]
+    },
+    "projectComplete": {
+      "id": "projectComplete",
+      "speaker": "Pixel",
+      "text": "Awesome work! Your game framework is ready! 🎉",
+      "followUp": "You can now start adding your own features and making it unique!",
+      "options": [
+        {
+          "text": "Open in editor to continue",
+          "action": "openEditor"
+        },
+        {
+          "text": "Start over with a different game",
+          "next": "start"
+        },
+        {
+          "text": "Learn more Python first",
+          "action": "openLessons"
+        }
+      ]
+    },
+    "error": {
+      "id": "error",
+      "speaker": "Pixel",
+      "text": "Oops! Something went wrong. Don't worry, we can fix this!",
+      "options": [
+        {
+          "text": "Try again",
+          "next": "start"
+        },
+        {
+          "text": "Get help",
+          "action": "openHelp"
+        }
+      ]
+    }
+  },
+  "startNode": "start"
+}
