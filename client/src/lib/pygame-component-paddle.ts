@@ -1,5 +1,16 @@
 // PyGame Paddle Component
-import { PyGameComponent, PaddleProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+interface PaddleProperties {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  speed: number;
+  color: string;
+  playerControlled: boolean;
+  controls?: 'arrows' | 'wasd' | 'mouse';
+}
 
 export const paddleComponent: PyGameComponent = {
   type: 'paddle',

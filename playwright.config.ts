@@ -99,7 +99,7 @@ export default defineConfig({
   },
   
   // Global setup for error detection
-  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
+  globalSetup: './tests/e2e/global-setup.ts',
   
   // Test output directories
   outputDir: 'test-results/',
