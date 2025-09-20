@@ -44,9 +44,10 @@ export default function WizardOptionHandler({
       return options.length > 4 ? 'flex flex-col gap-2' : 'flex flex-col gap-3';
     }
     
+    // For tablets and small desktops, be more conservative with horizontal layouts
     return shouldGrid
-      ? 'grid grid-cols-2 sm:grid-cols-3 gap-3'
-      : 'flex flex-col sm:flex-row gap-3 justify-center';
+      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'
+      : 'flex flex-col lg:flex-row gap-3 justify-center flex-wrap';
   })();
 
   return (
@@ -106,7 +107,7 @@ export function OptionButton({
     
     return optionCount > 4
       ? BUTTON_STYLES.DESKTOP_GRID
-      : BUTTON_STYLES.DESKTOP_DEFAULT;
+      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-4 md:px-6 min-w-0 flex-1 lg:flex-initial';
   })();
 
   const buttonVariant = getButtonVariant(isMobile, optionCount);
