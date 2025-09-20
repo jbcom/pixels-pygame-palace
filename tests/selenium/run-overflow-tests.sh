@@ -21,23 +21,11 @@ fi
 
 echo -e "${GREEN}✅ Server is running${NC}"
 
-# Compile TypeScript
-echo "📦 Compiling TypeScript tests..."
-npx tsc test-responsive-overflow.ts --module commonjs --target es2020 --esModuleInterop --skipLibCheck
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ TypeScript compilation failed${NC}"
-    exit 1
-fi
-
-# Run the overflow tests
+# Run the tests directly with tsx
 echo -e "${YELLOW}🚀 Starting overflow detection tests...${NC}"
-node test-responsive-overflow.js
+npx tsx test-responsive-overflow.ts
 
 TEST_RESULT=$?
-
-# Clean up
-rm -f test-responsive-overflow.js
 
 if [ $TEST_RESULT -eq 0 ]; then
     echo -e "${GREEN}✨ All responsive overflow tests passed!${NC}"
