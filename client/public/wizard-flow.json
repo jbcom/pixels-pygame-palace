@@ -123,14 +123,14 @@
     "workStyle": {
       "id": "workStyle",
       "speaker": "Pixel",
-      "text": "Nice choice! Now, quick question - how hands-on do you want to be?",
+      "text": "Nice choice! Now, quick question - how do you want to approach this?",
       "options": [
         {
-          "text": "Just give me the tools and let me build!",
+          "text": "I'll dive right in - just show me the tools!",
           "action": "openEditor"
         },
         {
-          "text": "Hold my hand a bit, I want to learn as we go",
+          "text": "Walk me through it - I learn best with guidance",
           "next": "wizardMode"
         }
       ]
