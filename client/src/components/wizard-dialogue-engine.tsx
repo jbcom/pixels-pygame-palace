@@ -90,14 +90,24 @@ export function useWizardDialogue({
     }));
   }, []);
 
-  const handleOptionSelect = useCallback((option: { text: string; next: string }) => {
+  const handleOptionSelect = useCallback((option: any) => {
     // Update session actions
-    setSessionActions(prev => updateSessionActionsForOption(prev, option.text));
+    if (option.text) {
+      setSessionActions(prev => updateSessionActionsForOption(prev, option.text));
+    }
+    
+    // Handle setVariable if present
+    if (option.setVariable) {
+      setSessionActions(prev => ({ ...prev, ...option.setVariable }));
+    }
     
     // Navigate to next node
     if (option.next) {
       navigateToNode(option.next);
     }
+    
+    // Return the option for additional handling in the parent component
+    return option;
   }, [navigateToNode]);
 
   const advance = useCallback(() => {

@@ -13,6 +13,82 @@
         {
           "text": "Would you like to take the opportunity to learn some Python together first?",
           "next": "learnPath"
+        },
+        {
+          "text": "I've made games before and know what I'm doing",
+          "next": "experienceCheck"
+        }
+      ]
+    },
+    "experienceCheck": {
+      "id": "experienceCheck",
+      "speaker": "Pixel",
+      "text": "Oh awesome! A fellow game developer! 🎮✨",
+      "followUp": "Just curious - have you worked with PyGame or similar game engines before?",
+      "options": [
+        {
+          "text": "Yes, I'm comfortable with PyGame",
+          "next": "unlockEditor",
+          "setVariable": { "experience": "advanced" }
+        },
+        {
+          "text": "I've made games but not with PyGame",
+          "next": "hybridMode",
+          "setVariable": { "experience": "intermediate" }
+        },
+        {
+          "text": "Actually, let's go with the guided approach",
+          "next": "gamePath",
+          "setVariable": { "experience": "beginner" }
+        }
+      ]
+    },
+    "hybridMode": {
+      "id": "hybridMode",
+      "speaker": "Pixel",
+      "text": "Perfect! You know games but PyGame is new territory. I've got the perfect approach for you!",
+      "followUp": "Would you like more control over your game design, or should I guide you through PyGame's specifics?",
+      "options": [
+        {
+          "text": "Give me more control - I learn by doing!",
+          "next": "unlockEditor"
+        },
+        {
+          "text": "Guide me through PyGame's unique features",
+          "next": "gamePath"
+        }
+      ]
+    },
+    "unlockEditor": {
+      "id": "unlockEditor",
+      "speaker": "Pixel",
+      "text": "🎉 Awesome! I'm unlocking the WYSIWYG Editor for you! This is where the real magic happens!",
+      "followUp": "With the editor, you can drag and drop components, see live previews, and watch your Python code generate in real-time. It's like having superpowers!",
+      "followUpDelay": 2000,
+      "additionalText": "Here's what you can do: • Drag components from the palette onto your canvas • Edit properties in real-time • See the Python code being generated • Test your game with play/pause controls • Export when you're ready!",
+      "action": "openWYSIWYGEditor",
+      "options": [
+        {
+          "text": "Let's dive into the editor!",
+          "action": "openWYSIWYGEditor"
+        },
+        {
+          "text": "Show me a quick tutorial first",
+          "next": "editorTutorial"
+        }
+      ]
+    },
+    "editorTutorial": {
+      "id": "editorTutorial",
+      "speaker": "Pixel",
+      "text": "Great choice! Let me show you around the WYSIWYG editor real quick!",
+      "followUp": "The editor has three main sections: the component palette on the left, the canvas in the center, and the properties panel on the right.",
+      "additionalText": "Start by dragging a sprite or platform from the palette onto the canvas. Click any component to edit its properties. The code panel shows you the Python being generated!",
+      "action": "openWYSIWYGEditor",
+      "options": [
+        {
+          "text": "Got it! Open the editor",
+          "action": "openWYSIWYGEditor"
         }
       ]
     },

@@ -16,6 +16,7 @@ import {
   useLayoutEdgeSwipe 
 } from './wizard-layout-manager';
 import WizardCodeRunner from './wizard-code-runner';
+import PygameWysiwygEditor from './pygame-wysiwyg-editor';
 import { ICON_SIZES, STYLES } from './wizard-constants';
 
 export default function UniversalWizard({ 
@@ -42,7 +43,8 @@ export default function UniversalWizard({
   const [uiState, setUiState] = useState<UIState>({
     pixelMenuOpen: false,
     embeddedComponent: 'none',
-    pixelState: 'center-stage'
+    pixelState: 'center-stage',
+    wysiwygEditorOpen: false
   });
 
   // Responsive detection
@@ -64,6 +66,38 @@ export default function UniversalWizard({
 
   // Get dialogue helper functions
   const dialogueHelpers = getDialogueHelpers(dialogueState);
+
+  // Handle action for current node
+  useEffect(() => {
+    const { currentNode } = dialogueState;
+    if (!currentNode) return;
+    
+    // Check if the current node has an action that should open the editor
+    if (currentNode.action === 'openWYSIWYGEditor') {
+      setUiState(prev => ({ ...prev, wysiwygEditorOpen: true }));
+      setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
+    } else if (currentNode.action === 'openEditor') {
+      setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
+    } else if (currentNode.action === 'openLessons') {
+      setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+    }
+  }, [dialogueState.currentNode]);
+
+  // Wrap handleOptionSelect to handle actions
+  const handleOptionSelectWithAction = useCallback((option: any) => {
+    // Check if option has an action
+    if (option.action === 'openWYSIWYGEditor') {
+      setUiState(prev => ({ ...prev, wysiwygEditorOpen: true }));
+      setSessionActions(prev => ({ ...prev, unlockedEditor: true }));
+    } else if (option.action === 'openEditor') {
+      setUiState(prev => ({ ...prev, embeddedComponent: 'editor' }));
+    } else if (option.action === 'openLessons') {
+      setUiState(prev => ({ ...prev, embeddedComponent: 'lessons' }));
+    }
+    
+    // Call the original handler
+    handleOptionSelect(option);
+  }, [handleOptionSelect]);
 
   // Render dialogue content for desktop/tablet
   const renderDialogue = useCallback(() => {
@@ -87,7 +121,7 @@ export default function UniversalWizard({
         {showOptions && currentNode.options && currentNode.options.length > 0 && (
           <WizardOptionHandler
             options={currentNode.options}
-            onOptionSelect={handleOptionSelect}
+            onOptionSelect={handleOptionSelectWithAction}
             isMobile={deviceState.isMobile}
           />
         )}
@@ -158,9 +192,18 @@ export default function UniversalWizard({
     currentNode: dialogueState.currentNode,
     dialogueStep: dialogueState.dialogueStep,
     onAdvance: advance,
-    onOptionSelect: handleOptionSelect,
+    onOptionSelect: handleOptionSelectWithAction,
     onOpenMenu: () => setUiState(prev => ({ ...prev, pixelMenuOpen: true }))
   };
+
+  // Show WYSIWYG editor if it's open
+  if (uiState.wysiwygEditorOpen) {
+    return (
+      <PygameWysiwygEditor
+        onClose={() => setUiState(prev => ({ ...prev, wysiwygEditorOpen: false }))}
+      />
+    );
+  }
 
   // Render phone portrait layout
   if (layoutMode === 'phone-portrait') {
