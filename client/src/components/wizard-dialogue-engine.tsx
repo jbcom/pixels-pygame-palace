@@ -51,9 +51,16 @@ export function useWizardDialogue({
 
   // Load wizard flow data
   useEffect(() => {
-    // Determine which flow to load
+    // Determine which flow to load based on game type
     let flowPath = wizardFlowPath;
-    if (flowType === 'game-dev') {
+    
+    // If we have a selected game type, load that specific flow
+    // Check both gameType and selectedGameType for compatibility
+    const gameType = sessionActions.selectedGameType || sessionActions.gameType;
+    if (gameType) {
+      flowPath = `/${gameType}-flow.json`;
+    } else if (flowType === 'game-dev') {
+      // Fallback to generic game flow if no specific type selected
       flowPath = '/game-wizard-flow.json';
     }
     
@@ -69,10 +76,29 @@ export function useWizardDialogue({
         setIsLoading(false);
       })
       .catch(error => {
-        console.error('Failed to load wizard flow:', error);
-        setIsLoading(false);
+        console.error(`Failed to load wizard flow from ${flowPath}:`, error);
+        // Try fallback to default flow
+        if (flowPath !== wizardFlowPath) {
+          loadWizardFlow(wizardFlowPath)
+            .then(nodes => {
+              setWizardData(nodes);
+              if (nodes[initialNodeId]) {
+                setDialogueState(prev => ({
+                  ...prev,
+                  currentNode: nodes[initialNodeId]
+                }));
+              }
+              setIsLoading(false);
+            })
+            .catch(fallbackError => {
+              console.error('Failed to load fallback flow:', fallbackError);
+              setIsLoading(false);
+            });
+        } else {
+          setIsLoading(false);
+        }
       });
-  }, [wizardFlowPath, initialNodeId, flowType]);
+  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType]);
 
   // Update current node when ID changes
   useEffect(() => {

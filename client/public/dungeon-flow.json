@@ -1,0 +1,368 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Pixel",
+    "text": "A DUNGEON CRAWLER! Dark corridors, treasure, monsters lurking in shadows!",
+    "followUp": "We'll build your dungeon floor by floor, room by room!",
+    "next": "dungeonTheme"
+  },
+  "dungeonTheme": {
+    "id": "dungeonTheme",
+    "speaker": "Pixel",
+    "text": "What kind of dungeon calls to you?",
+    "options": [
+      {
+        "text": "Classic stone dungeon with torches",
+        "next": "stoneTheme"
+      },
+      {
+        "text": "Sci-fi space station corridors",
+        "next": "spaceTheme"
+      },
+      {
+        "text": "Haunted crypt with undead",
+        "next": "cryptTheme"
+      }
+    ]
+  },
+  "stoneTheme": {
+    "id": "stoneTheme",
+    "speaker": "Pixel",
+    "text": "Classic dungeon it is! Stone walls, flickering torches, dripping water.",
+    "followUp": "Let's start with the entrance.",
+    "next": "dungeonEntrance"
+  },
+  "spaceTheme": {
+    "id": "spaceTheme",
+    "speaker": "Pixel",
+    "text": "Space horror! Metal corridors, emergency lighting, alien threats.",
+    "followUp": "Let's design the airlock entrance.",
+    "next": "dungeonEntrance"
+  },
+  "cryptTheme": {
+    "id": "cryptTheme",
+    "speaker": "Pixel",
+    "text": "Spooky crypt! Ancient tombs, restless spirits, cursed treasures.",
+    "followUp": "Let's create the crypt entrance.",
+    "next": "dungeonEntrance"
+  },
+  "dungeonEntrance": {
+    "id": "dungeonEntrance",
+    "speaker": "Pixel",
+    "text": "The entrance sets the mood. Pick your entry background.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["dungeon", "entrance", "door", "gate"]
+    },
+    "next": "heroSelection"
+  },
+  "heroSelection": {
+    "id": "heroSelection",
+    "speaker": "Pixel",
+    "text": "Who dares enter? Choose your brave explorer!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "characters",
+      "curated": true,
+      "tags": ["hero", "warrior", "explorer"]
+    },
+    "next": "movementStyle"
+  },
+  "movementStyle": {
+    "id": "movementStyle",
+    "speaker": "Pixel",
+    "text": "How should dungeon movement work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "walk",
+      "category": "movement"
+    },
+    "options": [
+      {
+        "text": "A: Grid-based - Classic tile movement",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "walk", "variant": "A" },
+        "next": "roomGeneration"
+      },
+      {
+        "text": "B: Free movement - Smooth exploration",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "walk", "variant": "B" },
+        "next": "roomGeneration"
+      }
+    ]
+  },
+  "roomGeneration": {
+    "id": "roomGeneration",
+    "speaker": "Pixel",
+    "text": "Dungeon layout is crucial! How should rooms connect?",
+    "options": [
+      {
+        "text": "Linear path with side rooms",
+        "next": "roomAssets"
+      },
+      {
+        "text": "Branching maze with dead ends",
+        "next": "roomAssets"
+      },
+      {
+        "text": "Open caverns with passages",
+        "next": "roomAssets"
+      }
+    ]
+  },
+  "roomAssets": {
+    "id": "roomAssets",
+    "speaker": "Pixel",
+    "text": "Rooms need atmosphere! Pick dungeon tiles and decorations.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "tiles",
+      "curated": true,
+      "multiple": true,
+      "tags": ["wall", "floor", "door", "torch"]
+    },
+    "next": "lightingSystem"
+  },
+  "lightingSystem": {
+    "id": "lightingSystem",
+    "speaker": "Pixel",
+    "text": "Darkness adds tension! How should lighting work?",
+    "options": [
+      {
+        "text": "Torch radius - See only around your light",
+        "next": "monsterTypes"
+      },
+      {
+        "text": "Room-based - Each room fully lit when entered",
+        "next": "monsterTypes"
+      },
+      {
+        "text": "No darkness - See everything clearly",
+        "next": "monsterTypes"
+      }
+    ]
+  },
+  "monsterTypes": {
+    "id": "monsterTypes",
+    "speaker": "Pixel",
+    "text": "Dungeons need monsters! Choose your enemies.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "enemies",
+      "curated": true,
+      "multiple": true,
+      "tags": ["monster", "skeleton", "slime", "goblin"]
+    },
+    "next": "combatSystem"
+  },
+  "combatSystem": {
+    "id": "combatSystem",
+    "speaker": "Pixel",
+    "text": "Fighting monsters! Pick your combat style.",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "melee",
+      "category": "combat"
+    },
+    "options": [
+      {
+        "text": "A: Hack and slash - Fast attacks",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "melee", "variant": "A" },
+        "next": "treasureTypes"
+      },
+      {
+        "text": "B: Tactical - Timing and positioning",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "melee", "variant": "B" },
+        "next": "treasureTypes"
+      }
+    ]
+  },
+  "treasureTypes": {
+    "id": "treasureTypes",
+    "speaker": "Pixel",
+    "text": "The reason we explore! Choose treasure to find.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["treasure", "chest", "gold", "gem", "potion"]
+    },
+    "next": "inventorySystem"
+  },
+  "inventorySystem": {
+    "id": "inventorySystem",
+    "speaker": "Pixel",
+    "text": "How should players manage their loot?",
+    "options": [
+      {
+        "text": "Simple bag - Unlimited carrying",
+        "next": "trapTypes"
+      },
+      {
+        "text": "Grid inventory - Limited space management",
+        "next": "trapTypes"
+      }
+    ]
+  },
+  "trapTypes": {
+    "id": "trapTypes",
+    "speaker": "Pixel",
+    "text": "Dungeons need dangers! What traps await?",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "obstacles",
+      "curated": true,
+      "multiple": true,
+      "tags": ["trap", "spike", "pit", "arrow"]
+    },
+    "next": "dungeonSounds"
+  },
+  "dungeonSounds": {
+    "id": "dungeonSounds",
+    "speaker": "Pixel",
+    "text": "Atmosphere through sound! Footsteps, monster growls, treasure jingles!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sound",
+      "curated": true,
+      "multiple": true,
+      "tags": ["footstep", "growl", "door", "treasure"]
+    },
+    "next": "dungeonMusic"
+  },
+  "dungeonMusic": {
+    "id": "dungeonMusic",
+    "speaker": "Pixel",
+    "text": "Dungeon ambience! Pick atmospheric music.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["ambient", "dark", "mysterious", "dungeon"]
+    },
+    "next": "bossChamber"
+  },
+  "bossChamber": {
+    "id": "bossChamber",
+    "speaker": "Pixel",
+    "text": "The deepest level needs a boss! Choose your dungeon lord.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "enemies",
+      "curated": true,
+      "tags": ["boss", "dragon", "lich", "demon"]
+    },
+    "next": "bossStrategy"
+  },
+  "bossStrategy": {
+    "id": "bossStrategy",
+    "speaker": "Pixel",
+    "text": "How should the boss fight play out?",
+    "options": [
+      {
+        "text": "Arena battle with patterns",
+        "next": "treasureRoom"
+      },
+      {
+        "text": "Chase sequence through collapsing dungeon",
+        "next": "treasureRoom"
+      }
+    ]
+  },
+  "treasureRoom": {
+    "id": "treasureRoom",
+    "speaker": "Pixel",
+    "text": "Victory brings rewards! Design the treasure room.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["treasure", "vault", "gold"]
+    },
+    "next": "escapeSequence"
+  },
+  "escapeSequence": {
+    "id": "escapeSequence",
+    "speaker": "Pixel",
+    "text": "Classic ending - escape the collapsing dungeon?",
+    "options": [
+      {
+        "text": "Yes! Timer-based escape run",
+        "next": "victoryScreen"
+      },
+      {
+        "text": "No, peaceful exit with treasure",
+        "next": "victoryScreen"
+      }
+    ]
+  },
+  "victoryScreen": {
+    "id": "victoryScreen",
+    "speaker": "Pixel",
+    "text": "How should we show the spoils of victory?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "score",
+      "category": "ui"
+    },
+    "options": [
+      {
+        "text": "A: Treasure counts up with coin sounds",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "A" },
+        "next": "victoryMusic"
+      },
+      {
+        "text": "B: Instant loot summary screen",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "B" },
+        "next": "victoryMusic"
+      }
+    ]
+  },
+  "victoryMusic": {
+    "id": "victoryMusic",
+    "speaker": "Pixel",
+    "text": "Triumphant escape music!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["victory", "triumph", "celebration"]
+    },
+    "next": "complete"
+  },
+  "complete": {
+    "id": "complete",
+    "speaker": "Pixel",
+    "text": "⚔️ DUNGEON CONQUERED! Entrance ✓ Rooms ✓ Monsters ✓ Treasure ✓ Boss ✓ Escape ✓",
+    "followUp": "Your dungeon crawler awaits brave adventurers!",
+    "action": "compileFullGame",
+    "options": [
+      {
+        "text": "Enter the dungeon!",
+        "action": "launchPyodideGame"
+      },
+      {
+        "text": "Export as Python file",
+        "action": "exportPyodideGame"
+      },
+      {
+        "text": "Open in Pro Editor",
+        "action": "openWYSIWYGEditor"
+      }
+    ]
+  }
+}
