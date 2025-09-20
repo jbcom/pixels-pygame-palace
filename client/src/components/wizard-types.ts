@@ -80,6 +80,7 @@ export interface UIState {
   pixelMenuOpen: boolean;
   embeddedComponent: EmbeddedComponentType;
   pixelState: PixelState;
+  wysiwygEditorOpen?: boolean;
 }
 
 // Edge swipe handler options
