@@ -83,18 +83,36 @@ function generateAssetLoader(assets: GameAsset[]): string {
     if (asset.type === 'sprite') {
       loader += `
         try:
-            self.assets['${asset.id}'] = pygame.image.load('${asset.path || asset.id}.png')
+            self.assets['${asset.id}'] = pygame.image.load('${asset.path || asset.id}')
         except:
             # Create placeholder if asset not found
             surf = pygame.Surface((32, 32))
             surf.fill((255, 0, 255))
             self.assets['${asset.id}'] = surf`;
+    } else if (asset.type === 'background') {
+      loader += `
+        try:
+            self.assets['${asset.id}'] = pygame.image.load('${asset.path || asset.id}')
+            # Scale background to fit screen
+            self.assets['${asset.id}'] = pygame.transform.scale(self.assets['${asset.id}'], (SCREEN_WIDTH, SCREEN_HEIGHT))
+        except:
+            # Create placeholder background
+            surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            surf.fill((100, 100, 200))
+            self.assets['${asset.id}'] = surf`;
     } else if (asset.type === 'sound') {
       loader += `
         try:
-            self.assets['${asset.id}'] = pygame.mixer.Sound('${asset.path || asset.id}.ogg')
+            self.assets['${asset.id}'] = pygame.mixer.Sound('${asset.path || asset.id}')
         except:
             self.assets['${asset.id}'] = None`;
+    } else if (asset.type === 'music') {
+      loader += `
+        try:
+            # Music is handled differently - just store path for later loading
+            self.assets['${asset.id}_music_path'] = '${asset.path || asset.id}'
+        except:
+            self.assets['${asset.id}_music_path'] = None`;
     }
   });
   
@@ -134,8 +152,10 @@ function generateTitleScreen(assets: GameAsset[]): string {
         if keys[pygame.K_SPACE]:
             self.state = "gameplay"
             ${musicAsset ? 
-              `if '${musicAsset.id}' in self.assets and self.assets['${musicAsset.id}']:
-                self.assets['${musicAsset.id}'].play(-1)` : ''
+              `# Load and play background music
+            if '${musicAsset.id}_music_path' in self.assets and self.assets['${musicAsset.id}_music_path']:
+                pygame.mixer.music.load(self.assets['${musicAsset.id}_music_path'])
+                pygame.mixer.music.play(-1)` : ''
             }
 `;
 }
