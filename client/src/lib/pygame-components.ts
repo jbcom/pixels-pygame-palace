@@ -1,23 +1,13 @@
 // PyGame Component Library - Main entry point
 // Re-exports all components from modular files
-import { setCanvasContext, flushFrameBuffer } from './pygame-simulation';
 
 // Import types
-import { 
-  PyGameComponent, 
-  ComponentType,
-  SpriteProperties,
-  PlatformProperties,
-  BallProperties,
-  PaddleProperties,
-  EnemyProperties,
-  CollectibleProperties,
-  BackgroundProperties,
-  ScoreTextProperties,
-  ButtonProperties,
-  ParticleEffectProperties,
-  TimerProperties,
-  HealthBarProperties,
+import type { 
+  PyGameComponent,
+  ComponentType
+} from './pygame-component-types';
+
+import {
   hexToRgb,
   drawStar,
   drawHeart,
@@ -43,21 +33,12 @@ import {
 } from './pygame-component-effects';
 
 // Re-export types
-export {
+export type {
   PyGameComponent,
-  ComponentType,
-  SpriteProperties,
-  PlatformProperties,
-  BallProperties,
-  PaddleProperties,
-  EnemyProperties,
-  CollectibleProperties,
-  BackgroundProperties,
-  ScoreTextProperties,
-  ButtonProperties,
-  ParticleEffectProperties,
-  TimerProperties,
-  HealthBarProperties,
+  ComponentType
+};
+
+export {
   hexToRgb,
   drawStar,
   drawHeart,
