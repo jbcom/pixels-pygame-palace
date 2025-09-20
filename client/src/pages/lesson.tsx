@@ -4,17 +4,14 @@ import { useState, useEffect, useMemo } from "react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/header";
-import LessonSidebar from "@/components/lesson-sidebar";
 import CodeEditor from "@/components/code-editor";
-import GameCanvas from "@/components/game-canvas";
 import FloatingFeedback from "@/components/floating-feedback";
-import LessonIntroModal from "@/components/lesson-intro-modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, ChevronRight, ChevronLeft, Trophy, Heart, Code2, Zap, BookOpen } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Trophy, Heart, Code2, Zap, BookOpen, Rocket } from "lucide-react";
 import type { Lesson, UserProgress } from "@shared/schema";
-import { createPythonRunner, type PythonRunner } from "@/lib/python/runner";
+import { createPythonRunner, type PythonRunner, type ExecutionResult, type ExecutionContext } from "@/lib/python/runner";
 import { gradeCode, type GradingContext } from "@/lib/grading";
 
 // Import Pixel images
@@ -94,7 +91,7 @@ export default function LessonEnhanced() {
   const pyodide = null;
   const pyodideLoading = false;
   const pyodideError = null;
-  const executeWithEnhancedErrors = async () => ({});
+  const executeWithEnhancedErrors = async (code: string, context: ExecutionContext): Promise<ExecutionResult> => ({ output: "", hasError: false });
   const isEnhancedReady = false;
   
   // Create PythonRunner instance when pyodide is ready
@@ -154,7 +151,7 @@ export default function LessonEnhanced() {
     }
   }, [currentStepIndex, currentStep]);
 
-  const executeCode = async (inputValues?: string, runAutoGrading = false) => {
+  const executeCode = async (inputValues: string = "", runAutoGrading = false) => {
     if (!pythonRunner || !code.trim()) {
       setPixelDialogue("Let's add some code first! You can do it! 💪");
       setPixelImage(pixelEncouraging);
@@ -242,6 +239,25 @@ export default function LessonEnhanced() {
     }
   };
 
+  const handleNextStep = () => {
+    if (lesson && currentStepIndex < lesson.content.steps.length - 1) {
+      const nextIndex = currentStepIndex + 1;
+      setCurrentStepIndex(nextIndex);
+      setCode(lesson.content.steps[nextIndex].initialCode || "");
+      setOutput("");
+      setError("");
+      setGradingResult(null);
+      updateProgressMutation.mutate({ currentStep: nextIndex, code: lesson.content.steps[nextIndex].initialCode || "" });
+    }
+  };
+
+  const handleCompleteLesson = () => {
+    if (lesson) {
+      updateProgressMutation.mutate({ completed: true });
+      // The lesson completion modal will be shown by the existing logic
+    }
+  };
+
   const showNextHint = () => {
     if (currentStep && currentStep.hints && currentHintIndex < currentStep.hints.length) {
       const hint = currentStep.hints[currentHintIndex];
@@ -255,7 +271,7 @@ export default function LessonEnhanced() {
   const [showCompletionOptions, setShowCompletionOptions] = useState(false);
 
   const getNextLessonId = (currentId: string): string | null => {
-    const lessonOrder: Record<string, string> = {
+    const lessonOrder: Record<string, string | null> = {
       'python-basics': 'control-flow',
       'control-flow': 'loops-iteration',
       'loops-iteration': 'data-structures',
@@ -329,13 +345,13 @@ export default function LessonEnhanced() {
   if (!lesson) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-        <Header />
+        <Header lesson={lesson!} progress={0} onBack={() => setLocation('/playground')} />
         <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
           <Card className="p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur">
             <img src={pixelThinking} alt="Pixel confused" className="w-20 h-20 mx-auto mb-4" />
             <p className="text-center text-gray-600 dark:text-gray-400">Lesson not found</p>
             <Button 
-              onClick={() => setLocation("/lessons")}
+              onClick={() => setLocation("/")}
               className="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500"
             >
               Back to Lessons
@@ -348,15 +364,9 @@ export default function LessonEnhanced() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-      <Header />
+      <Header lesson={lesson!} progress={progressPercent} onBack={() => setLocation('/playground')} />
       
-      {/* Show intro modal if needed */}
-      {showIntroModal && (
-        <LessonIntroModal 
-          lesson={lesson} 
-          onClose={() => setShowIntroModal(false)} 
-        />
-      )}
+      {/* Intro modal removed - functionality no longer available */}
       
       {/* Lesson Completion Modal */}
       <AnimatePresence>
@@ -407,7 +417,7 @@ export default function LessonEnhanced() {
                 
                 <Button
                   onClick={() => {
-                    setLocation('/project-builder');
+                    setLocation('/wizard');
                     setShowCompletionOptions(false);
                   }}
                   className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
@@ -419,7 +429,7 @@ export default function LessonEnhanced() {
                 
                 <Button
                   onClick={() => {
-                    setLocation('/lessons');
+                    setLocation('/');
                     setShowCompletionOptions(false);
                   }}
                   variant="outline"
@@ -436,12 +446,7 @@ export default function LessonEnhanced() {
       </AnimatePresence>
       
       <div className="flex h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <LessonSidebar
-          lesson={lesson}
-          currentStepIndex={currentStepIndex}
-          onStepSelect={setCurrentStepIndex}
-        />
+        {/* Sidebar removed - navigation simplified */}
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -516,9 +521,14 @@ export default function LessonEnhanced() {
               {/* Code Editor */}
               <div className="flex-1 overflow-hidden">
                 <CodeEditor
-                  value={code}
+                  code={code}
                   onChange={setCode}
-                  language="python"
+                  onExecute={executeCode}
+                  output={output}
+                  error={error}
+                  isExecuting={pyodideLoading}
+                  gradingResult={gradingResult}
+                  currentStep={currentStep}
                 />
               </div>
               
@@ -546,9 +556,12 @@ export default function LessonEnhanced() {
             
             {/* Right: Output & Canvas */}
             <div className="w-1/2 flex flex-col p-4 overflow-hidden">
-              {/* Game Canvas */}
+              {/* Game Canvas removed - output only shown in code editor */}
               <div className="flex-1 mb-4">
-                <GameCanvas code={code} />
+                <Card className="h-full p-4 bg-gray-900 text-green-400 font-mono overflow-auto">
+                  <pre>{output || "Run your code to see output here!"}</pre>
+                  {error && <pre className="text-red-500 mt-2">{error}</pre>}
+                </Card>
               </div>
               
               {/* Output/Error Display */}
@@ -578,10 +591,13 @@ export default function LessonEnhanced() {
                   animate={{ opacity: 1, scale: 1 }}
                 >
                   <FloatingFeedback
-                    passed={gradingResult.passed}
-                    feedback={gradingResult.feedback}
-                    expectedOutput={gradingResult.expectedOutput}
-                    actualOutput={gradingResult.actualOutput}
+                    step={currentStep!}
+                    onNextStep={handleNextStep}
+                    onCompleteLesson={handleCompleteLesson}
+                    onApplySolution={(solution: string) => setCode(solution)}
+                    showNext={gradingResult?.passed || false}
+                    isLastStep={currentStepIndex === lesson!.content.steps.length - 1}
+                    gradingResult={gradingResult}
                   />
                 </motion.div>
               )}
