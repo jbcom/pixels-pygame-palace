@@ -3,7 +3,7 @@
  * Tests various device resolutions to ensure no horizontal overflow occurs
  */
 
-import { Builder, Browser, By, until, WebDriver, Dimension } from 'selenium-webdriver';
+import { Builder, Browser, By, until, WebDriver } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
 import assert from 'assert';
 
@@ -119,7 +119,7 @@ class ResponsiveOverflowTest {
     `);
     
     return {
-      hasOverflow: result.hasOverflow,
+      hasOverflow: (result as any).hasOverflow,
       details: JSON.stringify(result, null, 2)
     };
   }
@@ -127,7 +127,7 @@ class ResponsiveOverflowTest {
   /**
    * Test a specific resolution
    */
-  async testResolution(name: string, dimensions: Dimension): Promise<void> {
+  async testResolution(name: string, dimensions: { width: number, height: number }): Promise<void> {
     if (!this.driver) throw new Error('Driver not initialized');
     
     console.log(`\\n📱 Testing ${name} (${dimensions.width}x${dimensions.height})...`);
@@ -204,7 +204,7 @@ class ResponsiveOverflowTest {
       
       for (const [name, dimensions] of Object.entries(DEVICE_RESOLUTIONS)) {
         try {
-          await this.testResolution(name, dimensions as Dimension);
+          await this.testResolution(name, dimensions);
         } catch (error) {
           failedTests.push(`${name}: ${error}`);
           // Continue testing other resolutions
@@ -241,7 +241,7 @@ class ResponsiveOverflowTest {
       await this.setup();
       
       for (const [name, dimensions] of Object.entries(problematicResolutions)) {
-        await this.testResolution(name, dimensions as Dimension);
+        await this.testResolution(name, dimensions);
       }
       
       console.log('\\n✅ All problematic resolutions fixed!');
