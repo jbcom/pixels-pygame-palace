@@ -14,6 +14,11 @@ import { allSprites } from './asset-sprites';
 import { allSounds } from './asset-sounds';
 import { allBackgrounds } from './asset-backgrounds';
 
+// Import real Kenney assets
+import { kenneySprites } from './kenney-sprites';
+import { kenneyBackgrounds } from './kenney-backgrounds';
+import { kenneySounds, kenneyMusic } from './kenney-sounds';
+
 // Asset Manager Class
 export class AssetManager {
   private assets: Map<string, GameAsset>;
@@ -47,19 +52,39 @@ export class AssetManager {
 
   // Initialize asset registry
   private initializeAssets() {
-    // Add sprites
+    // Add placeholder sprites (for fallback)
     allSprites.forEach(sprite => {
       this.assets.set(sprite.id, sprite);
     });
 
-    // Add sounds
+    // Add placeholder sounds (for fallback)
     allSounds.forEach(sound => {
       this.assets.set(sound.id, sound);
     });
 
-    // Add backgrounds
+    // Add placeholder backgrounds (for fallback)
     allBackgrounds.forEach(bg => {
       this.assets.set(bg.id, bg);
+    });
+
+    // Add REAL Kenney sprites
+    kenneySprites.forEach(sprite => {
+      this.assets.set(sprite.id, sprite as any);
+    });
+
+    // Add REAL Kenney backgrounds
+    kenneyBackgrounds.forEach(bg => {
+      this.assets.set(bg.id, bg as any);
+    });
+
+    // Add REAL Kenney sounds
+    kenneySounds.forEach(sound => {
+      this.assets.set(sound.id, sound as any);
+    });
+
+    // Add REAL Kenney music
+    kenneyMusic.forEach(music => {
+      this.assets.set(music.id, music as any);
     });
 
     this.loadStatus.total = this.assets.size;
