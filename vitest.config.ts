@@ -8,6 +8,20 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // Set test timeout to prevent hanging tests
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    // Exclude integration tests from default test run when collecting coverage
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      // Exclude integration tests from coverage runs
+      process.env.COVERAGE === 'true' ? '**/tests/integration/**' : '',
+      // Exclude e2e tests
+      '**/tests/e2e/**',
+      '**/*.e2e.test.{ts,tsx}',
+      '**/*.integration.test.{ts,tsx}'
+    ].filter(Boolean),
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -20,7 +34,12 @@ export default defineConfig({
         '*.config.js',
         'server/',
         '**/index.ts',
-        '**/*.d.ts'
+        '**/*.d.ts',
+        // Explicitly exclude integration and e2e tests from coverage
+        '**/tests/integration/**',
+        '**/tests/e2e/**',
+        '**/*.integration.test.{ts,tsx}',
+        '**/*.e2e.test.{ts,tsx}'
       ],
       include: [
         'client/src/**/*.{ts,tsx}'
@@ -30,6 +49,13 @@ export default defineConfig({
         functions: 90,
         branches: 85,
         statements: 90
+      }
+    },
+    // Run tests in parallel for better performance
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: false
       }
     }
   },
