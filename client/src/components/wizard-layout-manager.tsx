@@ -11,7 +11,8 @@ import {
   WizardNode, 
   WizardOption, 
   DeviceState,
-  UIState 
+  UIState,
+  SessionActions
 } from './wizard-types';
 import { 
   STYLES, 
@@ -28,6 +29,7 @@ import {
 interface LayoutProps {
   currentNode: WizardNode | null;
   dialogueStep: number;
+  sessionActions?: SessionActions;
   onAdvance: () => void;
   onOptionSelect: (option: WizardOption) => void;
   onOpenMenu: () => void;
@@ -38,13 +40,14 @@ interface LayoutProps {
 export function PhonePortraitLayout({
   currentNode,
   dialogueStep,
+  sessionActions,
   onAdvance,
   onOptionSelect,
   edgeSwipeHandlers
 }: LayoutProps) {
   if (!currentNode) return null;
   
-  const displayText = getCurrentText(currentNode, dialogueStep);
+  const displayText = getCurrentText(currentNode, dialogueStep, sessionActions);
   const showOptions = shouldShowOptions(currentNode, dialogueStep);
   const showContinue = shouldShowContinue(currentNode, dialogueStep);
 
@@ -89,13 +92,14 @@ export function PhonePortraitLayout({
 export function PhoneLandscapeLayout({
   currentNode,
   dialogueStep,
+  sessionActions,
   onAdvance,
   onOptionSelect,
   edgeSwipeHandlers
 }: LayoutProps) {
   if (!currentNode) return null;
   
-  const displayText = getCurrentText(currentNode, dialogueStep);
+  const displayText = getCurrentText(currentNode, dialogueStep, sessionActions);
   const showOptions = shouldShowOptions(currentNode, dialogueStep);
   const showContinue = shouldShowContinue(currentNode, dialogueStep);
 
