@@ -2,7 +2,7 @@
 
 ## Overview
 
-Pixel's PyGame Palace is an interactive Python programming learning platform that teaches Python fundamentals through game development. The platform features a revolutionary flexible auto-grading system that validates programming concepts rather than exact text matching, allowing students to learn creatively while maintaining educational standards. With its polished visual design, ungated lesson access, and real-time Pyodide execution, it provides an engaging, accessible learning experience for beginners.
+Pixel's PyGame Palace is a conversational, mascot-driven React application that teaches kids Python game development through reusable guided components. The platform features "Pixel," a cyberpunk mascot who guides users through organic conversational experiences with natural A/B choices for initial decisions, offering both a guided wizard flow for beginners and a professional WYSIWYG editor unlocked through conversation. The guided mode provides continuous linear progression where Pixel leads users through pre-built game components for Title Screen → Gameplay → End Credits, with stage-specific conditional content that adapts to the selected game type (platformer, RPG, dungeon, racing, puzzle, adventure).
 
 ## User Preferences
 
