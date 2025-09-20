@@ -1,82 +1,103 @@
-# TypeScript-Python Pygame Builder - Testing Infrastructure Guide
+# Comprehensive Playwright Testing Guide
 
-## Overview
-A comprehensive three-layer testing strategy has been implemented for the TypeScript-Python pygame builder, covering unit tests, integration tests, and end-to-end tests.
+## 🚨 Critical Error Prevention Suite
+
+This testing suite implements comprehensive end-to-end testing across multiple resolutions to catch runtime errors before they reach users. The suite was designed in response to critical runtime errors that weren't caught by existing tests.
 
 ## Testing Stack
-- **Unit Testing**: Vitest + @testing-library/react  
-- **Integration Testing**: Vitest + Pyodide fixtures
-- **E2E Testing**: Playwright
-- **Coverage**: c8
-- **Mocking**: MSW (Mock Service Worker)
+- **E2E Testing**: Playwright with multi-resolution viewport testing
+- **Error Detection**: Comprehensive runtime error monitoring
+- **Visual Testing**: Screenshot-based verification across resolutions
+- **Performance Monitoring**: Animation and load time testing
+- **Unit Testing**: Vitest + @testing-library/react (legacy)
+- **Integration Testing**: Vitest + Pyodide fixtures (legacy)
+- **Coverage**: c8 (legacy)
+- **Mocking**: MSW (legacy)
 
 ## Directory Structure
 ```
 tests/
-├── setup.ts                      # Global test setup (mocks, environment)
-├── fixtures/                     
-│   └── fake-pygame.py           # Mock pygame module for Python testing
-├── unit/                        
-│   ├── dialogue-engine.test.ts  # Tests dialogue system & Yarn integration
-│   ├── pygame-components.test.ts # Tests component structure & variants
-│   └── scene-generator.test.ts  # Tests Python code generation
-├── integration/                 
-│   ├── pyodide-fixture.ts      # Pyodide test helpers
-│   ├── component-execution.test.ts # Tests Python execution in browser
-│   └── asset-binding.test.ts   # Tests asset path resolution
-└── e2e/                        
-    ├── wizard-flow.test.ts      # Tests conversational wizard UX
-    ├── editor-flow.test.ts      # Tests visual editor functionality
-    └── game-execution.test.ts   # Tests actual game runtime
+├── e2e/                                    # Comprehensive E2E test suite
+│   ├── global-setup.ts                   # Global test initialization
+│   ├── utils/
+│   │   ├── error-detection.ts            # Runtime error monitoring
+│   │   └── wizard-actions.ts             # Wizard navigation utilities
+│   ├── smoke-tests.spec.ts               # Basic page loads & error detection
+│   ├── wizard-flow-tests.spec.ts         # Complete wizard interactions
+│   ├── wysiwyg-editor-tests.spec.ts      # Drag-drop & editor functionality
+│   ├── asset-browser-tests.spec.ts       # Asset loading & browsing
+│   ├── pixel-animation-tests.spec.ts     # Mascot animations & minimize/restore
+│   └── run-comprehensive-tests.ts        # Test suite runner
+├── setup.ts                              # Global test setup (legacy)
+├── fixtures/                             # Legacy fixtures
+├── unit/                                 # Legacy unit tests
+├── integration/                          # Legacy integration tests
+└── responsive-wizard.test.tsx            # Legacy responsive tests
 
 ```
 
-## Running Tests
+## 🎯 Critical Error Detection
+- **Vite error overlays** - Catches build and compilation errors
+- **JavaScript runtime errors** - Uncaught exceptions and type errors  
+- **Import/export failures** - Missing modules and broken dependencies
+- **Network failures** - Failed API calls and asset loading
+- **Component render errors** - React component failures and crashes
 
-### Using the test runner scripts:
+## 📱 Multi-Resolution Testing
+- **Desktop** (1920x1080) - Full desktop experience
+- **Tablet Portrait** (768x1024) - iPad-style layout
+- **Tablet Landscape** (1024x768) - Landscape tablet usage
+- **Mobile Portrait** (375x667) - iPhone 8 dimensions
+- **Mobile Landscape** (667x375) - Phone landscape mode
+- **Modern Mobile** (iPhone 12) - Current mobile standards
+
+## Running Comprehensive Tests
+
+### Quick Start Commands
 ```bash
-# Run unit tests
-./run-tests.sh unit
-# or
-node run-tests.js unit
+# Run all critical tests (fastest - ~5 minutes)
+npx tsx tests/e2e/run-comprehensive-tests.ts --critical
 
-# Open test UI
-./run-tests.sh ui
-# or
-node run-tests.js ui
+# Run all tests with UI visible (development)
+npx tsx tests/e2e/run-comprehensive-tests.ts --headed
 
-# Run with coverage
-./run-tests.sh coverage
-# or
-node run-tests.js coverage
-
-# Run E2E tests
-./run-tests.sh e2e
-# or
-node run-tests.js e2e
-
-# Run all tests
-./run-tests.sh all
-# or
-node run-tests.js all
+# Run specific test suite
+npx playwright test smoke-tests.spec.ts
+npx playwright test wizard-flow-tests.spec.ts
+npx playwright test wysiwyg-editor-tests.spec.ts
 ```
 
-### Using npx directly:
+### Comprehensive Test Runner
 ```bash
-# Unit tests
+# Use the comprehensive test runner
+npx tsx tests/e2e/run-comprehensive-tests.ts
+
+# Options:
+--critical      # Only critical tests (~5 minutes)
+--high         # Critical + high priority tests (~10 minutes)  
+--headed       # Show browser UI during tests
+--suite <name> # Run specific suite
+--project <browser> # Run on specific browser
+```
+
+### Browser-Specific Testing
+```bash
+# Test specific browsers/devices
+npx playwright test --project=desktop-chromium
+npx playwright test --project=mobile-portrait
+npx playwright test --project=tablet-landscape
+```
+
+### Legacy Test Commands
+```bash
+# Legacy unit tests
 npx vitest run
 
-# Test UI
+# Legacy test UI
 npx vitest --ui
 
-# Coverage
+# Legacy coverage
 npx vitest run --coverage
-
-# E2E tests  
-npx playwright test
-
-# Specific test file
-npx vitest run tests/unit/pygame-components.test.ts
 ```
 
 ## Test Categories
