@@ -21,12 +21,36 @@ export interface WizardNode {
     trueNext?: string;
     falseNext?: string;
   };
+  showLivePreview?: LivePreviewConfig;
+}
+
+// Live preview configuration
+export interface LivePreviewConfig {
+  enabled: boolean;
+  previewType: 'character' | 'enemy' | 'collectible' | 'mechanic' | 'rule' | 'comparison';
+  choices?: GameChoice[];
+  alternativeChoice?: GameChoice;
+  pixelComments?: string[];
+  autoPlay?: boolean;
+}
+
+export interface GameChoice {
+  type: 'character' | 'enemy' | 'collectible' | 'background' | 'rule' | 'mechanic';
+  id: string;
+  name: string;
+  properties?: Record<string, any>;
+  sprite?: string;
+  behavior?: string;
+  code?: string;
 }
 
 // Wizard option
 export interface WizardOption {
   text: string;
   next: string;
+  setVariable?: Record<string, any>;
+  updatePreview?: GameChoice;
+  previewComment?: string;
 }
 
 // Session Actions for tracking user progress
@@ -37,6 +61,12 @@ export interface SessionActions {
   currentProject: string | null;
   completedSteps: string[];
   unlockedEditor: boolean;
+  livePreviewChoices?: GameChoice[];
+  previewHistory?: Array<{
+    nodeId: string;
+    choice: GameChoice;
+    timestamp: Date;
+  }>;
 }
 
 // Session action for PixelMenu
@@ -84,6 +114,8 @@ export interface UIState {
   assetBrowserOpen?: boolean;
   assetBrowserType?: 'sprite' | 'sound' | 'music' | 'background' | 'all';
   selectedGameType?: string;
+  showLivePreview?: boolean;
+  livePreviewLoading?: boolean;
 }
 
 // Edge swipe handler options
