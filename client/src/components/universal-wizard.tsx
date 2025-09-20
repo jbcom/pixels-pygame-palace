@@ -22,11 +22,16 @@ import { GameAsset } from '@/lib/asset-library/asset-types';
 import { assetManager } from '@/lib/asset-library/asset-manager';
 import { ICON_SIZES, STYLES } from './wizard-constants';
 
+interface ExtendedWizardProps extends UniversalWizardProps {
+  flowType?: 'default' | 'game-dev';
+}
+
 export default function UniversalWizard({ 
   className = '', 
   assetMode = 'curated',
-  editorLocked = true 
-}: UniversalWizardProps) {
+  editorLocked = true,
+  flowType = 'default' 
+}: ExtendedWizardProps) {
   // Core dialogue state management using custom hook
   const {
     wizardData,
@@ -37,7 +42,7 @@ export default function UniversalWizard({
     handleOptionSelect,
     advance,
     setSessionActions
-  } = useWizardDialogue();
+  } = useWizardDialogue({ flowType });
 
   // Device state management
   const [deviceState, setDeviceState] = useState<DeviceState>(detectDevice());
