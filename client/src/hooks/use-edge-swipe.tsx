@@ -21,6 +21,9 @@ export function useEdgeSwipe({
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     
+    // Debug logging
+    console.log('Edge swipe check:', { direction, startX, startY, screenWidth, screenHeight, edgeThreshold });
+    
     // Check which edge the swipe started from
     switch (direction) {
       case 'down':
@@ -38,6 +41,7 @@ export function useEdgeSwipe({
       case 'right':
         // Swipe right from left edge
         if (startX < edgeThreshold) {
+          console.log('Left edge swipe detected!');
           onEdgeSwipe('left');
         }
         break;
@@ -70,7 +74,7 @@ export function useEdgeSwipe({
       isSwipingRef.current = false;
     },
     preventScrollOnSwipe: false,
-    trackMouse: false,
+    trackMouse: true, // Enable for testing
     trackTouch: true,
     delta: 10, // Min distance to be considered a swipe
     swipeDuration: 500, // Max time for swipe

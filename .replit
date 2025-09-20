@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["freetype", "git-lfs", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "unzip", "wget", "zlib", "vim-full", "python311Packages.pygame-ce"]
+packages = ["freetype", "git-lfs", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "unzip", "wget", "zlib", "vim-full", "python311Packages.pygame-ce", "python311Packages.selenium", "python311Packages.selenium-wire", "selenium-manager", "selenium-server-standalone", "chromium"]
 
 [deployment]
 deploymentTarget = "autoscale"

@@ -89,8 +89,8 @@ export default function UniversalWizard({
   });
 
   // Mobile detection
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [screenHeight, setScreenHeight] = useState(window.innerHeight);
 
@@ -109,9 +109,10 @@ export default function UniversalWizard({
     fetch('/wizard-flow.json')
       .then(res => res.json())
       .then(data => {
-        setWizardData(data);
-        if (data.start) {
-          setCurrentNode(data.start);
+        const nodes = data.nodes || data; // Support both nested and flat structure
+        setWizardData(nodes);
+        if (nodes.start) {
+          setCurrentNode(nodes.start);
         }
         setIsLoading(false);
       })
@@ -139,9 +140,11 @@ export default function UniversalWizard({
     const checkDevice = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      // Only phones need special layout (< 600px width)
-      const isPhone = width < 600;
+      // Only phones need special layout (< 768px width, consistent with getLayoutMode)
+      const isPhone = width < 768;
       const landscape = width > height;
+      
+      console.log('Device detection:', { width, height, isPhone, landscape });
       
       setScreenWidth(width);
       setScreenHeight(height);
@@ -229,15 +232,18 @@ export default function UniversalWizard({
 
   // Determine layout mode - simplified
   const getLayoutMode = () => {
-    if (!isMobile) return 'desktop'; // Tablets and up use desktop
+    // Only phones get special mobile layouts, tablets use desktop
+    const isActualPhone = isMobile; // Already checking < 768px in checkDevice
+    console.log('Layout mode check:', { isMobile, isActualPhone, isLandscape, screenWidth });
+    if (!isActualPhone) return 'desktop'; // Tablets and up use desktop
     if (isLandscape) return 'phone-landscape';
     return 'phone-portrait';
   };
 
   // Edge swipe handlers
   const edgeSwipeHandlers = useEdgeSwipe({
-    onEdgeSwipe: () => {
-      console.log('Edge swipe detected');
+    onEdgeSwipe: (edge) => {
+      console.log('Edge swipe detected on:', edge);
       setPixelMenuOpen(true);
     },
     edgeThreshold: 30,
@@ -615,6 +621,7 @@ export default function UniversalWizard({
 
   // Determine which layout to use
   const layoutMode = getLayoutMode();
+  console.log('Using layout mode:', layoutMode);
 
   // Render phone layouts if on phone device
   if (layoutMode === 'phone-portrait') {
@@ -703,10 +710,10 @@ export default function UniversalWizard({
         sessionActions={[]}
       />
 
-      {/* Menu button for tablets (no header) */}
+      {/* Menu button for tablets only (no phones, they use edge swipe) */}
       <Button
         onClick={() => setPixelMenuOpen(true)}
-        className="lg:hidden fixed top-4 right-4 z-50 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
+        className="lg:hidden min-[768px]:block hidden fixed top-4 right-4 z-50 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
         variant="outline"
         size="icon"
         data-testid="open-pixel-menu-button"
