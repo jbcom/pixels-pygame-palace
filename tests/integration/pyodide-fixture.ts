@@ -424,7 +424,7 @@ function parsePythonCodeAndReturnMock(code: string): any {
   
   // Handle rapid repeated executions
   if (code.includes('for i in range(100)') || code.includes('rapid_results')) {
-    const results = [];
+    const results: any[] = [];
     for (let i = 0; i < 100; i++) {
       results.push({ iteration: i, squared: i * i });
     }
