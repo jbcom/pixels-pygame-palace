@@ -12,6 +12,7 @@ import LessonPage from "@/pages/lesson";
 import PixelPresence from "@/components/pixel-presence";
 import UniversalWizard from "@/components/universal-wizard";
 import AssetLibraryTest from "@/pages/AssetLibraryTest";
+import PygamePreviewTest from "@/pages/pygame-preview-test";
 
 function Router() {
   return (
@@ -39,6 +40,11 @@ function Router() {
       <Route path="/asset-test" component={() => (
         <PageErrorBoundary context="Asset Library Test">
           <AssetLibraryTest />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/pygame-preview-test" component={() => (
+        <PageErrorBoundary context="Pygame Preview Test">
+          <PygamePreviewTest />
         </PageErrorBoundary>
       )} />
       <Route component={() => (

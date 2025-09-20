@@ -240,6 +240,198 @@ export function setCanvasContext(ctx: CanvasRenderingContext2D | null) {
   }
 }
 
+// Reset pygame state
+export function resetPygameState() {
+  frameBuffer = [];
+  isRenderingActive = false;
+  currentFPS = 60;
+  lastFrameTime = 0;
+}
+
+// Create complete pygame environment for Pyodide
+export function createPygameEnvironment() {
+  const pygame = {
+    init: () => console.log('🎮 Pygame initialized'),
+    quit: () => {
+      console.log('🎮 Pygame quit');
+      resetPygameState();
+    },
+    display: {
+      set_mode: (size: [number, number]) => {
+        console.log(`🖼️ Display mode set: ${size[0]}x${size[1]}`);
+        return new RenderingSurface(size[0], size[1], true);
+      },
+      flip: () => {
+        flushFrameBuffer();
+        frameBuffer = [];
+      },
+      update: () => {
+        flushFrameBuffer();
+        frameBuffer = [];
+      },
+      set_caption: (title: string) => console.log(`🏷️ Window caption: ${title}`)
+    },
+    draw: {
+      circle: (surface: RenderingSurface, color: [number, number, number], center: [number, number], radius: number) => {
+        if (surface.isMainSurface && canvasContext) {
+          const rgbColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          frameBuffer.push({ type: 'circle', args: [rgbColor, center[0], center[1], radius] });
+        }
+        return null;
+      },
+      rect: (surface: RenderingSurface, color: [number, number, number], rect: [number, number, number, number] | PygameRect) => {
+        if (surface.isMainSurface && canvasContext) {
+          const rgbColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          if (Array.isArray(rect)) {
+            frameBuffer.push({ type: 'rect', args: [rgbColor, rect[0], rect[1], rect[2], rect[3]] });
+          } else {
+            frameBuffer.push({ type: 'rect', args: [rgbColor, rect.x, rect.y, rect.width, rect.height] });
+          }
+        }
+        return null;
+      },
+      line: (surface: RenderingSurface, color: [number, number, number], start: [number, number], end: [number, number], width: number = 1) => {
+        if (surface.isMainSurface && canvasContext) {
+          const rgbColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          frameBuffer.push({ type: 'line', args: [rgbColor, start[0], start[1], end[0], end[1], width] });
+        }
+        return null;
+      },
+      polygon: (surface: RenderingSurface, color: [number, number, number], points: [number, number][]) => {
+        if (surface.isMainSurface && canvasContext) {
+          const rgbColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          frameBuffer.push({ type: 'polygon' as any, args: [rgbColor, points] });
+        }
+        return null;
+      },
+      ellipse: (surface: RenderingSurface, color: [number, number, number], rect: [number, number, number, number]) => {
+        if (surface.isMainSurface && canvasContext) {
+          const rgbColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          frameBuffer.push({ type: 'ellipse' as any, args: [rgbColor, rect[0], rect[1], rect[2], rect[3]] });
+        }
+        return null;
+      }
+    },
+    font: {
+      Font: PygameFont,
+      SysFont: (name: string | null, size: number) => new PygameFont(name, size)
+    },
+    time: {
+      Clock: PygameClock,
+      get_ticks: () => performance.now()
+    },
+    mixer: {
+      init: () => console.log('🔊 Mixer initialized'),
+      quit: () => console.log('🔇 Mixer quit'),
+      Sound: PygameSound,
+      music: {
+        load: (file: string) => console.log(`🎵 Loading music: ${file}`),
+        play: (loops: number = -1) => console.log('🎵 Playing music'),
+        stop: () => console.log('🎵 Music stopped'),
+        set_volume: (vol: number) => console.log(`🎵 Music volume: ${vol}`)
+      }
+    },
+    event: {
+      get: () => [],
+      poll: () => null,
+      Event: (type: number, dict: any = {}) => ({ type, ...dict })
+    },
+    key: {
+      get_pressed: () => new Array(512).fill(false),
+      name: (key: number) => `Key${key}`
+    },
+    mouse: {
+      get_pos: () => [0, 0],
+      get_pressed: () => [false, false, false],
+      set_cursor: (size: [number, number], hotspot: [number, number], xormasks: any, andmasks: any) => null
+    },
+    Surface: RenderingSurface,
+    Rect: PygameRect,
+    Color: (r: number, g: number = 0, b: number = 0, a: number = 255) => [r, g, b, a],
+    image: {
+      load: (filename: string) => {
+        console.log(`📷 Loading image: ${filename}`);
+        return new RenderingSurface(100, 100);
+      },
+      save: (surface: RenderingSurface, filename: string) => {
+        console.log(`💾 Saving image: ${filename}`);
+      }
+    },
+    transform: {
+      scale: (surface: RenderingSurface, size: [number, number]) => {
+        return new RenderingSurface(size[0], size[1]);
+      },
+      rotate: (surface: RenderingSurface, angle: number) => surface,
+      flip: (surface: RenderingSurface, xbool: boolean, ybool: boolean) => surface
+    },
+    sprite: {
+      Sprite: class {
+        image: RenderingSurface | null = null;
+        rect: PygameRect | null = null;
+        update() {}
+        kill() {}
+      },
+      Group: class {
+        sprites: any[] = [];
+        add(sprite: any) { this.sprites.push(sprite); }
+        remove(sprite: any) { 
+          const idx = this.sprites.indexOf(sprite);
+          if (idx > -1) this.sprites.splice(idx, 1);
+        }
+        empty() { this.sprites = []; }
+        update() { this.sprites.forEach(s => s.update()); }
+        draw(surface: RenderingSurface) {
+          this.sprites.forEach(s => {
+            if (s.image && s.rect) {
+              surface.blit(s.image, [s.rect.x, s.rect.y]);
+            }
+          });
+        }
+      }
+    },
+    locals: {
+      QUIT: 12,
+      KEYDOWN: 2,
+      KEYUP: 3,
+      MOUSEBUTTONDOWN: 5,
+      MOUSEBUTTONUP: 6,
+      MOUSEMOTION: 4,
+      K_LEFT: 276,
+      K_RIGHT: 275,
+      K_UP: 273,
+      K_DOWN: 274,
+      K_SPACE: 32,
+      K_RETURN: 13,
+      K_ESCAPE: 27,
+      K_a: 97,
+      K_d: 100,
+      K_w: 119,
+      K_s: 115,
+      K_x: 120,
+      K_LSHIFT: 304,
+      K_RSHIFT: 303
+    },
+    math: Math,
+    random: {
+      randint: (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min,
+      random: () => Math.random(),
+      choice: (arr: any[]) => arr[Math.floor(Math.random() * arr.length)],
+      shuffle: (arr: any[]) => {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+    }
+  };
+  
+  // Add pygame.locals shortcuts
+  Object.assign(pygame, pygame.locals);
+  
+  return pygame;
+}
+
 export function flushFrameBuffer() {
   if (!canvasContext || frameBuffer.length === 0) {
     return;
@@ -281,6 +473,34 @@ export function flushFrameBuffer() {
           canvasContext.moveTo(startX, startY);
           canvasContext.lineTo(endX, endY);
           canvasContext.stroke();
+          break;
+          
+        case 'polygon' as any:
+          const [polyColor, points] = command.args;
+          if (points && points.length > 0) {
+            canvasContext.fillStyle = polyColor;
+            canvasContext.beginPath();
+            canvasContext.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) {
+              canvasContext.lineTo(points[i][0], points[i][1]);
+            }
+            canvasContext.closePath();
+            canvasContext.fill();
+          }
+          break;
+          
+        case 'ellipse' as any:
+          const [ellipseColor, ellipseX, ellipseY, ellipseWidth, ellipseHeight] = command.args;
+          canvasContext.fillStyle = ellipseColor;
+          canvasContext.beginPath();
+          canvasContext.ellipse(
+            ellipseX + ellipseWidth / 2,
+            ellipseY + ellipseHeight / 2,
+            ellipseWidth / 2,
+            ellipseHeight / 2,
+            0, 0, 2 * Math.PI
+          );
+          canvasContext.fill();
           break;
           
         case 'text':

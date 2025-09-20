@@ -1,0 +1,475 @@
+{
+  "start": {
+    "id": "start",
+    "text": "Hey there, future game developer! I'm Pixel, and I'm super excited to help you create your very own game! 🎮",
+    "multiStep": [
+      "We're going to build something amazing together!",
+      "As we make choices, you'll see your game come to life in real-time on the preview!",
+      "Ready to start creating? Let's go!"
+    ],
+    "options": [
+      {
+        "text": "Let's create a game!",
+        "next": "choose-character",
+        "previewComment": "Here we go! Watch the preview come to life!"
+      },
+      {
+        "text": "Tell me more about game making",
+        "next": "about-games"
+      }
+    ]
+  },
+  
+  "about-games": {
+    "id": "about-games",
+    "text": "Game development is like digital storytelling with interaction!",
+    "multiStep": [
+      "You get to create worlds, characters, and rules that players follow.",
+      "The best part? You can see your ideas come to life instantly!",
+      "Let's start building your first game!"
+    ],
+    "options": [
+      {
+        "text": "I'm ready to create!",
+        "next": "choose-character"
+      }
+    ]
+  },
+  
+  "choose-character": {
+    "id": "choose-character",
+    "text": "First, let's choose your main character! Who will be the hero of your game?",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "character",
+      "pixelComments": ["Choose a character and watch them appear!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "🤖 Robot - Strong and techy!",
+        "next": "choose-enemy",
+        "updatePreview": {
+          "type": "character",
+          "id": "robot",
+          "name": "Robot Hero",
+          "properties": {
+            "speed": 5,
+            "jumpHeight": 12,
+            "color": [150, 150, 200]
+          }
+        },
+        "previewComment": "Cool robot! Look at those metallic colors!"
+      },
+      {
+        "text": "🥷 Ninja - Fast and stealthy!",
+        "next": "choose-enemy",
+        "updatePreview": {
+          "type": "character",
+          "id": "ninja",
+          "name": "Ninja Master",
+          "properties": {
+            "speed": 8,
+            "jumpHeight": 15,
+            "color": [50, 50, 50]
+          }
+        },
+        "previewComment": "Awesome ninja! So fast and agile!"
+      },
+      {
+        "text": "🧙 Wizard - Magical powers!",
+        "next": "choose-enemy",
+        "updatePreview": {
+          "type": "character",
+          "id": "wizard",
+          "name": "Wizard",
+          "properties": {
+            "speed": 4,
+            "jumpHeight": 10,
+            "color": [100, 50, 200]
+          }
+        },
+        "previewComment": "Magical wizard! Love that purple hat!"
+      }
+    ]
+  },
+  
+  "choose-enemy": {
+    "id": "choose-enemy",
+    "text": "Every hero needs a challenge! What kind of enemies should your character face?",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "enemy",
+      "pixelComments": ["Watch how different enemies behave!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "👾 Patrolling guards - They walk back and forth",
+        "next": "choose-collectible",
+        "updatePreview": {
+          "type": "enemy",
+          "id": "guard",
+          "name": "Patrol Guard",
+          "behavior": "patrol",
+          "properties": {
+            "speed": 3,
+            "patrolDistance": 100
+          }
+        },
+        "previewComment": "See them patrol? They guard their area!"
+      },
+      {
+        "text": "👺 Chasing monsters - They follow you!",
+        "next": "choose-collectible",
+        "updatePreview": {
+          "type": "enemy",
+          "id": "chaser",
+          "name": "Chaser",
+          "behavior": "chase",
+          "properties": {
+            "speed": 2,
+            "detectionRange": 150
+          }
+        },
+        "previewComment": "Watch out! They're coming for you!"
+      },
+      {
+        "text": "🦘 Jumping creatures - They hop around",
+        "next": "choose-collectible",
+        "updatePreview": {
+          "type": "enemy",
+          "id": "jumper",
+          "name": "Jumper",
+          "behavior": "jumper",
+          "properties": {
+            "jumpHeight": 20,
+            "jumpInterval": 2
+          }
+        },
+        "previewComment": "Boing! Look at them jump!"
+      }
+    ]
+  },
+  
+  "choose-collectible": {
+    "id": "choose-collectible",
+    "text": "What treasures should players collect in your game?",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "collectible",
+      "pixelComments": ["Shiny treasures! Click to collect them!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "🪙 Gold coins - Classic and valuable!",
+        "next": "choose-background",
+        "updatePreview": {
+          "type": "collectible",
+          "id": "coin",
+          "name": "Gold Coin",
+          "properties": {
+            "value": 10,
+            "floatAnimation": true
+          }
+        },
+        "previewComment": "Golden coins! They're floating beautifully!"
+      },
+      {
+        "text": "💎 Magic gems - Rare and powerful!",
+        "next": "choose-background",
+        "updatePreview": {
+          "type": "collectible",
+          "id": "gem",
+          "name": "Magic Gem",
+          "properties": {
+            "value": 25,
+            "sparkleEffect": true
+          }
+        },
+        "previewComment": "Sparkly gems! So valuable!"
+      },
+      {
+        "text": "⭐ Stars - Bright and special!",
+        "next": "choose-background",
+        "updatePreview": {
+          "type": "collectible",
+          "id": "star",
+          "name": "Power Star",
+          "properties": {
+            "value": 50,
+            "rotateAnimation": true
+          }
+        },
+        "previewComment": "Twinkly stars! They're worth a lot!"
+      }
+    ]
+  },
+  
+  "choose-background": {
+    "id": "choose-background",
+    "text": "Where does your adventure take place?",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "background",
+      "pixelComments": ["The perfect setting for your game!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "☁️ Sky kingdom - Among the clouds!",
+        "next": "choose-mechanic",
+        "updatePreview": {
+          "type": "background",
+          "id": "sky",
+          "name": "Sky Kingdom",
+          "properties": {
+            "clouds": true,
+            "color": [135, 206, 235]
+          }
+        },
+        "previewComment": "Beautiful sky! Look at those fluffy clouds!"
+      },
+      {
+        "text": "🌌 Outer space - Among the stars!",
+        "next": "choose-mechanic",
+        "updatePreview": {
+          "type": "background",
+          "id": "space",
+          "name": "Space",
+          "properties": {
+            "stars": true,
+            "color": [10, 10, 30]
+          }
+        },
+        "previewComment": "Wow, space! See all those stars?"
+      },
+      {
+        "text": "🗿 Mysterious cave - Dark and mysterious!",
+        "next": "choose-mechanic",
+        "updatePreview": {
+          "type": "background",
+          "id": "cave",
+          "name": "Cave",
+          "properties": {
+            "stalactites": true,
+            "color": [50, 50, 60]
+          }
+        },
+        "previewComment": "Spooky cave! Watch for stalactites!"
+      }
+    ]
+  },
+  
+  "choose-mechanic": {
+    "id": "choose-mechanic",
+    "text": "Let's add a special power to make your game unique!",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "mechanic",
+      "pixelComments": ["Try out your new power!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "🦘 Double jump - Jump in mid-air!",
+        "next": "choose-rule",
+        "updatePreview": {
+          "type": "mechanic",
+          "id": "double_jump",
+          "name": "Double Jump",
+          "properties": {
+            "enabled": true
+          }
+        },
+        "previewComment": "Press jump twice! You can reach higher places!"
+      },
+      {
+        "text": "💨 Dash ability - Super speed burst!",
+        "next": "choose-rule",
+        "updatePreview": {
+          "type": "mechanic",
+          "id": "dash",
+          "name": "Dash",
+          "properties": {
+            "dashSpeed": 15,
+            "cooldown": 1
+          }
+        },
+        "previewComment": "Hold shift and direction to dash! Zoom!"
+      },
+      {
+        "text": "🔫 Shooting power - Defeat enemies from afar!",
+        "next": "choose-rule",
+        "updatePreview": {
+          "type": "mechanic",
+          "id": "shoot",
+          "name": "Projectiles",
+          "properties": {
+            "projectileSpeed": 10,
+            "damage": 1
+          }
+        },
+        "previewComment": "Press X to shoot! Take down those enemies!"
+      }
+    ]
+  },
+  
+  "choose-rule": {
+    "id": "choose-rule",
+    "text": "What's the main goal of your game?",
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "rule",
+      "pixelComments": ["Your game objective is set!"],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "⏱️ Beat the clock - Race against time!",
+        "next": "game-complete",
+        "updatePreview": {
+          "type": "rule",
+          "id": "time_limit",
+          "name": "Time Challenge",
+          "properties": {
+            "timeLimit": 60
+          }
+        },
+        "previewComment": "60 seconds to win! Can you do it?"
+      },
+      {
+        "text": "🏆 Score target - Reach the high score!",
+        "next": "game-complete",
+        "updatePreview": {
+          "type": "rule",
+          "id": "score_target",
+          "name": "Score Challenge",
+          "properties": {
+            "targetScore": 100
+          }
+        },
+        "previewComment": "Get 100 points to win! Collect everything!"
+      },
+      {
+        "text": "💪 Survival mode - Last as long as you can!",
+        "next": "game-complete",
+        "updatePreview": {
+          "type": "rule",
+          "id": "survival",
+          "name": "Survival",
+          "properties": {
+            "infiniteEnemies": true
+          }
+        },
+        "previewComment": "How long can you survive? Enemies keep coming!"
+      }
+    ]
+  },
+  
+  "game-complete": {
+    "id": "game-complete",
+    "text": "🎉 Amazing! You've created your very own game!",
+    "multiStep": [
+      "Look at what you've built - it's completely unique!",
+      "You can play with the controls to adjust speed, jump height, and more!",
+      "Try clicking on the preview to interact with your game!",
+      "Want to make changes? You can always go back and try different choices!"
+    ],
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "comparison",
+      "pixelComments": [
+        "Your game is complete! Play with it!",
+        "Try the parameter sliders!",
+        "Click to interact with objects!"
+      ],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "🎮 Play my game!",
+        "next": "play-mode",
+        "previewComment": "Let's play! Use arrow keys to move, space to jump!"
+      },
+      {
+        "text": "✏️ Make changes",
+        "next": "choose-character",
+        "previewComment": "Let's try different choices!"
+      },
+      {
+        "text": "🚀 Export my game",
+        "next": "export-game",
+        "previewComment": "Ready to share your creation!"
+      }
+    ]
+  },
+  
+  "play-mode": {
+    "id": "play-mode",
+    "text": "Time to play your creation! Use the controls below:",
+    "multiStep": [
+      "← → Arrow keys to move",
+      "SPACE to jump (or double jump!)",
+      "X to use special ability (if you added shooting)",
+      "Try to collect all the items and avoid enemies!"
+    ],
+    "showLivePreview": {
+      "enabled": true,
+      "previewType": "comparison",
+      "pixelComments": [
+        "You're doing great!",
+        "Nice moves!",
+        "Keep going!"
+      ],
+      "autoPlay": true
+    },
+    "options": [
+      {
+        "text": "Back to editing",
+        "next": "game-complete"
+      }
+    ]
+  },
+  
+  "export-game": {
+    "id": "export-game",
+    "text": "Your game is ready to share with the world!",
+    "multiStep": [
+      "You can download the Python code for your game",
+      "Share it with friends and family",
+      "Or keep working on it to make it even better!"
+    ],
+    "options": [
+      {
+        "text": "Download game code",
+        "next": "download-complete"
+      },
+      {
+        "text": "Keep editing",
+        "next": "game-complete"
+      }
+    ]
+  },
+  
+  "download-complete": {
+    "id": "download-complete",
+    "text": "Your game has been downloaded! 🎊",
+    "multiStep": [
+      "You now have the Python/Pygame code for your game",
+      "You can run it on any computer with Python installed",
+      "Keep learning and creating more games!"
+    ],
+    "options": [
+      {
+        "text": "Create another game",
+        "next": "start"
+      },
+      {
+        "text": "Back to my game",
+        "next": "game-complete"
+      }
+    ]
+  }
+}
