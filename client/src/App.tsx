@@ -18,6 +18,7 @@ import ProjectViewer from "@/pages/project-viewer";
 import SplashScreen from "@/components/splash-screen";
 import PixelPresence from "@/components/pixel-presence";
 import ComponentTestPage from "@/pages/component-test";
+import WizardBuilder from "@/pages/wizard-builder";
 
 function Router() {
   return (
@@ -55,6 +56,11 @@ function Router() {
       <Route path="/component-test" component={() => (
         <PageErrorBoundary context="Component Test">
           <ComponentTestPage />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/wizard/:gameType" component={() => (
+        <PageErrorBoundary context="Wizard Builder">
+          <WizardBuilder />
         </PageErrorBoundary>
       )} />
       <Route component={() => (
