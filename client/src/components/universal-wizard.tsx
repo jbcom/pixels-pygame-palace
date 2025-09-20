@@ -110,13 +110,17 @@ export default function UniversalWizard({
   const { deviceType, isFoldable, isTablet, isDesktop } = useDeviceType();
 
   // Edge swipe detection
-  useEdgeSwipe({
+  const edgeSwipeHandlers = useEdgeSwipe({
     onEdgeSwipe: (edge) => {
       console.log(`Edge swipe detected from ${edge}`);
       setPixelMenuOpen(true);
+      // Add haptic feedback if available
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
     },
     enabled: isMobile || isTablet || isFoldable,
-    edgeThreshold: 50
+    edgeThreshold: 30 // More sensitive for mobile
   });
 
   // Icon mapping for game types
@@ -516,14 +520,18 @@ export default function UniversalWizard({
     const hasMoreChoices = currentNode.options && currentNode.options.length > 2;
 
     return (
-      <div className="h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+      <div {...edgeSwipeHandlers.handlers} className="h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
         {/* Menu Button - Top Right Corner */}
         <Button
-          onClick={() => setPixelMenuOpen(true)}
-          className="absolute top-4 right-4 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg"
+          onClick={() => {
+            console.log('Portrait menu button clicked');
+            setPixelMenuOpen(true);
+          }}
+          className="fixed top-4 right-4 z-40 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
           variant="outline"
           size="icon"
           data-testid="open-pixel-menu-button"
+          aria-label="Open Pixel Menu"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -679,14 +687,18 @@ export default function UniversalWizard({
     const hasCarousel = currentNode.options && currentNode.options.length > 2;
 
     return (
-      <div className="h-screen grid grid-cols-2 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
+      <div {...edgeSwipeHandlers.handlers} className="h-screen grid grid-cols-2 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
         {/* Menu Button - Top Right Corner */}
         <Button
-          onClick={() => setPixelMenuOpen(true)}
-          className="absolute top-4 right-4 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg"
+          onClick={() => {
+            console.log('Landscape menu button clicked');
+            setPixelMenuOpen(true);
+          }}
+          className="fixed top-4 right-4 z-40 rounded-full bg-white/90 dark:bg-gray-900/90 shadow-lg hover:shadow-xl transition-shadow"
           variant="outline"
           size="icon"
           data-testid="open-pixel-menu-button"
+          aria-label="Open Pixel Menu"
         >
           <Menu className="h-5 w-5" />
         </Button>
