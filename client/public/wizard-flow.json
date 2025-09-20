@@ -3,8 +3,7 @@
     "start": {
       "id": "start",
       "speaker": "Pixel",
-      "text": "Hey there! Welcome to Pixel's PyGame Palace! I'm Pixel, your game-making buddy! 🎮",
-      "followUp": "So... what brings you to my coding workshop today?",
+      "text": "Hey there! I'm Pixel, your game-making buddy! Ready to cook up something awesome? 🎮",
       "options": [
         {
           "text": "Let's build a game! 🎮",
@@ -16,61 +15,23 @@
         }
       ]
     },
-    "experienceCheck": {
-      "id": "experienceCheck",
+    "guidedExperience": {
+      "id": "guidedExperience",
       "speaker": "Pixel",
-      "text": "Oh awesome! A fellow game developer! 🎮✨",
-      "followUp": "Tell me a bit more - what's your experience like?",
+      "text": "Not for long! Check out the WYSIWYG editor - it's like building with digital LEGOs! You drag stuff, I write the code. Magic!",
       "options": [
         {
-          "text": "I'm experienced, unlock everything!",
-          "next": "unlockEditor",
-          "setVariable": { "experience": "advanced" }
+          "text": "Whoa, show me this magic!",
+          "next": "guidedTour"
         },
         {
-          "text": "Guide me through it",
-          "next": "gamePath",
-          "setVariable": { "experience": "beginner" }
-        }
-      ]
-    },
-    "hybridMode": {
-      "id": "hybridMode",
-      "speaker": "Pixel",
-      "text": "Perfect! You know games but PyGame is new territory. That's actually a great combo!",
-      "followUp": "So how do you usually like to learn new tools?",
-      "options": [
-        {
-          "text": "Just let me dive in and figure it out!",
-          "next": "unlockEditor"
-        },
-        {
-          "text": "Walk me through the PyGame-specific stuff, I'll handle the rest",
-          "next": "gamePath"
-        }
-      ]
-    },
-    "unlockEditor": {
-      "id": "unlockEditor",
-      "speaker": "Pixel",
-      "text": "🎉 Boom! You've got full access to the WYSIWYG Editor now! This is where things get really fun!",
-      "followUp": "It's basically like having creative mode in Minecraft - drag, drop, tweak, and watch your game come to life!",
-      "followUpDelay": 2000,
-      "additionalText": "Quick rundown: drag stuff from the left, drop it on your canvas, tweak settings on the right. The Python code writes itself while you build. Pretty neat, right?",
-      "action": "openWYSIWYGEditor",
-      "options": [
-        {
-          "text": "Let me at it!",
+          "text": "I'm ready, let me at it!",
           "action": "openWYSIWYGEditor"
-        },
-        {
-          "text": "Wait, show me the ropes first?",
-          "next": "editorTutorial"
         }
       ]
     },
-    "editorTutorial": {
-      "id": "editorTutorial",
+    "guidedTour": {
+      "id": "guidedTour",
       "speaker": "Pixel",
       "text": "Smart move! Let me give you the quick tour - it'll save you time, trust me!",
       "followUp": "Think of it like this: left side is your toy box, middle is your playground, right side is where you tweak stuff.",
@@ -131,39 +92,141 @@
         },
         {
           "text": "Walk me through it - I learn best with guidance",
-          "next": "wizardMode"
+          "next": "guidedStart"
         }
       ]
     },
-    "wizardMode": {
-      "id": "wizardMode",
+    "guidedStart": {
+      "id": "guidedStart",
+      "speaker": "Pixel",
+      "text": "Perfect! I'll guide you through building your complete game step by step. We'll create three essential parts: a title screen to welcome players, the main gameplay, and an ending screen. Ready?",
+      "followUp": "Let's start with your title screen - it's the first thing players see, so we'll make it pop!",
+      "next": "guidedTitleScreen"
+    },
+    "guidedTitleScreen": {
+      "id": "guidedTitleScreen",
       "speaker": "Pixel",
       "conditionalText": {
         "gameType": {
-          "platformer": "Jumping games! Love it! First thing - we need a hero who can bounce around. I've got some awesome robot sprites that would be perfect!",
-          "rpg": "Ooh, an RPG! You know what's cool? Starting with your hero's look and feel. Want to design your character first?",
-          "dungeon": "Dark and mysterious, I like your style! Let's set the mood - thinking torches, stone walls, maybe some skeletons?",
-          "racing": "VROOM VROOM! Okay, first big decision - are we talking cars, spaceships, or something totally wild?",
-          "puzzle": "Puzzles are my jam! Are you thinking match-3 style, or more like sliding blocks? We should start there!",
-          "adventure": "Story time! Every great adventure needs an opening that hooks players. Want to craft that first moment?",
-          "default": "Interesting! Let's start simple and build up from there. How about we get your main character sorted first?"
+          "platformer": "Here's an energetic title screen for your platformer! Big bouncy letters, your character doing a jump animation, and a pulsing 'Press Start' button. The background has floating platforms to hint at the gameplay!",
+          "rpg": "Behold! An epic fantasy title screen! Scrolling parchment texture, golden medieval font, your hero's silhouette against a dramatic sunset, and mystical particle effects. Very quest-worthy!",
+          "dungeon": "Dark and atmospheric! Stone wall texture, torches with flickering flame effects, the title etched in ancient stone, and a mysterious dungeon entrance looming in the background!",
+          "racing": "SPEED AND CHROME! Metallic letters with motion blur effects, checkered flag patterns, a sleek vehicle revving with exhaust particles, and speedometer graphics. Pure adrenaline!",
+          "puzzle": "Clean and clever! Geometric patterns animating in the background, crisp modern typography, puzzle pieces that slide together to form the title. Smart and inviting!",
+          "adventure": "Cinematic beauty! A sweeping landscape panorama, title that fades in with dramatic timing, subtle ambient particles floating by, and adventure gear scattered around the edges!",
+          "default": "A classic game title! Bold colorful letters with a subtle animation, inviting 'Start' button, and atmospheric background. Simple but effective!"
         }
       },
-      "conditionalAction": {
-        "gameType": {
-          "platformer": { "action": "showAssets", "params": { "type": "platformer", "scene": "title" } },
-          "rpg": { "action": "showAssets", "params": { "type": "rpg", "scene": "character" } },
-          "dungeon": { "action": "showAssets", "params": { "type": "dungeon", "scene": "entrance" } },
-          "racing": { "action": "showAssets", "params": { "type": "racing", "scene": "garage" } },
-          "puzzle": { "action": "showAssets", "params": { "type": "puzzle", "scene": "menu" } },
-          "adventure": { "action": "showAssets", "params": { "type": "adventure", "scene": "opening" } },
-          "default": { "action": "showAssets", "params": { "type": "generic", "scene": "menu" } }
-        }
-      },
+      "action": "showTitlePreset",
+      "additionalAction": "previewScene",
       "options": [
         {
-          "text": "Let's start building!",
-          "next": "assetSelected"
+          "text": "This looks perfect! Let's continue",
+          "action": "applyTitlePreset",
+          "next": "guidedGameplay"
+        },
+        {
+          "text": "Show me a different style",
+          "action": "cycleTitlePreset",
+          "next": "guidedTitleScreen"
+        }
+      ]
+    },
+    "guidedGameplay": {
+      "id": "guidedGameplay",
+      "speaker": "Pixel",
+      "text": "Excellent! Now for the heart of your game - the actual gameplay! I've prepared everything you need.",
+      "conditionalFollowUp": {
+        "gameType": {
+          "platformer": "Your hero can run with arrow keys, jump with spacebar, and collect shiny coins! I've added moving platforms, spiky obstacles to avoid, and power-ups that make you jump higher. Try it out!",
+          "rpg": "Your adventurer moves with WASD, interacts with E, and battles with the mouse! I've added a village to explore, friendly NPCs with quests, enemies to fight, and treasure chests to discover!",
+          "dungeon": "Navigate with arrow keys through procedurally generated rooms! I've added torch lighting that follows you, traps that activate when you're near, monsters lurking in shadows, and glittering treasure to collect!",
+          "racing": "Full throttle action! Up arrow accelerates, down brakes, left/right to steer! I've added a twisting track with corners, speed boosts on straightaways, a lap timer, and rival cars to race against!",
+          "puzzle": "Click and drag to interact! I've set up a satisfying match-3 grid where pieces fall naturally, combos trigger cascades, points rack up with multipliers, and special pieces clear whole rows!",
+          "adventure": "Point and click to explore! Your character pathfinds to clicked locations, examines objects for clues, collects items to your inventory, and solves environmental puzzles to progress!",
+          "default": "Basic but fun gameplay! Move your character, interact with the environment, collect items, and avoid obstacles. All the fundamentals are working!"
+        }
+      },
+      "action": "loadGameplayPreset",
+      "additionalAction": "launchPlaytest",
+      "options": [
+        {
+          "text": "This plays great! On to the ending",
+          "action": "saveGameplay",
+          "next": "guidedEndScreen"
+        },
+        {
+          "text": "Let me play around more",
+          "action": "extendPlaytest",
+          "next": "guidedGameplayTest"
+        }
+      ]
+    },
+    "guidedGameplayTest": {
+      "id": "guidedGameplayTest",
+      "speaker": "Pixel",
+      "text": "Take your time! Test out all the mechanics. When you're ready, we'll move on to creating your ending screen.",
+      "options": [
+        {
+          "text": "I'm satisfied! Let's continue",
+          "action": "saveGameplay",
+          "next": "guidedEndScreen"
+        },
+        {
+          "text": "Can I adjust the difficulty?",
+          "action": "tweakDifficulty",
+          "next": "guidedGameplayTest"
+        }
+      ]
+    },
+    "guidedEndScreen": {
+      "id": "guidedEndScreen",
+      "speaker": "Pixel",
+      "text": "Final piece - the ending! Every great game needs a satisfying conclusion, whether you win or lose.",
+      "conditionalFollowUp": {
+        "gameType": {
+          "platformer": "Victory celebration! Confetti rains down, your score displays with coin bonus, time taken shows for speedrunners, and a 'New Game+' option appears with harder levels!",
+          "rpg": "Quest complete! A grand scroll unfurls showing your journey stats - monsters slain, quests completed, gold earned, experience gained. Your hero stands triumphant!",
+          "dungeon": "Treasure chamber reached! Gold coins spill everywhere, rare artifacts you collected display prominently, dungeon completion percentage shows, and mysterious 'Deeper Dungeon?' option teases more!",
+          "racing": "Championship podium! You stand with a trophy as confetti flies, lap times display with records highlighted, rival positions show, and 'Next Circuit' unlocks!",
+          "puzzle": "Puzzle mastered! Fireworks explode in patterns, final score with combo multipliers tallied, brain rating calculated, and next puzzle set unlocks!",
+          "adventure": "Journey's end! Story epilogue plays out, showing consequences of your choices, items you collected displayed like trophies, and 'New Adventure' beckons!",
+          "default": "Game complete! Your final score in big numbers, achievements you unlocked listed, statistics tracked, and options to play again or return to menu!"
+        }
+      },
+      "action": "showEndingPreset",
+      "additionalAction": "previewEnding",
+      "options": [
+        {
+          "text": "Perfect ending! We're done!",
+          "action": "applyEndingPreset",
+          "next": "guidedComplete"
+        },
+        {
+          "text": "Try a different ending style",
+          "action": "cycleEndingPreset",
+          "next": "guidedEndScreen"
+        }
+      ]
+    },
+    "guidedComplete": {
+      "id": "guidedComplete",
+      "speaker": "Pixel",
+      "text": "🎉 CONGRATULATIONS! You've built a COMPLETE game! Title screen ✓ Gameplay ✓ Ending ✓ Everything connects perfectly!",
+      "followUp": "Want to see your masterpiece in action? I can show you the full experience from start to finish!",
+      "action": "assembleFullGame",
+      "options": [
+        {
+          "text": "Play my complete game!",
+          "action": "launchFullGame"
+        },
+        {
+          "text": "Show me the Python code behind it",
+          "action": "viewGeneratedCode"
+        },
+        {
+          "text": "Let me customize it more",
+          "action": "openEditor"
         }
       ]
     },
@@ -505,7 +568,7 @@
               "actionParams": { "lesson": 9 }
             },
             {
-              "text": "Start building with classes!",
+              "text": "Build an object-oriented game!",
               "next": "gamePath"
             },
             {
@@ -515,12 +578,12 @@
           ],
           "9": [
             {
-              "text": "Final Lesson - Build a Complete Game!",
+              "text": "Continue to Lesson 10 - Build a Game!",
               "action": "loadLesson",
               "actionParams": { "lesson": 10 }
             },
             {
-              "text": "Start my own PyGame project!",
+              "text": "Start making games NOW!",
               "next": "gamePath"
             },
             {
@@ -554,98 +617,6 @@
           ]
         }
       }
-    },
-    "assetSelected": {
-      "id": "assetSelected",
-      "speaker": "Pixel",
-      "text": "Nice pick! Okay, so we've got the basics... what feels most important to nail down next?",
-      "options": [
-        {
-          "text": "How the player moves around!",
-          "next": "playerControls"
-        },
-        {
-          "text": "Building the actual game world",
-          "next": "worldSetup"
-        },
-        {
-          "text": "Let's figure out how to win!",
-          "next": "gameRules"
-        }
-      ]
-    },
-    "playerControls": {
-      "id": "playerControls",
-      "speaker": "Pixel",
-      "conditionalText": {
-        "gameType": {
-          "platformer": "In platformers, movement is everything! Let's set up jumping and running mechanics!",
-          "rpg": "RPG controls are about exploration and interaction. Let's configure your character movement!",
-          "racing": "Racing is all about speed and precision! Let's tune your vehicle controls!",
-          "default": "Let's get your controls set up so you can interact with the game!"
-        }
-      },
-      "conditionalAction": {
-        "gameType": {
-          "platformer": { "action": "setupControls", "params": { "type": "platformer" } },
-          "rpg": { "action": "setupControls", "params": { "type": "rpg" } },
-          "racing": { "action": "setupControls", "params": { "type": "racing" } },
-          "default": { "action": "setupControls", "params": { "type": "default" } }
-        }
-      },
-      "next": "projectComplete"
-    },
-    "worldSetup": {
-      "id": "worldSetup",
-      "speaker": "Pixel",
-      "text": "Time to build your game world! This is where the magic happens!",
-      "conditionalFollowUp": {
-        "gameType": {
-          "platformer": "Platformers need great level design with platforms, obstacles, and collectibles!",
-          "rpg": "RPG worlds are vast and full of stories. Let's create your first area!"
-        }
-      },
-      "action": "buildWorld",
-      "next": "projectComplete"
-    },
-    "gameRules": {
-      "id": "gameRules",
-      "speaker": "Pixel",
-      "text": "Every game needs rules! How challenging do you want this to be?",
-      "options": [
-        {
-          "text": "Keep it simple - I just want to have fun!",
-          "action": "setRules",
-          "actionParams": { "complexity": "simple" },
-          "next": "projectComplete"
-        },
-        {
-          "text": "Make it deep - I want strategy and challenge!",
-          "action": "setRules",
-          "actionParams": { "complexity": "complex" },
-          "next": "projectComplete"
-        }
-      ]
-    },
-    "projectComplete": {
-      "id": "projectComplete",
-      "speaker": "Pixel",
-      "text": "BOOM! Look at that - you've got a real game framework! 🎉",
-      "followUp": "This is just the beginning though. Ready to add your own twist to it?",
-      "options": [
-        {
-          "text": "Yes! Let me customize it!",
-          "action": "openEditor"
-        },
-        {
-          "text": "Actually, I want to try something different",
-          "next": "start"
-        },
-        {
-          "text": "I should probably learn more Python first...",
-          "action": "openLessons"
-        }
-      ]
     },
     "error": {
       "id": "error",
