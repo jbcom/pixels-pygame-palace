@@ -12,6 +12,7 @@ import DebugToggle from "@/components/debug-toggle";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import LessonPage from "@/pages/lesson";
+import LessonsPage from "@/pages/lessons";
 import ProjectBuilderEnhanced from "@/pages/project-builder-enhanced";
 import Gallery from "@/pages/gallery";
 import ProjectViewer from "@/pages/project-viewer";
@@ -19,6 +20,7 @@ import SplashScreen from "@/components/splash-screen";
 import PixelPresence from "@/components/pixel-presence";
 import ComponentTestPage from "@/pages/component-test";
 import WizardBuilder from "@/pages/wizard-builder";
+import UniversalWizard from "@/components/universal-wizard";
 
 function Router() {
   return (
@@ -26,6 +28,11 @@ function Router() {
       <Route path="/" component={() => (
         <PageErrorBoundary context="Home Page">
           <Home />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/lessons" component={() => (
+        <PageErrorBoundary context="Lessons Page">
+          <LessonsPage />
         </PageErrorBoundary>
       )} />
       <Route path="/lesson/:lessonId" component={() => (
@@ -56,6 +63,11 @@ function Router() {
       <Route path="/component-test" component={() => (
         <PageErrorBoundary context="Component Test">
           <ComponentTestPage />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/wizard" component={() => (
+        <PageErrorBoundary context="Universal Wizard">
+          <UniversalWizard />
         </PageErrorBoundary>
       )} />
       <Route path="/wizard/:gameType" component={() => (

@@ -166,7 +166,11 @@ function createDefaultGameConfig(projectName: string): GameConfig {
   };
 }
 
-export default function ProjectBuilderEnhanced() {
+interface ProjectBuilderEnhancedProps {
+  embedded?: boolean;
+}
+
+export default function ProjectBuilderEnhanced({ embedded = false }: ProjectBuilderEnhancedProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   // Pyodide temporarily disabled
