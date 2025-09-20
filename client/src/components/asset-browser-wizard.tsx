@@ -59,6 +59,8 @@ export default function AssetBrowserWizard({
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [hoveredAsset, setHoveredAsset] = useState<GameAsset | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Get suggested assets based on game type
   const suggestedAssets = useMemo(() => {
@@ -91,6 +93,18 @@ export default function AssetBrowserWizard({
     });
     return Array.from(cats);
   }, [filteredAssets]);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+  const paginatedAssets = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAssets.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAssets, currentPage, itemsPerPage]);
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedTab, selectedCategory, assetType]);
 
   // Handle asset selection
   const handleAssetClick = useCallback((asset: GameAsset) => {
@@ -132,6 +146,7 @@ export default function AssetBrowserWizard({
         <Tooltip>
           <TooltipTrigger asChild>
             <Card
+              data-testid={`asset-card-${asset.id}`}
               className={`
                 relative cursor-pointer transition-all hover:scale-105 hover:shadow-lg
                 ${isSelected ? 'ring-2 ring-purple-500' : ''}
@@ -234,7 +249,9 @@ export default function AssetBrowserWizard({
   };
 
   return (
-    <div className={`${embedded ? '' : 'fixed inset-0 z-50 bg-black/50 flex items-center justify-center'}`}>
+    <div 
+      data-testid="asset-browser"
+      className={`${embedded ? '' : 'fixed inset-0 z-50 bg-black/50 flex items-center justify-center'}`}>
       <div className={`
         ${embedded ? 'w-full h-full' : 'bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh]'}
         flex flex-col
@@ -329,8 +346,35 @@ export default function AssetBrowserWizard({
               : 'space-y-2'
             }
           `}>
-            {filteredAssets.map(asset => renderAssetCard(asset))}
+            {paginatedAssets.map(asset => renderAssetCard(asset))}
           </div>
+          
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                data-testid="pagination-prev"
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages} ({filteredAssets.length} total)
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                data-testid="pagination-next"
+              >
+                Next
+              </Button>
+            </div>
+          )}
           
           {filteredAssets.length === 0 && (
             <div className="text-center py-12 text-gray-500">
