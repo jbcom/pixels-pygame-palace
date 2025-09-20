@@ -100,6 +100,7 @@ export interface CollectibleProperties {
   respawns?: boolean;
 }
 
+// Background component properties
 export interface BackgroundProperties {
   imagePath?: string;
   color?: string;
