@@ -20,9 +20,11 @@ import PygameWysiwygEditor from './pygame-wysiwyg-editor';
 import AssetBrowserWizard from './asset-browser-wizard';
 import PixelMinimizeAnimation from './pixel-minimize-animation';
 import PixelMinimized from './pixel-minimized';
+import PygameComponentSelector from './pygame-component-selector';
 import { GameAsset } from '@/lib/asset-library/asset-types';
 import { assetManager } from '@/lib/asset-library/asset-manager';
 import { ICON_SIZES, STYLES } from './wizard-constants';
+import { compilePythonGame, downloadPythonFile } from '@/lib/pygame-game-compiler';
 
 interface ExtendedWizardProps extends UniversalWizardProps {
   flowType?: 'default' | 'game-dev';
@@ -154,6 +156,34 @@ export default function UniversalWizard({
         embeddedComponent: 'pygame-runner',
         previewMode: 'full'
       }));
+    } else if (currentNode.action === 'showComponentChoice') {
+      // Show A/B component variants for selection
+      const componentId = currentNode.params?.componentId;
+      const category = currentNode.params?.category;
+      setUiState(prev => ({ 
+        ...prev, 
+        componentChoiceOpen: true,
+        currentComponentId: componentId,
+        currentComponentCategory: category
+      }));
+    } else if (currentNode.action === 'compileFullGame') {
+      // Compile all scenes with selected components
+      setSessionActions(prev => ({ 
+        ...prev, 
+        compiledScenes: {
+          ...prev.compiledScenes,
+          full: true
+        }
+      }));
+    } else if (currentNode.action === 'launchPyodidePreview') {
+      // Launch Pyodide preview with compiled components
+      const scene = currentNode.params?.scene || 'full';
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: scene,
+        pyodideMode: true
+      }));
     }
   }, [dialogueState.currentNode, setSessionActions]);
 
@@ -161,7 +191,7 @@ export default function UniversalWizard({
   const handleOptionSelectWithAction = useCallback((option: any) => {
     // Check if option has an action
     if (option.action === 'openWYSIWYGEditor') {
-      // Different messages based on context
+      // Open the pro editor with all selected components and assets
       const message = "You've got this! I'm here if you need me!";
       setUiState(prev => ({ 
         ...prev, 
@@ -177,12 +207,14 @@ export default function UniversalWizard({
     } else if (option.action === 'showAssets') {
       // Open asset browser with specific type if provided
       const assetType = option.actionParams?.type || 'all';
-      const gameType = option.actionParams?.gameType || dialogueState.currentNode?.params?.gameType;
+      const gameType = option.actionParams?.gameType || sessionActions.gameType;
+      const curated = option.actionParams?.curated !== false;
       setUiState(prev => ({ 
         ...prev, 
         assetBrowserOpen: true,
         assetBrowserType: assetType,
-        selectedGameType: gameType
+        selectedGameType: gameType,
+        curatedMode: curated
       }));
     } else if (option.action === 'minimizePixel') {
       // Handle minimize from option
@@ -254,6 +286,87 @@ export default function UniversalWizard({
         ...prev, 
         embeddedComponent: 'code-editor',
         viewMode: 'generated'
+      }));
+    } else if (option.action === 'showComponentChoice') {
+      // Show A/B component variants for user to choose
+      const componentId = option.actionParams?.componentId;
+      const category = option.actionParams?.category;
+      setUiState(prev => ({ 
+        ...prev, 
+        componentChoiceOpen: true,
+        currentComponentId: componentId,
+        currentComponentCategory: category
+      }));
+    } else if (option.action === 'selectComponentVariant') {
+      // Store selected component variant
+      const componentId = option.actionParams?.componentId;
+      const variant = option.actionParams?.variant;
+      setSessionActions(prev => ({ 
+        ...prev, 
+        selectedComponents: {
+          ...prev.selectedComponents,
+          [componentId]: variant
+        }
+      }));
+    } else if (option.action === 'compileGameplayScene' || option.action === 'compileEndScene' || option.action === 'compileFullGame') {
+      // Compile the scene with selected components and assets
+      const sceneType = option.action.includes('Gameplay') ? 'gameplay' : 
+                        option.action.includes('End') ? 'ending' : 'full';
+      setSessionActions(prev => ({ 
+        ...prev, 
+        compiledScenes: {
+          ...prev.compiledScenes,
+          [sceneType]: true
+        }
+      }));
+    } else if (option.action === 'launchPyodidePreview') {
+      // Launch Pyodide preview with compiled scene
+      const scene = option.actionParams?.scene || 'full';
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: scene,
+        pyodideMode: true
+      }));
+    } else if (option.action === 'launchPyodideGame') {
+      // Launch the complete compiled game
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'full',
+        pyodideMode: true
+      }));
+    } else if (option.action === 'exportPyodideGame') {
+      // Export the complete game as Python file
+      const pythonCode = compilePythonGame(sessionActions.selectedComponents || {}, selectedAssets);
+      downloadPythonFile(pythonCode, `my_game_${Date.now()}.py`);
+    } else if (option.action === 'compileGameplayScene') {
+      // Compile gameplay scene from selected components
+      setSessionActions(prev => ({ 
+        ...prev, 
+        compiledScenes: {
+          ...prev.compiledScenes,
+          gameplay: true
+        }
+      }));
+    } else if (option.action === 'compileEndScene') {
+      // Compile ending scene from selected components
+      setSessionActions(prev => ({ 
+        ...prev, 
+        compiledScenes: {
+          ...prev.compiledScenes,
+          ending: true
+        }
+      }));
+    } else if (option.action === 'compileFullGame') {
+      // Compile all scenes into complete game
+      setSessionActions(prev => ({ 
+        ...prev, 
+        compiledScenes: {
+          ...prev.compiledScenes,
+          full: true
+        },
+        gameAssembled: true
       }));
     } else if (option.action === 'tweakDifficulty') {
       // Adjust game difficulty settings  
@@ -460,7 +573,7 @@ export default function UniversalWizard({
         )}
         {uiState.assetBrowserOpen && (
           <AssetBrowserWizard
-            assetType={uiState.assetBrowserType === 'all' ? undefined : uiState.assetBrowserType}
+            assetType={uiState.assetBrowserType === 'all' ? undefined : (uiState.assetBrowserType as any)}
             gameType={uiState.selectedGameType}
             onSelect={handleAssetSelection}
             onClose={() => setUiState(prev => ({ ...prev, assetBrowserOpen: false }))}
@@ -480,11 +593,39 @@ export default function UniversalWizard({
     );
   }
 
+  // Show component selector if it's open
+  if (uiState.componentChoiceOpen) {
+    return (
+      <>
+        <PygameComponentSelector
+          componentId={uiState.currentComponentId}
+          category={uiState.currentComponentCategory}
+          onSelect={(componentId, variant) => {
+            // Store the selection
+            setSessionActions(prev => ({ 
+              ...prev, 
+              selectedComponents: {
+                ...prev.selectedComponents,
+                [componentId]: variant
+              }
+            }));
+            // Close selector and advance dialogue
+            setUiState(prev => ({ ...prev, componentChoiceOpen: false }));
+            advance();
+          }}
+          onClose={() => setUiState(prev => ({ ...prev, componentChoiceOpen: false }))}
+        />
+        {/* Keep wizard dialogue in background */}
+        {renderDialogue()}
+      </>
+    );
+  }
+  
   // Show asset browser if it's open
   if (uiState.assetBrowserOpen) {
     return (
       <AssetBrowserWizard
-        assetType={uiState.assetBrowserType === 'all' ? undefined : uiState.assetBrowserType}
+        assetType={uiState.assetBrowserType === 'all' ? undefined : (uiState.assetBrowserType as any)}
         gameType={uiState.selectedGameType}
         onSelect={handleAssetSelection}
         onClose={() => setUiState(prev => ({ ...prev, assetBrowserOpen: false }))}
