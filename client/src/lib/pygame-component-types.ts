@@ -5,6 +5,8 @@
 // Component Type Definitions
 // ============================================================================
 
+export type ComponentType = 'sprite' | 'platform' | 'ball' | 'paddle' | 'enemy' | 'collectible' | 'background' | 'scoreText' | 'button' | 'particleEffect' | 'timer' | 'healthBar';
+
 export interface PyGameComponent {
   type: ComponentType;
   id: string;
@@ -16,20 +18,6 @@ export interface PyGameComponent {
   generateCode: (props: any) => string;
   defaultProperties: Record<string, any>;
 }
-
-export type ComponentType = 
-  | 'sprite' 
-  | 'platform' 
-  | 'ball' 
-  | 'paddle' 
-  | 'enemy' 
-  | 'collectible'
-  | 'background' 
-  | 'scoreText' 
-  | 'button' 
-  | 'particleEffect' 
-  | 'timer' 
-  | 'healthBar';
 
 // ============================================================================
 // Component Property Interfaces
@@ -100,7 +88,6 @@ export interface CollectibleProperties {
   respawns?: boolean;
 }
 
-// Background component properties
 export interface BackgroundProperties {
   imagePath?: string;
   color?: string;

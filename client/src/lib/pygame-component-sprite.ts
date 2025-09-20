@@ -1,5 +1,16 @@
 // PyGame Sprite Component
-import { PyGameComponent, SpriteProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+interface SpriteProperties {
+  x: number;
+  y: number;
+  velocityX: number;
+  velocityY: number;
+  imagePath?: string;
+  width: number;
+  height: number;
+  color?: string;
+}
 
 export const spriteComponent: PyGameComponent = {
   type: 'sprite',

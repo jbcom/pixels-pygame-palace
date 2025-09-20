@@ -1,5 +1,51 @@
 // PyGame UI Components (ScoreText, Button, Timer, HealthBar)
-import { PyGameComponent, ScoreTextProperties, ButtonProperties, TimerProperties, HealthBarProperties, hexToRgb } from './pygame-component-types';
+import { PyGameComponent, hexToRgb } from './pygame-component-types';
+
+interface ScoreTextProperties {
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  fontFamily?: string;
+  alignment?: 'left' | 'center' | 'right';
+  isScore?: boolean;
+}
+
+interface ButtonProperties {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+  onClick: string; // Python function name
+  color: string;
+  textColor: string;
+  fontSize?: number;
+}
+
+interface TimerProperties {
+  duration: number;
+  x: number;
+  y: number;
+  onComplete: string; // Python function name
+  countDown: boolean;
+  fontSize: number;
+  color: string;
+  showMilliseconds?: boolean;
+}
+
+interface HealthBarProperties {
+  x: number;
+  y: number;
+  current: number;
+  max: number;
+  width: number;
+  height: number;
+  color: string;
+  backgroundColor: string;
+  showText?: boolean;
+}
 
 export const scoreTextComponent: PyGameComponent = {
   type: 'scoreText',

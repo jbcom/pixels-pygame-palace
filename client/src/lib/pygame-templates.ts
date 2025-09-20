@@ -1,6 +1,5 @@
 // PyGame Game Templates - Main entry point
 // Re-exports all templates from modular files
-import { PyGameComponent, ComponentType } from './pygame-components';
 
 // Import types
 import { GameTemplate, TemplateComponent, GameSettings } from './pygame-template-types';

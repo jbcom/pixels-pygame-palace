@@ -1,5 +1,5 @@
 // PyGame Template Type Definitions
-import { ComponentType } from './pygame-component-types';
+import type { ComponentType } from './pygame-component-types';
 
 // ============================================================================
 // Template Type Definitions
