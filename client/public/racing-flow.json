@@ -1,0 +1,344 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Pixel",
+    "text": "RACING GAME! Speed, competition, and adrenaline! Let's build this track by track!",
+    "followUp": "We'll create every scene from garage to podium!",
+    "next": "titleGarage"
+  },
+  "titleGarage": {
+    "id": "titleGarage",
+    "speaker": "Pixel",
+    "text": "Title screen in the garage! Pick a garage background.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["garage", "workshop", "industrial"]
+    },
+    "next": "titleCarShowcase"
+  },
+  "titleCarShowcase": {
+    "id": "titleCarShowcase",
+    "speaker": "Pixel",
+    "text": "Show off a car on the title! Pick a vehicle sprite.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "vehicles",
+      "curated": true,
+      "tags": ["car", "racing", "vehicle"]
+    },
+    "next": "titleEngineSound"
+  },
+  "titleEngineSound": {
+    "id": "titleEngineSound",
+    "speaker": "Pixel",
+    "text": "Rev those engines! Pick title screen music with energy!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["energetic", "rock", "electronic"]
+    },
+    "next": "carSelection"
+  },
+  "carSelection": {
+    "id": "carSelection",
+    "speaker": "Pixel",
+    "text": "Car selection screen! How many vehicles should players choose from?",
+    "options": [
+      {
+        "text": "3 cars - Speed, Balance, Handling",
+        "next": "carSprites3"
+      },
+      {
+        "text": "6 cars - Full roster with unique stats",
+        "next": "carSprites6"
+      }
+    ]
+  },
+  "carSprites3": {
+    "id": "carSprites3",
+    "speaker": "Pixel",
+    "text": "Pick 3 different car sprites for your roster!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "vehicles",
+      "curated": true,
+      "multiple": true,
+      "limit": 3,
+      "tags": ["car", "vehicle"]
+    },
+    "next": "carCustomization"
+  },
+  "carSprites6": {
+    "id": "carSprites6",
+    "speaker": "Pixel",
+    "text": "Pick 6 different car sprites for your full roster!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "vehicles",
+      "curated": true,
+      "multiple": true,
+      "limit": 6,
+      "tags": ["car", "vehicle"]
+    },
+    "next": "carCustomization"
+  },
+  "carCustomization": {
+    "id": "carCustomization",
+    "speaker": "Pixel",
+    "text": "Should players customize their ride?",
+    "options": [
+      {
+        "text": "Just pick and race!",
+        "next": "trackSelection"
+      },
+      {
+        "text": "Color customization",
+        "next": "trackSelection"
+      },
+      {
+        "text": "Full tuning - engine, tires, spoiler",
+        "next": "trackSelection"
+      }
+    ]
+  },
+  "trackSelection": {
+    "id": "trackSelection",
+    "speaker": "Pixel",
+    "text": "Track selection! What environments should we race through?",
+    "options": [
+      {
+        "text": "City streets, Desert highway, Mountain pass",
+        "next": "trackBackgrounds"
+      },
+      {
+        "text": "Circuit, Drag strip, Rally course, Street race",
+        "next": "trackBackgrounds"
+      }
+    ]
+  },
+  "trackBackgrounds": {
+    "id": "trackBackgrounds",
+    "speaker": "Pixel",
+    "text": "Pick backgrounds for your race tracks!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "multiple": true,
+      "tags": ["city", "desert", "mountain", "road"]
+    },
+    "next": "raceCountdown"
+  },
+  "raceCountdown": {
+    "id": "raceCountdown",
+    "speaker": "Pixel",
+    "text": "3... 2... 1... GO! How should races start?",
+    "options": [
+      {
+        "text": "Traffic light countdown",
+        "next": "raceControls"
+      },
+      {
+        "text": "Flag person signals",
+        "next": "raceControls"
+      },
+      {
+        "text": "Digital countdown timer",
+        "next": "raceControls"
+      }
+    ]
+  },
+  "raceControls": {
+    "id": "raceControls",
+    "speaker": "Pixel",
+    "text": "Racing controls are crucial! How should steering feel?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "walk",
+      "category": "movement"
+    },
+    "options": [
+      {
+        "text": "A: Arcade - Instant response, easy drifting",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "walk", "variant": "A" },
+        "next": "raceObstacles"
+      },
+      {
+        "text": "B: Realistic - Weight and momentum",
+        "action": "selectComponentVariant", 
+        "actionParams": { "componentId": "walk", "variant": "B" },
+        "next": "raceObstacles"
+      }
+    ]
+  },
+  "raceObstacles": {
+    "id": "raceObstacles",
+    "speaker": "Pixel",
+    "text": "Tracks need obstacles! What hazards should racers avoid?",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "obstacles",
+      "curated": true,
+      "multiple": true,
+      "tags": ["barrier", "cone", "oil"]
+    },
+    "next": "racePowerups"
+  },
+  "racePowerups": {
+    "id": "racePowerups",
+    "speaker": "Pixel",
+    "text": "Power-ups add chaos! Pick track items.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["boost", "shield", "powerup"]
+    },
+    "next": "raceOpponents"
+  },
+  "raceOpponents": {
+    "id": "raceOpponents",
+    "speaker": "Pixel",
+    "text": "Racing against AI! How should opponents behave?",
+    "options": [
+      {
+        "text": "Rubber band AI - Always close races",
+        "next": "raceSounds"
+      },
+      {
+        "text": "Realistic AI - Make mistakes, varied skill",
+        "next": "raceSounds"
+      }
+    ]
+  },
+  "raceSounds": {
+    "id": "raceSounds",
+    "speaker": "Pixel",
+    "text": "Racing needs sound! Engine roars, tire screeches, boost whooshes!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sound",
+      "curated": true,
+      "multiple": true,
+      "tags": ["engine", "screech", "boost", "crash"]
+    },
+    "next": "raceMusic"
+  },
+  "raceMusic": {
+    "id": "raceMusic",
+    "speaker": "Pixel",
+    "text": "High-octane racing music! Pick your track theme!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["fast", "electronic", "rock", "intense"]
+    },
+    "next": "finishLine"
+  },
+  "finishLine": {
+    "id": "finishLine",
+    "speaker": "Pixel",
+    "text": "Crossing the finish line! How should it look?",
+    "options": [
+      {
+        "text": "Checkered flag waves",
+        "next": "resultsScreen"
+      },
+      {
+        "text": "Fireworks and confetti",
+        "next": "resultsScreen"
+      },
+      {
+        "text": "Photo finish freeze frame",
+        "next": "resultsScreen"
+      }
+    ]
+  },
+  "resultsScreen": {
+    "id": "resultsScreen",
+    "speaker": "Pixel",
+    "text": "Race results! How should we show the standings?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "score",
+      "category": "ui"
+    },
+    "options": [
+      {
+        "text": "A: Animated leaderboard climb",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "A" },
+        "next": "podiumCelebration"
+      },
+      {
+        "text": "B: Instant results with lap times",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "B" },
+        "next": "podiumCelebration"
+      }
+    ]
+  },
+  "podiumCelebration": {
+    "id": "podiumCelebration",
+    "speaker": "Pixel",
+    "text": "Podium time! How should winners celebrate?",
+    "options": [
+      {
+        "text": "Champagne spray animation",
+        "next": "victoryMusic"
+      },
+      {
+        "text": "Trophy presentation",
+        "next": "victoryMusic"
+      },
+      {
+        "text": "Victory lap with burnout",
+        "next": "victoryMusic"
+      }
+    ]
+  },
+  "victoryMusic": {
+    "id": "victoryMusic",
+    "speaker": "Pixel",
+    "text": "Victory music for the champion!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["victory", "celebration", "triumph"]
+    },
+    "next": "complete"
+  },
+  "complete": {
+    "id": "complete",
+    "speaker": "Pixel",
+    "text": "🏁 CHECKERED FLAG! Your racing game is complete! Garage ✓ Cars ✓ Tracks ✓ Racing ✓ Results ✓ Podium ✓",
+    "followUp": "Start your engines! Ready to race?",
+    "action": "compileFullGame",
+    "options": [
+      {
+        "text": "Start racing!",
+        "action": "launchPyodideGame"
+      },
+      {
+        "text": "Export as Python file",
+        "action": "exportPyodideGame"
+      },
+      {
+        "text": "Open in Pro Editor",
+        "action": "openWYSIWYGEditor"
+      }
+    ]
+  }
+}

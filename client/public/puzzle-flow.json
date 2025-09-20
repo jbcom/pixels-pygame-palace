@@ -1,0 +1,354 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Pixel",
+    "text": "A PUZZLE GAME! Time to challenge minds with clever mechanics!",
+    "followUp": "We'll build brain-teasers that get progressively harder!",
+    "next": "puzzleType"
+  },
+  "puzzleType": {
+    "id": "puzzleType",
+    "speaker": "Pixel",
+    "text": "What style of puzzle speaks to you?",
+    "options": [
+      {
+        "text": "Match-3 like Bejeweled",
+        "next": "match3Theme"
+      },
+      {
+        "text": "Block puzzles like Tetris",
+        "next": "blockTheme"
+      },
+      {
+        "text": "Physics puzzles like Angry Birds",
+        "next": "physicsTheme"
+      }
+    ]
+  },
+  "match3Theme": {
+    "id": "match3Theme",
+    "speaker": "Pixel",
+    "text": "Match-3 it is! Gems, candies, or something unique?",
+    "followUp": "Let's pick your matching pieces!",
+    "next": "match3Pieces"
+  },
+  "blockTheme": {
+    "id": "blockTheme",
+    "speaker": "Pixel",
+    "text": "Falling blocks! Classic shapes that fit together perfectly.",
+    "followUp": "Let's design your block pieces!",
+    "next": "blockPieces"
+  },
+  "physicsTheme": {
+    "id": "physicsTheme",
+    "speaker": "Pixel",
+    "text": "Physics puzzler! Launch, bounce, and solve with real physics!",
+    "followUp": "Let's set up your physics world!",
+    "next": "physicsObjects"
+  },
+  "match3Pieces": {
+    "id": "match3Pieces",
+    "speaker": "Pixel",
+    "text": "Choose your matching pieces - gems, fruits, or candies?",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["gem", "fruit", "candy", "match3"]
+    },
+    "next": "titleBackground"
+  },
+  "blockPieces": {
+    "id": "blockPieces",
+    "speaker": "Pixel",
+    "text": "Pick colorful blocks for your falling pieces!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["block", "tetromino", "piece"]
+    },
+    "next": "titleBackground"
+  },
+  "physicsObjects": {
+    "id": "physicsObjects",
+    "speaker": "Pixel",
+    "text": "Choose physics objects - balls, boxes, or birds?",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["ball", "projectile", "physics"]
+    },
+    "next": "titleBackground"
+  },
+  "titleBackground": {
+    "id": "titleBackground",
+    "speaker": "Pixel",
+    "text": "Every puzzle needs an inviting title screen!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["abstract", "colorful", "pattern"]
+    },
+    "next": "titleMusic"
+  },
+  "titleMusic": {
+    "id": "titleMusic",
+    "speaker": "Pixel",
+    "text": "Relaxing puzzle music to set the mood!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["relaxing", "calm", "puzzle"]
+    },
+    "next": "menuSystem"
+  },
+  "menuSystem": {
+    "id": "menuSystem",
+    "speaker": "Pixel",
+    "text": "How should players navigate levels?",
+    "options": [
+      {
+        "text": "Linear progression - unlock one by one",
+        "next": "gameplayMechanics"
+      },
+      {
+        "text": "Star system - earn stars to unlock",
+        "next": "gameplayMechanics"
+      },
+      {
+        "text": "All unlocked - play any level",
+        "next": "gameplayMechanics"
+      }
+    ]
+  },
+  "gameplayMechanics": {
+    "id": "gameplayMechanics",
+    "speaker": "Pixel",
+    "text": "Core gameplay time! How should controls feel?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "walk",
+      "category": "movement"
+    },
+    "options": [
+      {
+        "text": "A: Snappy - Instant response",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "walk", "variant": "A" },
+        "next": "gameplayGrid"
+      },
+      {
+        "text": "B: Smooth - Animated transitions",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "walk", "variant": "B" },
+        "next": "gameplayGrid"
+      }
+    ]
+  },
+  "gameplayGrid": {
+    "id": "gameplayGrid",
+    "speaker": "Pixel",
+    "text": "Puzzle board setup! What size grid?",
+    "options": [
+      {
+        "text": "Small 6x6 - Quick rounds",
+        "next": "gameplaySpecialPieces"
+      },
+      {
+        "text": "Medium 8x8 - Classic size",
+        "next": "gameplaySpecialPieces"
+      },
+      {
+        "text": "Large 10x10 - Epic puzzles",
+        "next": "gameplaySpecialPieces"
+      }
+    ]
+  },
+  "gameplaySpecialPieces": {
+    "id": "gameplaySpecialPieces",
+    "speaker": "Pixel",
+    "text": "Special pieces add strategy! Choose power-ups.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "items",
+      "curated": true,
+      "multiple": true,
+      "tags": ["bomb", "rainbow", "lightning", "powerup"]
+    },
+    "next": "gameplayEffects"
+  },
+  "gameplayEffects": {
+    "id": "gameplayEffects",
+    "speaker": "Pixel",
+    "text": "Visual feedback is key! Pick effect sprites.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "effects",
+      "curated": true,
+      "multiple": true,
+      "tags": ["sparkle", "explosion", "stars"]
+    },
+    "next": "gameplaySounds"
+  },
+  "gameplaySounds": {
+    "id": "gameplaySounds",
+    "speaker": "Pixel",
+    "text": "Satisfying sounds! Match sounds, combo chimes, clear effects!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sound",
+      "curated": true,
+      "multiple": true,
+      "tags": ["pop", "chime", "success", "combo"]
+    },
+    "next": "gameplayMusic"
+  },
+  "gameplayMusic": {
+    "id": "gameplayMusic",
+    "speaker": "Pixel",
+    "text": "Background music while puzzling!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["calm", "thinking", "ambient"]
+    },
+    "next": "challengeModes"
+  },
+  "challengeModes": {
+    "id": "challengeModes",
+    "speaker": "Pixel",
+    "text": "Challenge modes keep it fresh! What restrictions?",
+    "options": [
+      {
+        "text": "Time limit - Beat the clock",
+        "next": "bonusRounds"
+      },
+      {
+        "text": "Move limit - Strategic thinking",
+        "next": "bonusRounds"
+      },
+      {
+        "text": "Endless zen - No pressure",
+        "next": "bonusRounds"
+      }
+    ]
+  },
+  "bonusRounds": {
+    "id": "bonusRounds",
+    "speaker": "Pixel",
+    "text": "Bonus rounds between levels?",
+    "options": [
+      {
+        "text": "Yes! Mini-games for extra points",
+        "next": "scoringSystem"
+      },
+      {
+        "text": "No, keep it simple",
+        "next": "scoringSystem"
+      }
+    ]
+  },
+  "scoringSystem": {
+    "id": "scoringSystem",
+    "speaker": "Pixel",
+    "text": "Scoring motivates players! How should points work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "score",
+      "category": "ui"
+    },
+    "options": [
+      {
+        "text": "A: Combo multipliers - Chain for big points",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "A" },
+        "next": "levelComplete"
+      },
+      {
+        "text": "B: Simple scoring - Clear points",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "score", "variant": "B" },
+        "next": "levelComplete"
+      }
+    ]
+  },
+  "levelComplete": {
+    "id": "levelComplete",
+    "speaker": "Pixel",
+    "text": "Level complete celebration! How should we reward success?",
+    "options": [
+      {
+        "text": "Star rating - 1 to 3 stars",
+        "next": "victoryEffects"
+      },
+      {
+        "text": "High score board",
+        "next": "victoryEffects"
+      },
+      {
+        "text": "Unlockable content",
+        "next": "victoryEffects"
+      }
+    ]
+  },
+  "victoryEffects": {
+    "id": "victoryEffects",
+    "speaker": "Pixel",
+    "text": "Victory needs fanfare! Choose celebration effects!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "effects",
+      "curated": true,
+      "multiple": true,
+      "tags": ["confetti", "fireworks", "stars"]
+    },
+    "next": "victoryMusic"
+  },
+  "victoryMusic": {
+    "id": "victoryMusic",
+    "speaker": "Pixel",
+    "text": "Victory jingle for level completion!",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["victory", "success", "achievement"]
+    },
+    "next": "complete"
+  },
+  "complete": {
+    "id": "complete",
+    "speaker": "Pixel",
+    "text": "🧩 PUZZLE PERFECTION! Title ✓ Menu ✓ Gameplay ✓ Special Pieces ✓ Challenges ✓ Victory ✓",
+    "followUp": "Your puzzle game is ready to challenge minds!",
+    "action": "compileFullGame",
+    "options": [
+      {
+        "text": "Play puzzle game!",
+        "action": "launchPyodideGame"
+      },
+      {
+        "text": "Export as Python file",
+        "action": "exportPyodideGame"
+      },
+      {
+        "text": "Open in Pro Editor",
+        "action": "openWYSIWYGEditor"
+      }
+    ]
+  }
+}
