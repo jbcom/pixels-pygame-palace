@@ -4,6 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Mobile safe area padding for bottom modals */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
+
 :root {
   --background: hsl(300, 30%, 98%);
   --foreground: hsl(280, 15%, 25%);

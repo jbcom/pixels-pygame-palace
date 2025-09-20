@@ -9,10 +9,12 @@ import {
   Sparkles,
   Code2,
   Rocket,
-  History
+  History,
+  X
 } from "lucide-react";
 import SessionPlayback from "@/components/session-playback";
 import { sessionHistory, SessionEvent } from "@/lib/session-history";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 // Import Pixel images
 import pixelHappy from '@assets/pixel/Pixel_happy_excited_expression_22a41625.png';
@@ -45,6 +47,8 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
   const [dialogue, setDialogue] = useState("Need help?");
   const [showContent, setShowContent] = useState(false);
   const [showPlayback, setShowPlayback] = useState(false);
+  const [mobileDialogueOpen, setMobileDialogueOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Initial choices for center stage
   const initialChoices: Choice[] = [
@@ -139,15 +143,28 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
 
   // Expand Pixel for interactions
   const expandPixel = (choices: Choice[], newDialogue: string, image = pixelThinking) => {
-    setState('expanded-corner');
-    setCurrentChoices(choices);
-    setDialogue(newDialogue);
-    setPixelImage(image);
+    if (isMobile) {
+      // On mobile, open dialogue modal instead
+      setMobileDialogueOpen(true);
+      setCurrentChoices(choices);
+      setDialogue(newDialogue);
+      setPixelImage(image);
+    } else {
+      // Desktop: expand from corner
+      setState('expanded-corner');
+      setCurrentChoices(choices);
+      setDialogue(newDialogue);
+      setPixelImage(image);
+    }
   };
 
   // Collapse Pixel back to corner
   const collapsePixel = () => {
-    setState('waiting-corner');
+    if (isMobile) {
+      setMobileDialogueOpen(false);
+    } else {
+      setState('waiting-corner');
+    }
     setCurrentChoices([]);
   };
 
@@ -268,7 +285,7 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
               whileTap={{ scale: 0.95 }}
               data-testid="pixel-expand"
             >
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 shadow-lg">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-purple-500/50 shadow-lg">
                 <img 
                   src={pixelImage} 
                   alt="Pixel" 
@@ -283,13 +300,15 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 3, repeat: Infinity }}
               />
-              {/* Tooltip on hover */}
-              <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Click me for help!
-              </div>
+              {/* Tooltip on hover - desktop only */}
+              {!isMobile && (
+                <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Click me for help!
+                </div>
+              )}
             </motion.button>
-          ) : (
-            // Expanded corner mode - medium size with choices
+          ) : !isMobile ? (
+            // Desktop: Expanded corner mode - medium size with choices
             <Card className="w-80 p-4 shadow-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500/20">
               <div className="flex flex-col space-y-4">
                 {/* Header with Pixel */}
@@ -336,10 +355,55 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
                 </div>
               </div>
             </Card>
-          )}
+          ) : null}
         </motion.div>
       </AnimatePresence>
 
+      {/* Mobile Dialogue Modal */}
+      {isMobile && mobileDialogueOpen && currentChoices.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 100 }}
+          className="fixed inset-x-0 bottom-0 z-50 p-4 pb-safe"
+        >
+          <Card className="relative w-full p-6 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl shadow-2xl border-2 border-purple-500/20 rounded-t-2xl">
+            {/* Close button for mobile modal */}
+            <button
+              onClick={() => setMobileDialogueOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              data-testid="mobile-dialogue-close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Mobile Dialogue Header */}
+            <div className="mb-4">
+              <p className="text-lg font-semibold">{dialogue}</p>
+            </div>
+
+            {/* Mobile Choices */}
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+              {currentChoices.map((choice, index) => (
+                <Button
+                  key={choice.id}
+                  onClick={() => {
+                    choice.action();
+                    collapsePixel();
+                  }}
+                  size="lg"
+                  variant={index === 0 ? "default" : "outline"}
+                  className="w-full justify-start py-4 text-left"
+                  data-testid={`mobile-choice-${index}`}
+                >
+                  {choice.icon && <choice.icon className="h-5 w-5 mr-3 flex-shrink-0" />}
+                  <span className="font-medium">{choice.label}</span>
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Session Playback Modal */}
       <SessionPlayback
