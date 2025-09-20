@@ -22,12 +22,14 @@ import {
 interface UseWizardDialogueProps {
   initialNodeId?: string;
   wizardFlowPath?: string;
+  flowType?: 'default' | 'game-dev';
 }
 
 // Custom hook for managing wizard dialogue state
 export function useWizardDialogue({ 
   initialNodeId = INITIAL_NODE_ID,
-  wizardFlowPath = WIZARD_FLOW_PATH 
+  wizardFlowPath = WIZARD_FLOW_PATH,
+  flowType = 'default' 
 }: UseWizardDialogueProps = {}) {
   const [wizardData, setWizardData] = useState<Record<string, WizardNode> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +51,13 @@ export function useWizardDialogue({
 
   // Load wizard flow data
   useEffect(() => {
-    loadWizardFlow(wizardFlowPath)
+    // Determine which flow to load
+    let flowPath = wizardFlowPath;
+    if (flowType === 'game-dev') {
+      flowPath = '/game-wizard-flow.json';
+    }
+    
+    loadWizardFlow(flowPath)
       .then(nodes => {
         setWizardData(nodes);
         if (nodes[initialNodeId]) {
@@ -64,7 +72,7 @@ export function useWizardDialogue({
         console.error('Failed to load wizard flow:', error);
         setIsLoading(false);
       });
-  }, [wizardFlowPath, initialNodeId]);
+  }, [wizardFlowPath, initialNodeId, flowType]);
 
   // Update current node when ID changes
   useEffect(() => {

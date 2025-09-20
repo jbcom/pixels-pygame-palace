@@ -31,6 +31,11 @@ function Router() {
           <UniversalWizard />
         </PageErrorBoundary>
       )} />
+      <Route path="/game-wizard" component={() => (
+        <PageErrorBoundary context="Game Development Wizard">
+          <UniversalWizard flowType="game-dev" />
+        </PageErrorBoundary>
+      )} />
       <Route path="/asset-test" component={() => (
         <PageErrorBoundary context="Asset Library Test">
           <AssetLibraryTest />
