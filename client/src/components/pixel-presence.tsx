@@ -12,8 +12,7 @@ import {
   History,
   X
 } from "lucide-react";
-import SessionPlayback from "@/components/session-playback";
-import { sessionHistory, SessionEvent } from "@/lib/session-history";
+import { sessionHistory } from "@/lib/session-history";
 import { useIsMobile } from "@/hooks/use-media-query";
 
 // Import Pixel images
@@ -46,7 +45,6 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
   const [pixelImage, setPixelImage] = useState(pixelWelcoming);
   const [dialogue, setDialogue] = useState("Need help?");
   const [showContent, setShowContent] = useState(false);
-  const [showPlayback, setShowPlayback] = useState(false);
   const [mobileDialogueOpen, setMobileDialogueOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -179,33 +177,16 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
       }
     },
     {
-      id: 'review-journey',
-      label: 'Review our journey',
+      id: 'go-home',
+      label: 'Go home',
       icon: History,
       action: () => {
-        setShowPlayback(true);
+        onNavigate('/');
         collapsePixel();
       }
     }
   ];
 
-  // Handle jumping to an event from playback
-  const handleJumpToEvent = (event: SessionEvent) => {
-    if (event.data?.path) {
-      sessionHistory.trackChoice('jumped-to-event', `Jumped to: ${event.description}`);
-      onNavigate(event.data.path);
-    }
-    setShowPlayback(false);
-  };
-
-  // Handle reverting to an event from playback
-  const handleRevertToEvent = (event: SessionEvent) => {
-    sessionHistory.revertToEvent(event.id);
-    if (event.data?.path) {
-      onNavigate(event.data.path);
-    }
-    setShowPlayback(false);
-  };
 
   // Position and size variants for animations
   const variants = {
@@ -405,13 +386,6 @@ export default function PixelPresence({ onNavigate, currentPath = "/" }: PixelPr
         </motion.div>
       )}
 
-      {/* Session Playback Modal */}
-      <SessionPlayback
-        isOpen={showPlayback}
-        onClose={() => setShowPlayback(false)}
-        onJumpToEvent={handleJumpToEvent}
-        onRevertToEvent={handleRevertToEvent}
-      />
     </>
   );
 }
