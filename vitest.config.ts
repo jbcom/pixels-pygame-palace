@@ -9,9 +9,28 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     coverage: {
-      provider: 'c8',
-      reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'dist/', 'tests/', '*.config.ts']
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'dist/', 
+        'tests/',
+        '*.config.ts',
+        '*.config.js',
+        'server/',
+        '**/index.ts',
+        '**/*.d.ts'
+      ],
+      include: [
+        'client/src/**/*.{ts,tsx}'
+      ],
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90
+      }
     }
   },
   resolve: {
