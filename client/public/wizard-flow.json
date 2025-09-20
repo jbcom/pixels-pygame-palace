@@ -4,18 +4,18 @@
       "id": "start",
       "speaker": "Pixel",
       "text": "Hey there! Welcome to Pixel's PyGame Palace! I'm Pixel, your game-making buddy! 🎮",
-      "followUp": "Before we dive in, I want to make sure I'm not telling you anything you already know...",
+      "followUp": "So... what brings you to my coding workshop today?",
       "options": [
         {
-          "text": "You want me to throw together a basic framework for your game so you can get started right away?",
+          "text": "I want to jump straight into making a game!",
           "next": "gamePath"
         },
         {
-          "text": "Would you like to take the opportunity to learn some Python together first?",
+          "text": "Actually, could we learn Python together first? I'm new to this",
           "next": "learnPath"
         },
         {
-          "text": "I've made games before and know what I'm doing",
+          "text": "I know my way around code already",
           "next": "experienceCheck"
         }
       ]
@@ -24,20 +24,20 @@
       "id": "experienceCheck",
       "speaker": "Pixel",
       "text": "Oh awesome! A fellow game developer! 🎮✨",
-      "followUp": "Just curious - have you worked with PyGame or similar game engines before?",
+      "followUp": "Tell me a bit more - what's your experience like?",
       "options": [
         {
-          "text": "Yes, I'm comfortable with PyGame",
+          "text": "PyGame and I are old friends!",
           "next": "unlockEditor",
           "setVariable": { "experience": "advanced" }
         },
         {
-          "text": "I've made games but not with PyGame",
+          "text": "I've built stuff in Unity, Godot, that sort of thing... but PyGame is new",
           "next": "hybridMode",
           "setVariable": { "experience": "intermediate" }
         },
         {
-          "text": "Actually, let's go with the guided approach",
+          "text": "Hmm, actually I might be overconfident. Guide me!",
           "next": "gamePath",
           "setVariable": { "experience": "beginner" }
         }
@@ -46,15 +46,15 @@
     "hybridMode": {
       "id": "hybridMode",
       "speaker": "Pixel",
-      "text": "Perfect! You know games but PyGame is new territory. I've got the perfect approach for you!",
-      "followUp": "Would you like more control over your game design, or should I guide you through PyGame's specifics?",
+      "text": "Perfect! You know games but PyGame is new territory. That's actually a great combo!",
+      "followUp": "So how do you usually like to learn new tools?",
       "options": [
         {
-          "text": "Give me more control - I learn by doing!",
+          "text": "Just let me dive in and figure it out!",
           "next": "unlockEditor"
         },
         {
-          "text": "Guide me through PyGame's unique features",
+          "text": "Walk me through the PyGame-specific stuff, I'll handle the rest",
           "next": "gamePath"
         }
       ]
@@ -62,18 +62,18 @@
     "unlockEditor": {
       "id": "unlockEditor",
       "speaker": "Pixel",
-      "text": "🎉 Awesome! I'm unlocking the WYSIWYG Editor for you! This is where the real magic happens!",
-      "followUp": "With the editor, you can drag and drop components, see live previews, and watch your Python code generate in real-time. It's like having superpowers!",
+      "text": "🎉 Boom! You've got full access to the WYSIWYG Editor now! This is where things get really fun!",
+      "followUp": "It's basically like having creative mode in Minecraft - drag, drop, tweak, and watch your game come to life!",
       "followUpDelay": 2000,
-      "additionalText": "Here's what you can do: • Drag components from the palette onto your canvas • Edit properties in real-time • See the Python code being generated • Test your game with play/pause controls • Export when you're ready!",
+      "additionalText": "Quick rundown: drag stuff from the left, drop it on your canvas, tweak settings on the right. The Python code writes itself while you build. Pretty neat, right?",
       "action": "openWYSIWYGEditor",
       "options": [
         {
-          "text": "Let's dive into the editor!",
+          "text": "Let me at it!",
           "action": "openWYSIWYGEditor"
         },
         {
-          "text": "Show me a quick tutorial first",
+          "text": "Wait, show me the ropes first?",
           "next": "editorTutorial"
         }
       ]
@@ -81,13 +81,13 @@
     "editorTutorial": {
       "id": "editorTutorial",
       "speaker": "Pixel",
-      "text": "Great choice! Let me show you around the WYSIWYG editor real quick!",
-      "followUp": "The editor has three main sections: the component palette on the left, the canvas in the center, and the properties panel on the right.",
-      "additionalText": "Start by dragging a sprite or platform from the palette onto the canvas. Click any component to edit its properties. The code panel shows you the Python being generated!",
+      "text": "Smart move! Let me give you the quick tour - it'll save you time, trust me!",
+      "followUp": "Think of it like this: left side is your toy box, middle is your playground, right side is where you tweak stuff.",
+      "additionalText": "Pro tip: Start with a character sprite, then add some platforms. Everything you drop becomes instant Python code. It's honestly kind of mesmerizing to watch!",
       "action": "openWYSIWYGEditor",
       "options": [
         {
-          "text": "Got it! Open the editor",
+          "text": "Alright, I'm ready!",
           "action": "openWYSIWYGEditor"
         }
       ]
@@ -95,35 +95,35 @@
     "gamePath": {
       "id": "gamePath",
       "speaker": "Pixel",
-      "text": "Great, we've got ourselves a game cooking here! But it needs a direction. What are you thinking? I can do a few!",
+      "text": "Alright, time for the fun part! What kind of game is bouncing around in your head right now?",
       "options": [
         {
-          "text": "RPG - Epic quests and adventures!",
+          "text": "Something with swords and magic and epic quests!",
           "next": "workStyle",
           "setVariable": { "gameType": "rpg" }
         },
         {
-          "text": "Platformer - Jump and run fun!",
+          "text": "A jumpy, bouncy platformer!",
           "next": "workStyle",
           "setVariable": { "gameType": "platformer" }
         },
         {
-          "text": "Dungeon Crawler - Explore dark depths!",
+          "text": "Ooh, dark dungeons and treasure hunting",
           "next": "workStyle",
           "setVariable": { "gameType": "dungeon" }
         },
         {
-          "text": "Racing - Speed and thrills!",
+          "text": "SPEED! I want to go fast!",
           "next": "workStyle",
           "setVariable": { "gameType": "racing" }
         },
         {
-          "text": "Puzzle - Brain-teasing challenges!",
+          "text": "Something that makes people think",
           "next": "workStyle",
           "setVariable": { "gameType": "puzzle" }
         },
         {
-          "text": "Adventure - Story-driven exploration!",
+          "text": "A story-driven adventure would be cool",
           "next": "workStyle",
           "setVariable": { "gameType": "adventure" }
         }
@@ -132,14 +132,14 @@
     "workStyle": {
       "id": "workStyle",
       "speaker": "Pixel",
-      "text": "Awesome! Love it! Hey I'm just here to help, how do you like to work?",
+      "text": "Nice choice! Now, quick question - how hands-on do you want to be?",
       "options": [
         {
-          "text": "Full editor - I got this!",
+          "text": "Just give me the tools and let me build!",
           "action": "openEditor"
         },
         {
-          "text": "Walk me through it!",
+          "text": "Hold my hand a bit, I want to learn as we go",
           "next": "wizardMode"
         }
       ]
@@ -149,13 +149,13 @@
       "speaker": "Pixel",
       "conditionalText": {
         "gameType": {
-          "platformer": "Alright, great! What do you think for a title screen? Got these great assets that work perfect in a platformer!",
-          "rpg": "Awesome! Okay hey, in an RPG you know what you need? A character selection screen! Let's design that first!",
-          "dungeon": "Perfect choice! Dungeon crawlers need that spooky atmosphere. Let's start with your dungeon entrance!",
-          "racing": "Speed demon! I like it! Every racing game needs a cool car selection screen. Let's build that first!",
-          "puzzle": "Brain teasers! Nice! Let's design your main menu where players can choose levels!",
-          "adventure": "Adventure awaits! These games are all about the story. Let's create your opening scene!",
-          "default": "Interesting choice! Let's start with the basics - your main menu!"
+          "platformer": "Jumping games! Love it! First thing - we need a hero who can bounce around. I've got some awesome robot sprites that would be perfect!",
+          "rpg": "Ooh, an RPG! You know what's cool? Starting with your hero's look and feel. Want to design your character first?",
+          "dungeon": "Dark and mysterious, I like your style! Let's set the mood - thinking torches, stone walls, maybe some skeletons?",
+          "racing": "VROOM VROOM! Okay, first big decision - are we talking cars, spaceships, or something totally wild?",
+          "puzzle": "Puzzles are my jam! Are you thinking match-3 style, or more like sliding blocks? We should start there!",
+          "adventure": "Story time! Every great adventure needs an opening that hooks players. Want to craft that first moment?",
+          "default": "Interesting! Let's start simple and build up from there. How about we get your main character sorted first?"
         }
       },
       "conditionalAction": {
@@ -173,20 +173,20 @@
     "learnPath": {
       "id": "learnPath",
       "speaker": "Pixel",
-      "text": "Perfect! Learning Python is the best way to really understand game development!",
-      "followUp": "I've created 10 fun lessons that will take you from zero to game hero! Each one builds on the last.",
+      "text": "Smart choice! Python's like the secret language of games - once you know it, you can make anything!",
+      "followUp": "I've got 10 super fun lessons lined up. We'll start simple and before you know it, you'll be making actual games!",
       "options": [
         {
-          "text": "Start with Lesson 1 - Hello World!",
+          "text": "Let's start from the very beginning!",
           "action": "loadLesson",
           "actionParams": { "lesson": 1 }
         },
         {
-          "text": "Show me all lessons",
+          "text": "What will I learn? Show me everything!",
           "next": "lessonMenu"
         },
         {
-          "text": "I know some Python already",
+          "text": "Actually, I might know some of this already...",
           "next": "lessonSkillCheck"
         }
       ]
@@ -194,35 +194,35 @@
     "lessonMenu": {
       "id": "lessonMenu",
       "speaker": "Pixel",
-      "text": "Here are all 10 Python lessons! Each one unlocks new game-making powers! 🎮",
-      "followUp": "Start from the beginning or jump to any lesson you want!",
+      "text": "Here's my full curriculum! Each lesson is like unlocking a new power-up! 🎮",
+      "followUp": "Where do you want to start your journey?",
       "options": [
         {
-          "text": "Lesson 1: Hello World - Variables & Print",
+          "text": "The very beginning - Hello World!",
           "action": "loadLesson",
           "actionParams": { "lesson": 1 }
         },
         {
-          "text": "Lesson 2: Math & Operations",
+          "text": "Math stuff sounds interesting",
           "action": "loadLesson",
           "actionParams": { "lesson": 2 }
         },
         {
-          "text": "Lesson 3: Conditionals (if/else)",
+          "text": "How do I make my game make decisions?",
           "action": "loadLesson",
           "actionParams": { "lesson": 3 }
         },
         {
-          "text": "Lesson 4: Loops & Repetition",
+          "text": "What are loops for?",
           "action": "loadLesson",
           "actionParams": { "lesson": 4 }
         },
         {
-          "text": "More lessons →",
+          "text": "Show me more →",
           "next": "lessonMenuPage2"
         },
         {
-          "text": "Back to main menu",
+          "text": "Actually, let me think about this",
           "next": "start"
         }
       ]
@@ -291,27 +291,27 @@
     "lessonSkillCheck": {
       "id": "lessonSkillCheck",
       "speaker": "Pixel",
-      "text": "Great! Let me help you find the right starting point!",
-      "followUp": "What Python concepts are you already comfortable with?",
+      "text": "No problem! Let's figure out where you're at so we don't waste your time!",
+      "followUp": "Quick check - what can you already do in Python?",
       "options": [
         {
-          "text": "Variables and basic math",
+          "text": "I can make variables and do some math",
           "next": "suggestLesson3"
         },
         {
-          "text": "If statements and loops",
+          "text": "If statements and loops? Yeah, I got those",
           "next": "suggestLesson5"
         },
         {
-          "text": "Functions and lists",
+          "text": "Functions, lists, that intermediate stuff",
           "next": "suggestLesson7"
         },
         {
-          "text": "Classes and objects",
+          "text": "I'm basically a Python ninja already",
           "next": "suggestLesson9"
         },
         {
-          "text": "Let me see all lessons",
+          "text": "You know what? Let's just start fresh",
           "next": "lessonMenu"
         }
       ]
@@ -319,16 +319,16 @@
     "suggestLesson3": {
       "id": "suggestLesson3",
       "speaker": "Pixel",
-      "text": "Perfect! You know the basics. I suggest starting with Lesson 3 - Conditionals!",
-      "followUp": "This will teach you how games make decisions - super important for game logic!",
+      "text": "Sweet! You've got the basics down. How about we jump into making your code think?",
+      "followUp": "Lesson 3 is all about decisions - like 'if the player hits a wall, bounce them back!' Super important for games!",
       "options": [
         {
-          "text": "Start Lesson 3!",
+          "text": "Yeah! Let's make smart code!",
           "action": "loadLesson",
           "actionParams": { "lesson": 3 }
         },
         {
-          "text": "Show me all lessons",
+          "text": "Hmm, what else is there?",
           "next": "lessonMenu"
         }
       ]
@@ -336,16 +336,16 @@
     "suggestLesson5": {
       "id": "suggestLesson5",
       "speaker": "Pixel",
-      "text": "Nice! You've got good foundations. Jump into Lesson 5 - Lists!",
-      "followUp": "Lists are how games track enemies, inventory, high scores - everything!",
+      "text": "Oh nice! You're past the beginner stuff. Time for the good parts!",
+      "followUp": "Lists are like... imagine your game inventory, or tracking all the enemies on screen. Essential stuff!",
       "options": [
         {
-          "text": "Start Lesson 5!",
+          "text": "That's exactly what I need!",
           "action": "loadLesson",
           "actionParams": { "lesson": 5 }
         },
         {
-          "text": "Show me all lessons",
+          "text": "Let me browse around first",
           "next": "lessonMenu"
         }
       ]
@@ -353,16 +353,16 @@
     "suggestLesson7": {
       "id": "suggestLesson7",
       "speaker": "Pixel",
-      "text": "Wow, you know your stuff! Try Lesson 7 - Dictionaries!",
-      "followUp": "Perfect for game stats, settings, and complex data structures!",
+      "text": "Whoa, look at you! You're ready for the advanced stuff!",
+      "followUp": "Dictionaries are like cheat sheets for your game - storing player stats, item properties, all that good data!",
       "options": [
         {
-          "text": "Start Lesson 7!",
+          "text": "Perfect, I love organizing data!",
           "action": "loadLesson",
           "actionParams": { "lesson": 7 }
         },
         {
-          "text": "Show me all lessons",
+          "text": "What else you got?",
           "next": "lessonMenu"
         }
       ]
@@ -370,21 +370,21 @@
     "suggestLesson9": {
       "id": "suggestLesson9",
       "speaker": "Pixel",
-      "text": "You're ready for the good stuff! Jump straight into PyGame!",
-      "followUp": "Lesson 9 will show you how to turn Python into real games!",
+      "text": "A Python ninja! You're totally ready for the real game development!",
+      "followUp": "Want to dive straight into PyGame? Or go all-in and build something right now?",
       "options": [
         {
-          "text": "Start Lesson 9 - PyGame!",
+          "text": "Show me PyGame's secrets!",
           "action": "loadLesson",
           "actionParams": { "lesson": 9 }
         },
         {
-          "text": "Start Lesson 10 - Build a Game!",
+          "text": "I'm ready to BUILD!",
           "action": "loadLesson",
           "actionParams": { "lesson": 10 }
         },
         {
-          "text": "Show me all lessons",
+          "text": "Let me see everything first",
           "next": "lessonMenu"
         }
       ]
@@ -561,18 +561,18 @@
     "assetSelected": {
       "id": "assetSelected",
       "speaker": "Pixel",
-      "text": "Great choice! Now let's add some interactivity. What should happen when the player starts?",
+      "text": "Nice pick! Okay, so we've got the basics... what feels most important to nail down next?",
       "options": [
         {
-          "text": "Add player controls",
+          "text": "How the player moves around!",
           "next": "playerControls"
         },
         {
-          "text": "Set up the game world",
+          "text": "Building the actual game world",
           "next": "worldSetup"
         },
         {
-          "text": "Configure game rules",
+          "text": "Let's figure out how to win!",
           "next": "gameRules"
         }
       ]
@@ -614,16 +614,16 @@
     "gameRules": {
       "id": "gameRules",
       "speaker": "Pixel",
-      "text": "Every game needs rules! Let's define how players win, lose, and progress!",
+      "text": "Every game needs rules! How challenging do you want this to be?",
       "options": [
         {
-          "text": "Simple rules - Just the basics",
+          "text": "Keep it simple - I just want to have fun!",
           "action": "setRules",
           "actionParams": { "complexity": "simple" },
           "next": "projectComplete"
         },
         {
-          "text": "Complex rules - Full game mechanics",
+          "text": "Make it deep - I want strategy and challenge!",
           "action": "setRules",
           "actionParams": { "complexity": "complex" },
           "next": "projectComplete"
@@ -633,19 +633,19 @@
     "projectComplete": {
       "id": "projectComplete",
       "speaker": "Pixel",
-      "text": "Awesome work! Your game framework is ready! 🎉",
-      "followUp": "You can now start adding your own features and making it unique!",
+      "text": "BOOM! Look at that - you've got a real game framework! 🎉",
+      "followUp": "This is just the beginning though. Ready to add your own twist to it?",
       "options": [
         {
-          "text": "Open in editor to continue",
+          "text": "Yes! Let me customize it!",
           "action": "openEditor"
         },
         {
-          "text": "Start over with a different game",
+          "text": "Actually, I want to try something different",
           "next": "start"
         },
         {
-          "text": "Learn more Python first",
+          "text": "I should probably learn more Python first...",
           "action": "openLessons"
         }
       ]
@@ -653,14 +653,14 @@
     "error": {
       "id": "error",
       "speaker": "Pixel",
-      "text": "Oops! Something went wrong. Don't worry, we can fix this!",
+      "text": "Uh oh! Something went a bit sideways there. No worries though, happens to the best of us!",
       "options": [
         {
-          "text": "Try again",
+          "text": "Let's try that again!",
           "next": "start"
         },
         {
-          "text": "Get help",
+          "text": "I need some help here...",
           "action": "openHelp"
         }
       ]
