@@ -122,17 +122,13 @@
           "default": "A classic game title! Bold colorful letters with a subtle animation, inviting 'Start' button, and atmospheric background. Simple but effective!"
         }
       },
-      "action": "showTitlePreset",
-      "additionalAction": "previewScene",
       "options": [
         {
           "text": "This looks perfect! Let's continue",
-          "action": "applyTitlePreset",
           "next": "guidedGameplay"
         },
         {
           "text": "Show me a different style",
-          "action": "cycleTitlePreset",
           "next": "guidedTitleScreen"
         }
       ]
@@ -152,17 +148,13 @@
           "default": "Basic but fun gameplay! Move your character, interact with the environment, collect items, and avoid obstacles. All the fundamentals are working!"
         }
       },
-      "action": "loadGameplayPreset",
-      "additionalAction": "launchPlaytest",
       "options": [
         {
           "text": "This plays great! On to the ending",
-          "action": "saveGameplay",
           "next": "guidedEndScreen"
         },
         {
           "text": "Let me play around more",
-          "action": "extendPlaytest",
           "next": "guidedGameplayTest"
         }
       ]
@@ -174,12 +166,10 @@
       "options": [
         {
           "text": "I'm satisfied! Let's continue",
-          "action": "saveGameplay",
           "next": "guidedEndScreen"
         },
         {
           "text": "Can I adjust the difficulty?",
-          "action": "tweakDifficulty",
           "next": "guidedGameplayTest"
         }
       ]
@@ -199,17 +189,13 @@
           "default": "Game complete! Your final score in big numbers, achievements you unlocked listed, statistics tracked, and options to play again or return to menu!"
         }
       },
-      "action": "showEndingPreset",
-      "additionalAction": "previewEnding",
       "options": [
         {
           "text": "Perfect ending! We're done!",
-          "action": "applyEndingPreset",
           "next": "guidedComplete"
         },
         {
           "text": "Try a different ending style",
-          "action": "cycleEndingPreset",
           "next": "guidedEndScreen"
         }
       ]
@@ -219,15 +205,14 @@
       "speaker": "Pixel",
       "text": "🎉 CONGRATULATIONS! You've built a COMPLETE game! Title screen ✓ Gameplay ✓ Ending ✓ Everything connects perfectly!",
       "followUp": "Want to see your masterpiece in action? I can show you the full experience from start to finish!",
-      "action": "assembleFullGame",
       "options": [
         {
           "text": "Play my complete game!",
-          "action": "launchFullGame"
+          "action": "openEditor"
         },
         {
           "text": "Show me the Python code behind it",
-          "action": "viewGeneratedCode"
+          "action": "openEditor"
         },
         {
           "text": "Let me customize it more",
