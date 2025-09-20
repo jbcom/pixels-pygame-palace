@@ -17,6 +17,7 @@ import Gallery from "@/pages/gallery";
 import ProjectViewer from "@/pages/project-viewer";
 import SplashScreen from "@/components/splash-screen";
 import PixelPresence from "@/components/pixel-presence";
+import ComponentTestPage from "@/pages/component-test";
 
 function Router() {
   return (
@@ -49,6 +50,11 @@ function Router() {
       <Route path="/gallery/:id" component={() => (
         <PageErrorBoundary context="Project Viewer">
           <ProjectViewer />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/component-test" component={() => (
+        <PageErrorBoundary context="Component Test">
+          <ComponentTestPage />
         </PageErrorBoundary>
       )} />
       <Route component={() => (
