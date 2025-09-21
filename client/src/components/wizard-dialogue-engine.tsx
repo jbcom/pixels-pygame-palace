@@ -49,8 +49,10 @@ export function useWizardDialogue({
     unlockedEditor: false
   });
   
-  // Track the currently loaded flow path
+  // Track the currently loaded flow path, loading state, and failed attempts
   const [loadedFlowPath, setLoadedFlowPath] = useState<string | null>(null);
+  const [isFlowLoading, setIsFlowLoading] = useState(false);
+  const [failedFlowPaths, setFailedFlowPaths] = useState<Set<string>>(new Set());
 
   // Load wizard flow data
   useEffect(() => {
@@ -64,12 +66,14 @@ export function useWizardDialogue({
     // Check if we should load a specialized flow
     // This happens when:
     // 1. We have a gameType set AND
-    // 2. Either we're transitioning to specialized flow OR we don't have wizard data yet
-    const shouldLoadSpecializedFlow = gameType && (
-      sessionActions.transitionToSpecializedFlow || 
-      !wizardData ||
-      (loadedFlowPath && !loadedFlowPath.includes(gameType))
-    );
+    // 2. Either we're explicitly transitioning OR the current flow doesn't match the gameType
+    // 3. AND we haven't already failed to load this flow
+    const specializedFlowPath = gameType ? `/${gameType}-flow.json` : null;
+    const shouldLoadSpecializedFlow = gameType && 
+      !failedFlowPaths.has(specializedFlowPath || '') && (
+        sessionActions.transitionToSpecializedFlow || 
+        (loadedFlowPath !== specializedFlowPath)
+      );
     
     if (shouldLoadSpecializedFlow) {
       // Load specialized flow when we have gameType
@@ -82,13 +86,24 @@ export function useWizardDialogue({
       console.log('Loading generic game flow');
     }
     
-    // Skip loading if we already have the right flow loaded
-    if (loadedFlowPath === flowPath && wizardData) {
+    // Skip loading if we already have the right flow loaded or if we're currently loading
+    if (loadedFlowPath === flowPath) {
       console.log('Flow already loaded, skipping:', flowPath);
+      // Clear transition flag if it's set but we already have the right flow
+      if (sessionActions.transitionToSpecializedFlow) {
+        setSessionActions(prev => ({ ...prev, transitionToSpecializedFlow: false }));
+      }
+      return;
+    }
+    
+    // Prevent concurrent flow loads
+    if (isFlowLoading) {
+      console.log('Flow is already loading, skipping duplicate load request');
       return;
     }
     
     console.log('Loading flow from:', flowPath, 'Previously loaded:', loadedFlowPath);
+    setIsFlowLoading(true);
     
     loadWizardFlow(flowPath)
       .then(nodes => {
@@ -115,16 +130,29 @@ export function useWizardDialogue({
         }
         
         // Clear the transition flag after successful load
-        if (sessionActions.transitionToSpecializedFlow) {
+        // Use a timeout to ensure state updates happen after the current render cycle
+        setTimeout(() => {
           setSessionActions(prev => ({ ...prev, transitionToSpecializedFlow: false }));
-        }
+        }, 0);
         
         setIsLoading(false);
+        setIsFlowLoading(false);
       })
       .catch(error => {
         console.error(`Failed to load wizard flow from ${flowPath}:`, error);
-        // Try fallback to default flow
-        if (flowPath !== wizardFlowPath) {
+        
+        // Mark this flow path as failed to prevent retry loops
+        setFailedFlowPaths(prev => new Set(prev).add(flowPath));
+        
+        // Clear the transition flag since we failed to load the specialized flow
+        if (sessionActions.transitionToSpecializedFlow) {
+          setTimeout(() => {
+            setSessionActions(prev => ({ ...prev, transitionToSpecializedFlow: false }));
+          }, 0);
+        }
+        
+        // Try fallback to default flow only if we're not already on it
+        if (flowPath !== wizardFlowPath && !failedFlowPaths.has(wizardFlowPath)) {
           console.log('Attempting fallback to default flow:', wizardFlowPath);
           loadWizardFlow(wizardFlowPath)
             .then(nodes => {
@@ -141,16 +169,25 @@ export function useWizardDialogue({
                 }));
               }
               setIsLoading(false);
+              setIsFlowLoading(false);
             })
             .catch(fallbackError => {
               console.error('Failed to load fallback flow:', fallbackError);
+              setFailedFlowPaths(prev => new Set(prev).add(wizardFlowPath));
               setIsLoading(false);
+              setIsFlowLoading(false);
             });
         } else {
           setIsLoading(false);
+          setIsFlowLoading(false);
+          
+          // If we can't load any flow, stay with the current flow if available
+          if (!wizardData && loadedFlowPath) {
+            console.log('No flow data available, staying with current flow');
+          }
         }
       });
-  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType, sessionActions.transitionToSpecializedFlow, loadedFlowPath]);
+  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType, sessionActions.transitionToSpecializedFlow]);
 
   // Update current node when ID changes
   useEffect(() => {
@@ -197,17 +234,18 @@ export function useWizardDialogue({
     
     // Handle transitionToSpecializedFlow action
     if (option.action === 'transitionToSpecializedFlow') {
-      console.log('Setting transitionToSpecializedFlow flag');
+      console.log('Setting transitionToSpecializedFlow flag for gameType:', option.setVariable?.gameType || sessionActions.gameType);
       setSessionActions(prev => ({ 
         ...prev, 
         transitionToSpecializedFlow: true
       }));
       
-      // If there's no explicit next node, we'll navigate to a placeholder
-      // The specialized flow will override this when it loads
+      // Don't navigate immediately - let the flow loading handle it
+      // This prevents race conditions between navigation and flow loading
       if (!option.next) {
         console.log('No next node specified, will load specialized flow start node');
-        // Don't navigate here - let the flow loading handle it
+        // Return early to prevent navigation
+        return option;
       }
     }
     
