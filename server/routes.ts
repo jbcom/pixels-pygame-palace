@@ -796,3 +796,161 @@ while running:
 pygame.quit()
 sys.exit()`;
 }
+
+  // === REGISTRY API ENDPOINTS ===
+  
+  // Components
+  app.get("/api/registry/components", async (req, res) => {
+    try {
+      const components = await storage.getRegistryComponents();
+      res.json({
+        components,
+        total: components.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch components",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/registry/components/:id", async (req, res) => {
+    try {
+      const component = await storage.getRegistryComponent(req.params.id);
+      if (!component) {
+        return res.status(404).json({ message: "Component not found" });
+      }
+      res.json(component);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch component",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Mechanics
+  app.get("/api/registry/mechanics", async (req, res) => {
+    try {
+      const mechanics = await storage.getRegistryMechanics();
+      res.json({
+        mechanics,
+        total: mechanics.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch mechanics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/registry/mechanics/:id", async (req, res) => {
+    try {
+      const mechanic = await storage.getRegistryMechanic(req.params.id);
+      if (!mechanic) {
+        return res.status(404).json({ message: "Mechanic not found" });
+      }
+      res.json(mechanic);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch mechanic",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Templates
+  app.get("/api/registry/templates", async (req, res) => {
+    try {
+      const templates = await storage.getRegistryTemplates();
+      res.json({
+        templates,
+        total: templates.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch templates",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/registry/templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getRegistryTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch template",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Assets (placeholder - no seed data created yet)
+  app.get("/api/registry/assets", async (req, res) => {
+    try {
+      const assets = await storage.getRegistryAssets();
+      res.json({
+        assets,
+        total: assets.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch assets",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/registry/assets/:id", async (req, res) => {
+    try {
+      const asset = await storage.getRegistryAsset(req.params.id);
+      if (!asset) {
+        return res.status(404).json({ message: "Asset not found" });
+      }
+      res.json(asset);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch asset",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Build Targets
+  app.get("/api/registry/build-targets", async (req, res) => {
+    try {
+      const buildTargets = await storage.getRegistryBuildTargets();
+      res.json({
+        buildTargets,
+        total: buildTargets.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch build targets",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/registry/build-targets/:id", async (req, res) => {
+    try {
+      const buildTarget = await storage.getRegistryBuildTarget(req.params.id);
+      if (!buildTarget) {
+        return res.status(404).json({ message: "Build target not found" });
+      }
+      res.json(buildTarget);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch build target",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+}
