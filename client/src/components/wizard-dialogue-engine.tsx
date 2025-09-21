@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   WizardNode, 
@@ -18,6 +18,11 @@ import {
   STYLES,
   ANIMATIONS
 } from './wizard-constants';
+import {
+  saveWizardStateDebounced,
+  loadWizardState,
+  PersistedWizardState
+} from '@/lib/persistence';
 
 interface UseWizardDialogueProps {
   initialNodeId?: string;
@@ -33,26 +38,78 @@ export function useWizardDialogue({
 }: UseWizardDialogueProps = {}) {
   const [wizardData, setWizardData] = useState<Record<string, WizardNode> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dialogueState, setDialogueState] = useState<DialogueState>({
-    currentNodeId: initialNodeId,
-    currentNode: null,
-    dialogueStep: 0,
-    carouselIndex: 0,
-    showAllChoices: false,
-  });
-  const [sessionActions, setSessionActions] = useState<SessionActions>({
-    choices: [],
-    createdAssets: [],
-    gameType: null,
-    currentProject: null,
-    completedSteps: [],
-    unlockedEditor: false
-  });
+  
+  // Load persisted state on mount
+  const [hasLoadedPersistedState, setHasLoadedPersistedState] = useState(false);
+  const persistedStateRef = useRef<PersistedWizardState | null>(null);
+  
+  // Initialize state from localStorage if available
+  const getInitialDialogueState = (): DialogueState => {
+    const persistedState = loadWizardState();
+    if (persistedState && persistedState.currentNodeId) {
+      persistedStateRef.current = persistedState;
+      return {
+        currentNodeId: persistedState.currentNodeId,
+        currentNode: null,
+        dialogueStep: 0,
+        carouselIndex: 0,
+        showAllChoices: false,
+      };
+    }
+    return {
+      currentNodeId: initialNodeId,
+      currentNode: null,
+      dialogueStep: 0,
+      carouselIndex: 0,
+      showAllChoices: false,
+    };
+  };
+  
+  const getInitialSessionActions = (): SessionActions => {
+    const persistedState = persistedStateRef.current || loadWizardState();
+    if (persistedState && persistedState.sessionActions) {
+      return persistedState.sessionActions;
+    }
+    return {
+      choices: [],
+      createdAssets: [],
+      gameType: null,
+      currentProject: null,
+      completedSteps: [],
+      unlockedEditor: false
+    };
+  };
+  
+  const [dialogueState, setDialogueState] = useState<DialogueState>(getInitialDialogueState);
+  const [sessionActions, setSessionActions] = useState<SessionActions>(getInitialSessionActions);
   
   // Track the currently loaded flow path, loading state, and failed attempts
-  const [loadedFlowPath, setLoadedFlowPath] = useState<string | null>(null);
+  const [loadedFlowPath, setLoadedFlowPath] = useState<string | null>(() => {
+    const persistedState = persistedStateRef.current || loadWizardState();
+    return persistedState?.activeFlowPath || null;
+  });
   const [isFlowLoading, setIsFlowLoading] = useState(false);
   const [failedFlowPaths, setFailedFlowPaths] = useState<Set<string>>(new Set());
+  
+  // Persist state changes
+  useEffect(() => {
+    if (!hasLoadedPersistedState) {
+      // Don't persist on initial load
+      setHasLoadedPersistedState(true);
+      return;
+    }
+    
+    // Save state to localStorage (debounced)
+    saveWizardStateDebounced({
+      version: '1.0.0',
+      activeFlowPath: loadedFlowPath,
+      currentNodeId: dialogueState.currentNodeId,
+      gameType: sessionActions.gameType,
+      selectedGameType: sessionActions.selectedGameType,
+      sessionActions: sessionActions,
+      updatedAt: new Date().toISOString()
+    });
+  }, [dialogueState.currentNodeId, sessionActions, loadedFlowPath, hasLoadedPersistedState]);
 
   // Load wizard flow data
   useEffect(() => {
@@ -112,8 +169,21 @@ export function useWizardDialogue({
         setLoadedFlowPath(flowPath);
         
         // When loading a specialized flow, start from the beginning
-        const startNodeId = gameType && flowPath.includes(gameType) ? 'start' : initialNodeId;
-        console.log('Setting start node to:', startNodeId);
+        // However, if we have persisted state for this flow, resume from that node
+        let startNodeId: string;
+        const persistedState = loadWizardState();
+        if (persistedState && persistedState.activeFlowPath === flowPath && persistedState.currentNodeId && nodes[persistedState.currentNodeId]) {
+          // Resume from saved position
+          startNodeId = persistedState.currentNodeId;
+          console.log('Resuming from persisted node:', startNodeId);
+        } else if (gameType && flowPath.includes(gameType)) {
+          // Start from beginning for specialized flows
+          startNodeId = 'start';
+          console.log('Starting specialized flow from beginning');
+        } else {
+          startNodeId = initialNodeId;
+          console.log('Using initial node:', startNodeId);
+        }
         
         if (nodes[startNodeId]) {
           setDialogueState(prev => ({

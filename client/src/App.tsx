@@ -13,6 +13,7 @@ import PixelPresence from "@/components/pixel-presence";
 import UniversalWizard from "@/components/universal-wizard";
 import AssetLibraryTest from "@/pages/AssetLibraryTest";
 import PygamePreviewTest from "@/pages/pygame-preview-test";
+import PersistenceTest from "@/pages/PersistenceTest";
 
 function Router() {
   return (
@@ -45,6 +46,11 @@ function Router() {
       <Route path="/pygame-preview-test" component={() => (
         <PageErrorBoundary context="Pygame Preview Test">
           <PygamePreviewTest />
+        </PageErrorBoundary>
+      )} />
+      <Route path="/persistence-test" component={() => (
+        <PageErrorBoundary context="Persistence Test">
+          <PersistenceTest />
         </PageErrorBoundary>
       )} />
       <Route component={() => (
