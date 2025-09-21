@@ -2,9 +2,13 @@ import os
 import json
 import uuid
 import subprocess
+import re
+import ast
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import BadRequest
 import tempfile
 import base64
@@ -13,10 +17,17 @@ from PIL import Image
 import threading
 import queue
 import time
+import atexit
+import signal
 
 # Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Security Configuration
+MAX_CONCURRENT_SESSIONS = 10  # Limit concurrent game sessions
+MAX_SESSION_TIME = 300  # 5 minutes max per session
+MAX_CODE_SIZE = 100000  # 100KB max code size
 
 # Configure CORS to allow requests from the React frontend
 CORS(app, resources={
@@ -27,14 +38,44 @@ CORS(app, resources={
     }
 })
 
-# Initialize SocketIO with CORS support
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+# Initialize rate limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Initialize SocketIO with specific CORS origins (not wildcard)
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins=["http://localhost:5000", "http://localhost:5173", "http://127.0.0.1:5000"],
+    async_mode='threading'
+)
 
 # In-memory storage for projects (replace with database later)
 projects_db = {}
 
-# Game execution sessions
+# Game execution sessions with tracking
 game_sessions = {}
+session_start_times = {}  # Track session start times for timeouts
+
+# Cleanup function for graceful shutdown
+def cleanup_all_sessions():
+    """Clean up all running game sessions on shutdown"""
+    print("Cleaning up all game sessions...")
+    for session_id in list(game_sessions.keys()):
+        try:
+            executor = game_sessions[session_id]
+            executor.stop()
+        except Exception as e:
+            print(f"Error cleaning up session {session_id}: {e}")
+    game_sessions.clear()
+    session_start_times.clear()
+
+# Register cleanup on exit
+atexit.register(cleanup_all_sessions)
+signal.signal(signal.SIGINT, lambda s, f: cleanup_all_sessions())
+signal.signal(signal.SIGTERM, lambda s, f: cleanup_all_sessions())
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -42,6 +83,7 @@ def health_check():
     return jsonify({'status': 'healthy', 'service': 'pygame-backend'}), 200
 
 @app.route('/api/compile', methods=['POST'])
+@limiter.limit("10 per minute")
 def compile_game():
     """Compile game from components into executable Python code"""
     try:
@@ -67,6 +109,7 @@ def compile_game():
         }), 400
 
 @app.route('/api/execute', methods=['POST'])
+@limiter.limit("5 per minute")
 def execute_game():
     """Execute Python game code with pygame"""
     try:
@@ -75,14 +118,49 @@ def execute_game():
             raise BadRequest("No code provided")
         
         code = data['code']
+        
+        # Security: Check code size
+        if len(code) > MAX_CODE_SIZE:
+            return jsonify({
+                'success': False,
+                'error': f'Code size exceeds limit ({MAX_CODE_SIZE} bytes)'
+            }), 400
+        
+        # Security: Check concurrent sessions
+        if len(game_sessions) >= MAX_CONCURRENT_SESSIONS:
+            # Try to clean up old sessions first
+            current_time = time.time()
+            for sid in list(session_start_times.keys()):
+                if current_time - session_start_times[sid] > MAX_SESSION_TIME:
+                    if sid in game_sessions:
+                        game_sessions[sid].stop()
+                        del game_sessions[sid]
+                        del session_start_times[sid]
+            
+            # Check again after cleanup
+            if len(game_sessions) >= MAX_CONCURRENT_SESSIONS:
+                return jsonify({
+                    'success': False,
+                    'error': 'Maximum concurrent sessions reached. Please try again later.'
+                }), 429
+        
+        # Security: Validate and sanitize code
+        validation_result = validate_user_code(code)
+        if not validation_result['valid']:
+            return jsonify({
+                'success': False,
+                'error': validation_result['error']
+            }), 400
+        
         session_id = str(uuid.uuid4())
         
         # Import the game engine module
         from game_engine import GameExecutor
         
-        # Create a new game executor
-        executor = GameExecutor(session_id)
+        # Create a new game executor with timeout
+        executor = GameExecutor(session_id, timeout=MAX_SESSION_TIME)
         game_sessions[session_id] = executor
+        session_start_times[session_id] = time.time()
         
         # Start game execution in a separate thread
         def run_game():
@@ -91,6 +169,12 @@ def execute_game():
             except Exception as e:
                 print(f"Game execution error: {e}")
                 socketio.emit('game_error', {'session_id': session_id, 'error': str(e)})
+            finally:
+                # Clean up after execution
+                if session_id in game_sessions:
+                    del game_sessions[session_id]
+                if session_id in session_start_times:
+                    del session_start_times[session_id]
         
         game_thread = threading.Thread(target=run_game)
         game_thread.daemon = True
@@ -120,9 +204,9 @@ def game_stream(session_id):
         while executor.is_running():
             frame = executor.get_frame()
             if frame:
-                # Convert PIL image to base64
+                # Convert PIL image to base64 with JPEG for better performance
                 buffered = BytesIO()
-                frame.save(buffered, format="PNG")
+                frame.save(buffered, format="JPEG", quality=75, optimize=True)
                 img_str = base64.b64encode(buffered.getvalue()).decode()
                 
                 yield f"data: {json.dumps({'type': 'frame', 'data': img_str})}\n\n"
@@ -306,6 +390,159 @@ def handle_stop_game(data):
         emit('game_stopped', {'session_id': session_id})
     else:
         emit('stop_error', {'error': 'Invalid session'})
+
+# Add new REST API endpoints for game control
+@app.route('/api/stop/<session_id>', methods=['POST'])
+@limiter.limit("20 per minute")
+def stop_game_endpoint(session_id):
+    """Stop a running game session"""
+    try:
+        if session_id not in game_sessions:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid session ID'
+            }), 404
+        
+        executor = game_sessions[session_id]
+        executor.stop()
+        
+        # Clean up session
+        del game_sessions[session_id]
+        if session_id in session_start_times:
+            del session_start_times[session_id]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Game stopped successfully'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/game-input/<session_id>', methods=['POST'])
+@limiter.limit("100 per minute")
+def send_game_input(session_id):
+    """Send input to a running game session"""
+    try:
+        if session_id not in game_sessions:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid session ID'
+            }), 404
+        
+        data = request.json
+        if not data or 'input' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'No input data provided'
+            }), 400
+        
+        executor = game_sessions[session_id]
+        executor.send_input(data['input'])
+        
+        return jsonify({
+            'success': True,
+            'message': 'Input sent successfully'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/sessions', methods=['GET'])
+def list_active_sessions():
+    """List all active game sessions"""
+    try:
+        current_time = time.time()
+        sessions = []
+        
+        for session_id in game_sessions:
+            start_time = session_start_times.get(session_id, current_time)
+            executor = game_sessions[session_id]
+            
+            sessions.append({
+                'session_id': session_id,
+                'running_time': current_time - start_time,
+                'is_running': executor.is_running(),
+                'max_time': MAX_SESSION_TIME
+            })
+        
+        return jsonify({
+            'success': True,
+            'sessions': sessions,
+            'max_concurrent': MAX_CONCURRENT_SESSIONS,
+            'current_count': len(sessions)
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def validate_user_code(code):
+    """Validate and sanitize user code for security"""
+    # List of dangerous imports and functions
+    dangerous_patterns = [
+        r'\b__import__\b',
+        r'\beval\b',
+        r'\bexec\b',
+        r'\bcompile\b',
+        r'\bopen\b',
+        r'\bfile\b',
+        r'\binput\b',
+        r'\braw_input\b',
+        r'\bos\.',
+        r'\bsubprocess\.',
+        r'\bsocket\.',
+        r'\burllib\.',
+        r'\brequests\.',
+        r'\b__builtins__\b',
+        r'\bglobals\b',
+        r'\blocals\b',
+        r'\bvars\b',
+        r'\bdir\b',
+        r'\bgetattr\b',
+        r'\bsetattr\b',
+        r'\bdelattr\b',
+        r'\bhasattr\b',
+        r'\b__class__\b',
+        r'\b__bases__\b',
+        r'\b__subclasses__\b',
+        r'\bimportlib\.',
+        r'\bpkgutil\.',
+        r'\bsys\.exit\b',
+        r'\bexit\b',
+        r'\bquit\b',
+    ]
+    
+    # Check for dangerous patterns
+    for pattern in dangerous_patterns:
+        if re.search(pattern, code):
+            return {
+                'valid': False,
+                'error': f'Dangerous code pattern detected: {pattern}'
+            }
+    
+    # Try to parse the code as valid Python
+    try:
+        ast.parse(code)
+    except SyntaxError as e:
+        return {
+            'valid': False,
+            'error': f'Syntax error in code: {str(e)}'
+        }
+    
+    # Check for valid pygame imports
+    if 'import pygame' not in code and 'from pygame' not in code:
+        return {
+            'valid': False,
+            'error': 'Code must import pygame to create a game'
+        }
+    
+    return {'valid': True}
 
 def generate_python_code(components, game_type):
     """Generate Python pygame code from visual components"""

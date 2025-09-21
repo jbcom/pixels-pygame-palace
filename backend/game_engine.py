@@ -11,11 +11,13 @@ from io import BytesIO
 from PIL import Image
 import signal
 import shutil
+import psutil
+import resource
 
 class GameExecutor:
     """Executes pygame code in a subprocess with virtual display support"""
     
-    def __init__(self, session_id):
+    def __init__(self, session_id, timeout=300):
         self.session_id = session_id
         self.process = None
         self.running = False
@@ -24,36 +26,66 @@ class GameExecutor:
         self.temp_dir = None
         self.xvfb_process = None
         self.display_num = None
+        self.timeout = timeout  # Maximum execution time in seconds
+        self.start_time = None
+        self.cleanup_lock = threading.Lock()
+        self.xvfb_cleanup_done = False
         
     def execute(self, code):
-        """Execute pygame code in a subprocess"""
+        """Execute pygame code in a subprocess with security constraints"""
         try:
             self.running = True
+            self.start_time = time.time()
             
             # Create temporary directory for game files
             self.temp_dir = tempfile.mkdtemp(prefix=f"game_{self.session_id}_")
             
-            # Write the game code to a temporary file
+            # Copy the game template to temp directory
+            template_path = os.path.join(os.path.dirname(__file__), 'game_template.py')
             game_file = os.path.join(self.temp_dir, "game.py")
+            
+            # Read template and inject user code
+            with open(template_path, 'r') as f:
+                template_code = f.read()
+            
+            # Replace the USER_CODE placeholder with actual user code
+            modified_code = template_code.replace(
+                "USER_CODE = '''\n# User game code will be inserted here\npass\n'''",
+                f"USER_CODE = '''{code}'''"
+            )
+            
+            # Write the complete game file
             with open(game_file, 'w') as f:
-                # Modify the code to work in headless mode
-                modified_code = self._modify_code_for_headless(code)
                 f.write(modified_code)
+            
+            # Also write user code separately for execution
+            user_code_file = os.path.join(self.temp_dir, "user_game.py")
+            with open(user_code_file, 'w') as f:
+                f.write(code)
             
             # Check if we can use a real display or need Xvfb
             if not os.environ.get('DISPLAY'):
                 # Start Xvfb (virtual display) if no display is available
                 self.display_num = self._find_free_display()
-                self.xvfb_process = subprocess.Popen([
-                    'Xvfb',
-                    f':{self.display_num}',
-                    '-screen', '0', '800x600x24',
-                    '-ac',  # Disable access control
-                    '+extension', 'GLX'  # Enable OpenGL extension
-                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                
-                # Wait for Xvfb to start
-                time.sleep(0.5)
+                try:
+                    self.xvfb_process = subprocess.Popen([
+                        'Xvfb',
+                        f':{self.display_num}',
+                        '-screen', '0', '800x600x24',
+                        '-ac',  # Disable access control
+                        '+extension', 'GLX'  # Enable OpenGL extension
+                    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    
+                    # Wait for Xvfb to start
+                    time.sleep(0.5)
+                    
+                    # Verify Xvfb started successfully
+                    if self.xvfb_process.poll() is not None:
+                        raise Exception("Xvfb failed to start")
+                    
+                except Exception as e:
+                    print(f"Error starting Xvfb: {e}")
+                    raise
                 
                 # Set display environment variable
                 env = os.environ.copy()
@@ -67,25 +99,34 @@ class GameExecutor:
             # Disable SDL audio to avoid issues
             env['SDL_AUDIODRIVER'] = 'dummy'
             
-            # Run the game
+            # Set resource limits for security
+            env['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'  # Hide pygame welcome message
+            
+            # Run the game with resource limits
             self.process = subprocess.Popen(
-                [sys.executable, game_file],
+                [sys.executable, '-u', game_file],  # -u for unbuffered output
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 env=env,
-                cwd=self.temp_dir
+                cwd=self.temp_dir,
+                preexec_fn=self._set_resource_limits if os.name != 'nt' else None
             )
             
-            # Start threads to handle output
+            # Start threads to handle output and timeout
             stdout_thread = threading.Thread(target=self._read_stdout)
             stderr_thread = threading.Thread(target=self._read_stderr)
+            timeout_thread = threading.Thread(target=self._monitor_timeout)
+            
             stdout_thread.daemon = True
             stderr_thread.daemon = True
+            timeout_thread.daemon = True
+            
             stdout_thread.start()
             stderr_thread.start()
+            timeout_thread.start()
             
-            # Wait for the process to complete
+            # Wait for the process to complete or timeout
             self.process.wait()
             
         except Exception as e:
@@ -95,9 +136,39 @@ class GameExecutor:
             self.running = False
             self._cleanup()
     
+    def _set_resource_limits(self):
+        """Set resource limits for the subprocess (Unix/Linux only)"""
+        # CPU time limit (soft, hard) in seconds
+        resource.setrlimit(resource.RLIMIT_CPU, (self.timeout, self.timeout + 10))
+        
+        # Memory limit (soft, hard) in bytes - 512MB
+        max_memory = 512 * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (max_memory, max_memory))
+        
+        # Limit number of processes
+        resource.setrlimit(resource.RLIMIT_NPROC, (10, 10))
+        
+        # Limit number of open files
+        resource.setrlimit(resource.RLIMIT_NOFILE, (50, 50))
+    
+    def _monitor_timeout(self):
+        """Monitor process execution time and kill if timeout exceeded"""
+        while self.running and self.process:
+            if self.process.poll() is not None:
+                # Process has ended
+                break
+            
+            elapsed = time.time() - self.start_time
+            if elapsed > self.timeout:
+                print(f"Game {self.session_id} exceeded timeout of {self.timeout}s")
+                self.stop()
+                break
+            
+            time.sleep(1)
+    
     def _modify_code_for_headless(self, code):
-        """Modify pygame code to work in headless mode and capture frames"""
-        # Insert frame capture code
+        """[DEPRECATED] This method is no longer used - template system is used instead"""
+        # This method is kept for backward compatibility but not used
         capture_code = '''
 # Frame capture setup for streaming
 import os
@@ -222,46 +293,86 @@ def capture_frame(screen):
             return None
     
     def stop(self):
-        """Stop the game execution"""
-        self.running = False
-        
-        if self.process:
-            try:
-                # Try graceful termination first
-                self.process.terminate()
-                self.process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                # Force kill if it doesn't stop
-                self.process.kill()
-                self.process.wait()
-        
-        self._cleanup()
+        """Stop the game execution with proper cleanup"""
+        with self.cleanup_lock:
+            if not self.running:
+                return  # Already stopped
+            
+            self.running = False
+            
+            # Stop the process
+            if self.process:
+                try:
+                    # Try graceful termination first
+                    self.process.terminate()
+                    self.process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    # Force kill if it doesn't stop
+                    try:
+                        self.process.kill()
+                        self.process.wait(timeout=1)
+                    except:
+                        # If kill also fails, try using psutil
+                        try:
+                            p = psutil.Process(self.process.pid)
+                            p.kill()
+                        except:
+                            pass
+                except Exception as e:
+                    print(f"Error stopping process: {e}")
+            
+            # Clean up resources
+            self._cleanup()
     
     def _cleanup(self):
-        """Clean up resources"""
-        # Stop Xvfb if it was started
-        if self.xvfb_process:
-            try:
-                self.xvfb_process.terminate()
-                self.xvfb_process.wait(timeout=2)
-            except:
-                self.xvfb_process.kill()
-            
-            # Clean up X lock file
-            if self.display_num:
-                lock_file = f'/tmp/.X{self.display_num}-lock'
-                if os.path.exists(lock_file):
+        """Clean up resources with proper error handling"""
+        # Prevent double cleanup
+        if self.xvfb_cleanup_done:
+            return
+        
+        try:
+            # Stop Xvfb if it was started
+            if self.xvfb_process:
+                try:
+                    self.xvfb_process.terminate()
+                    self.xvfb_process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
                     try:
-                        os.remove(lock_file)
+                        self.xvfb_process.kill()
+                        self.xvfb_process.wait(timeout=1)
                     except:
                         pass
-        
-        # Remove temporary directory
-        if self.temp_dir and os.path.exists(self.temp_dir):
-            try:
-                shutil.rmtree(self.temp_dir)
-            except:
-                pass
+                except Exception as e:
+                    print(f"Error stopping Xvfb: {e}")
+                finally:
+                    self.xvfb_process = None
+            
+            # Clean up X lock file and socket
+            if self.display_num:
+                files_to_remove = [
+                    f'/tmp/.X{self.display_num}-lock',
+                    f'/tmp/.X11-unix/X{self.display_num}'
+                ]
+                for file_path in files_to_remove:
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                        except Exception as e:
+                            print(f"Error removing {file_path}: {e}")
+            
+            # Remove temporary directory
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                try:
+                    shutil.rmtree(self.temp_dir, ignore_errors=True)
+                except Exception as e:
+                    print(f"Error removing temp directory: {e}")
+                finally:
+                    self.temp_dir = None
+            
+            self.xvfb_cleanup_done = True
+            
+        except Exception as e:
+            print(f"Cleanup error: {e}")
     
     def is_running(self):
         """Check if the game is still running"""

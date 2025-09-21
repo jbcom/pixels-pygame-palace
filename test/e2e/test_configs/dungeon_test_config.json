@@ -1,0 +1,209 @@
+{
+  "game_type": "dungeon",
+  "description": "Test configuration for dungeon crawler game creation flow",
+  "stages": {
+    "title_screen": {
+      "title": "Depths of Darkness",
+      "font": "gothic",
+      "background": "#0F0F0F",
+      "music": "ominous_intro.mp3",
+      "style": "dark_fantasy",
+      "buttons": ["Enter Dungeon", "Load Game", "Settings", "Bestiary", "Quit"]
+    },
+    "gameplay": {
+      "player": {
+        "class": "warrior",
+        "sprite": "warrior_armor.png",
+        "health": 100,
+        "stamina": 50,
+        "attack": 15,
+        "defense": 10,
+        "speed": 3,
+        "abilities": ["sword_slash", "shield_bash", "battle_cry"],
+        "animations": ["idle", "walk", "attack", "block", "hurt", "death"]
+      },
+      "dungeon_layout": {
+        "generation": "procedural",
+        "room_types": ["combat", "treasure", "trap", "boss", "shop", "rest"],
+        "size": "medium",
+        "floors": 10,
+        "tile_size": 32,
+        "lighting": "torch_radius",
+        "fog_of_war": true
+      },
+      "enemies": [
+        {
+          "type": "skeleton",
+          "sprite": "skeleton_warrior.png",
+          "health": 30,
+          "damage": 8,
+          "speed": 2,
+          "ai": "aggressive",
+          "loot": ["bones", "rusty_sword"]
+        },
+        {
+          "type": "orc",
+          "sprite": "orc_brute.png",
+          "health": 50,
+          "damage": 12,
+          "speed": 2,
+          "ai": "patrol",
+          "loot": ["gold", "orc_axe"]
+        },
+        {
+          "type": "demon_lord",
+          "sprite": "demon_boss.png",
+          "health": 200,
+          "damage": 25,
+          "speed": 3,
+          "boss": true,
+          "abilities": ["fireball", "summon_minions"]
+        }
+      ],
+      "loot_system": {
+        "rarity_tiers": ["common", "rare", "epic", "legendary"],
+        "item_types": ["weapons", "armor", "potions", "scrolls", "keys"],
+        "drop_rates": {
+          "common": 0.6,
+          "rare": 0.25,
+          "epic": 0.1,
+          "legendary": 0.05
+        }
+      },
+      "traps": [
+        {
+          "type": "spike_pit",
+          "damage": 20,
+          "trigger": "pressure_plate",
+          "sprite": "trap_spikes.png"
+        },
+        {
+          "type": "arrow_trap",
+          "damage": 15,
+          "trigger": "tripwire",
+          "sprite": "trap_arrow.png"
+        },
+        {
+          "type": "poison_gas",
+          "damage": 5,
+          "duration": 10,
+          "trigger": "proximity",
+          "sprite": "trap_gas.png"
+        }
+      ],
+      "combat": {
+        "style": "real_time",
+        "combo_system": true,
+        "dodge_roll": true,
+        "parry_timing": true,
+        "critical_hits": true
+      }
+    },
+    "assets": {
+      "sprites": [
+        {"name": "hero_classes", "path": "assets/2d/dungeon/characters/heroes.png"},
+        {"name": "monsters", "path": "assets/2d/dungeon/characters/monsters.png"},
+        {"name": "dungeon_tiles", "path": "assets/2d/dungeon/tiles/dungeon.png"},
+        {"name": "items", "path": "assets/2d/dungeon/items/loot.png"},
+        {"name": "effects", "path": "assets/2d/dungeon/effects/magic.png"}
+      ],
+      "sounds": [
+        {"name": "sword_hit", "path": "assets/audio/sfx/weapons/sword_impact.wav"},
+        {"name": "monster_growl", "path": "assets/audio/sfx/monsters/growl.wav"},
+        {"name": "door_open", "path": "assets/audio/sfx/environment/door.wav"},
+        {"name": "treasure_open", "path": "assets/audio/sfx/items/chest.wav"},
+        {"name": "trap_trigger", "path": "assets/audio/sfx/traps/activate.wav"}
+      ],
+      "backgrounds": [
+        {"name": "dungeon_wall", "path": "assets/2d/dungeon/backgrounds/stone_wall.png"},
+        {"name": "boss_arena", "path": "assets/2d/dungeon/backgrounds/boss_room.png"}
+      ],
+      "music": [
+        {"name": "exploration", "path": "assets/audio/music/loops/dungeon_ambient.mp3"},
+        {"name": "combat", "path": "assets/audio/music/loops/battle_intense.mp3"},
+        {"name": "boss_fight", "path": "assets/audio/music/loops/boss_epic.mp3"}
+      ]
+    },
+    "progression": {
+      "leveling": {
+        "experience_from_enemies": true,
+        "skill_points": true,
+        "stat_upgrades": ["health", "attack", "defense", "speed"]
+      },
+      "equipment": {
+        "slots": ["weapon", "armor", "accessory", "consumable"],
+        "upgrade_system": true,
+        "enchantments": true
+      },
+      "unlockables": {
+        "new_classes": ["rogue", "mage", "paladin"],
+        "new_abilities": true,
+        "secret_rooms": true
+      }
+    },
+    "special_features": {
+      "merchant": {
+        "appears_randomly": true,
+        "sells": ["potions", "weapons", "maps"],
+        "currency": "gold"
+      },
+      "secrets": {
+        "hidden_walls": true,
+        "secret_passages": true,
+        "treasure_rooms": true
+      },
+      "challenges": {
+        "timed_rooms": true,
+        "survival_waves": true,
+        "puzzle_doors": true
+      }
+    },
+    "ending_screen": {
+      "win_message": "You have conquered the dungeon!",
+      "lose_message": "You have fallen to the darkness...",
+      "music": "victory_or_defeat.mp3",
+      "style": "epic_scroll",
+      "show_stats": true,
+      "show_loot": true,
+      "show_floor_reached": true,
+      "options": ["New Game+", "New Run", "View Stats", "Main Menu"]
+    },
+    "ui_elements": {
+      "hud": {
+        "health_bar": "top_left",
+        "stamina_bar": "below_health",
+        "minimap": "top_right",
+        "inventory_hotbar": "bottom",
+        "ability_cooldowns": "bottom_right",
+        "floor_indicator": "top_center"
+      },
+      "menus": {
+        "inventory": "grid_layout",
+        "character_sheet": true,
+        "map": "reveals_as_explored",
+        "journal": true
+      }
+    },
+    "expected_flow": [
+      "welcome",
+      "choose_game_type",
+      "title_screen_setup",
+      "character_class_selection",
+      "dungeon_generation_settings",
+      "enemy_configuration",
+      "loot_system_setup",
+      "trap_placement",
+      "combat_mechanics",
+      "progression_system",
+      "special_features",
+      "ending_configuration",
+      "compile_and_test",
+      "export_game"
+    ],
+    "validation": {
+      "required_components": ["title_screen", "player", "dungeon_layout", "enemies", "combat_system", "game_loop", "loot_system"],
+      "minimum_assets": 8,
+      "code_requirements": ["pygame.init", "game loop", "procedural generation", "combat system", "inventory management", "fog of war"]
+    }
+  }
+}
