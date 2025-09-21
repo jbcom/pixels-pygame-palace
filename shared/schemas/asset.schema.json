@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pixel-pygame-palace.com/schemas/asset.json",
+  "title": "Game Asset Schema",
+  "description": "Schema for game assets (sprites, sounds, etc.)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the asset",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the asset"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the asset"
+    },
+    "path": {
+      "type": "string",
+      "description": "File path or URL to the asset"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["sprite", "sound", "music", "tileset", "font", "data", "model"],
+      "description": "Type of asset"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["character", "environment", "ui", "effect", "audio", "data", "font", "custom"],
+      "description": "Category for organizing assets"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this variant"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of this variant"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to this variant's file"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Variant-specific properties"
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tags specific to this variant"
+          }
+        },
+        "required": ["id", "name", "path"]
+      },
+      "description": "Different variants of this asset (e.g., different colors, sizes)"
+    },
+    "license": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["CC0", "CC-BY", "CC-BY-SA", "CC-BY-NC", "CC-BY-NC-SA", "MIT", "GPL", "proprietary", "custom"],
+          "description": "License type"
+        },
+        "attribution": {
+          "type": "string",
+          "description": "Attribution text if required"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to full license text"
+        },
+        "commercial": {
+          "type": "boolean",
+          "description": "Whether commercial use is allowed"
+        }
+      },
+      "required": ["type"],
+      "description": "License and attribution information"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "fileSize": {
+          "type": "integer",
+          "description": "File size in bytes"
+        },
+        "dimensions": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer" },
+            "height": { "type": "integer" }
+          },
+          "description": "Dimensions for images/sprites"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration in seconds for audio/video"
+        },
+        "format": {
+          "type": "string",
+          "description": "File format (png, jpg, wav, mp3, etc.)"
+        },
+        "frameCount": {
+          "type": "integer",
+          "description": "Number of animation frames for sprite sheets"
+        },
+        "frameRate": {
+          "type": "number",
+          "description": "Default animation frame rate"
+        }
+      },
+      "description": "Technical metadata about the asset"
+    },
+    "properties": {
+      "type": "object",
+      "description": "Asset-specific properties and settings"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags for searching and filtering assets"
+    },
+    "buildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["desktop", "web", "mobile"]
+      },
+      "description": "Which platforms this asset supports",
+      "default": ["desktop", "web"]
+    },
+    "thumbnail": {
+      "type": "string",
+      "description": "Path to thumbnail image for preview"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Path to preview file (larger image, audio sample, etc.)"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "author": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "collection": { "type": "string" }
+      },
+      "description": "Information about the asset's source"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "path",
+    "kind",
+    "category",
+    "license"
+  ]
+}
