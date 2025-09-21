@@ -1,0 +1,179 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Pixel",
+    "text": "Space shooter time! We'll build an epic galactic battle scene by scene.",
+    "followUp": "First up: your title screen that'll launch players into space!",
+    "next": "titleBackground"
+  },
+  "titleBackground": {
+    "id": "titleBackground",
+    "speaker": "Pixel",
+    "text": "Let's set the cosmic mood! Pick a space background with stars and nebulas.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "background",
+      "curated": true,
+      "tags": ["space", "stars", "galaxy", "cosmic"]
+    },
+    "next": "titleShipPreview"
+  },
+  "titleShipPreview": {
+    "id": "titleShipPreview",
+    "speaker": "Pixel",
+    "text": "Now let's pick your spaceship! It'll fly across the title screen.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "vehicles",
+      "curated": true,
+      "tags": ["spaceship", "fighter", "rocket"]
+    },
+    "next": "titleMusic"
+  },
+  "titleMusic": {
+    "id": "titleMusic",
+    "speaker": "Pixel",
+    "text": "Every space epic needs dramatic music! Pick something intense and cosmic.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "music",
+      "curated": true,
+      "tags": ["space", "epic", "electronic", "dramatic"]
+    },
+    "next": "gameplayMovement"
+  },
+  "gameplayMovement": {
+    "id": "gameplayMovement",
+    "speaker": "Pixel",
+    "text": "Time for gameplay! How should your spaceship move?",
+    "action": "selectComponent",
+    "actionParams": {
+      "category": "movement",
+      "context": "space-shooter"
+    },
+    "options": [
+      {
+        "text": "Classic arcade - 8-way movement",
+        "next": "gameplayEnemies"
+      },
+      {
+        "text": "Modern twin-stick - move and aim separately",
+        "next": "gameplayEnemies"
+      }
+    ]
+  },
+  "gameplayEnemies": {
+    "id": "gameplayEnemies",
+    "speaker": "Pixel",
+    "text": "What kind of alien enemies will challenge your pilot?",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "enemies",
+      "curated": true,
+      "tags": ["alien", "enemy", "spaceship", "ufo"]
+    },
+    "next": "gameplayShooting"
+  },
+  "gameplayShooting": {
+    "id": "gameplayShooting",
+    "speaker": "Pixel",
+    "text": "Pew pew! Time to set up your weapon systems!",
+    "action": "selectComponent",
+    "actionParams": {
+      "componentId": "shooting",
+      "context": "space-combat"
+    },
+    "next": "gameplayPowerups"
+  },
+  "gameplayPowerups": {
+    "id": "gameplayPowerups",
+    "speaker": "Pixel",
+    "text": "Power-ups make space battles more exciting! Pick some boost items.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "collectibles",
+      "curated": true,
+      "tags": ["powerup", "boost", "weapon", "shield"]
+    },
+    "next": "gameplayEffects"
+  },
+  "gameplayEffects": {
+    "id": "gameplayEffects",
+    "speaker": "Pixel",
+    "text": "Explosions in space! Let's add some particle effects!",
+    "options": [
+      {
+        "text": "Colorful arcade explosions",
+        "next": "gameplayScore"
+      },
+      {
+        "text": "Realistic space debris",
+        "next": "gameplayScore"
+      }
+    ]
+  },
+  "gameplayScore": {
+    "id": "gameplayScore",
+    "speaker": "Pixel",
+    "text": "How should we track the pilot's progress?",
+    "action": "selectComponent",
+    "actionParams": {
+      "componentId": "score",
+      "context": "space-shooter"
+    },
+    "next": "bossSetup"
+  },
+  "bossSetup": {
+    "id": "bossSetup",
+    "speaker": "Pixel",
+    "text": "Every space shooter needs an epic boss battle! Pick your big bad.",
+    "action": "showAssets",
+    "actionParams": {
+      "type": "sprite",
+      "category": "bosses",
+      "curated": true,
+      "tags": ["boss", "mothership", "large", "alien"]
+    },
+    "next": "victoryScreen"
+  },
+  "victoryScreen": {
+    "id": "victoryScreen",
+    "speaker": "Pixel",
+    "text": "Victory! How should we celebrate defeating the alien invasion?",
+    "options": [
+      {
+        "text": "Fireworks in space!",
+        "next": "compile"
+      },
+      {
+        "text": "Epic medal ceremony",
+        "next": "compile"
+      }
+    ]
+  },
+  "compile": {
+    "id": "compile",
+    "speaker": "Pixel",
+    "text": "Your space shooter is ready to launch! All systems are go!",
+    "followUp": "Ready to see your galactic adventure in action?",
+    "action": "compileGame",
+    "actionParams": {
+      "gameType": "space"
+    },
+    "options": [
+      {
+        "text": "Launch the game! 🚀",
+        "next": "playGame"
+      }
+    ]
+  },
+  "playGame": {
+    "id": "playGame",
+    "speaker": "Pixel",
+    "text": "Mission accomplished, pilot! Your space shooter is live!",
+    "action": "runGame"
+  }
+}
