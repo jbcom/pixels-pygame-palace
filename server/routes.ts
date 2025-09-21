@@ -15,7 +15,7 @@ function generateFlaskAuthToken(userId: string = "mock-user-id"): string {
     iat: Math.floor(Date.now() / 1000)
   };
   
-  return jwt.sign(payload, ServiceConfig.SECURITY.JWT_SECRET, {
+  return jwt.sign(payload, ServiceConfig.security.jwtSecret, {
     algorithm: 'HS256'
   });
 }
@@ -33,7 +33,7 @@ async function proxyToFlask(
     
     const config = {
       method,
-      url: `${ServiceConfig.FLASK_URL}${endpoint}`,
+      url: `${ServiceConfig.services.flask.url}${endpoint}`,
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -87,7 +87,7 @@ async function proxySSEToFlask(
     
     const response = await axios({
       method: 'GET',
-      url: `${ServiceConfig.FLASK_URL}${endpoint}`,
+      url: `${ServiceConfig.services.flask.url}${endpoint}`,
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'text/event-stream'
@@ -118,7 +118,7 @@ export function registerRoutes(app: Express): void {
     const healthCheck = {
       status: 'healthy' as 'healthy' | 'unhealthy',
       service: 'express-backend',
-      port: ServiceConfig.EXPRESS_PORT,
+      port: ServiceConfig.services.express.port,
       version: '2.0.0',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
@@ -130,8 +130,7 @@ export function registerRoutes(app: Express): void {
       },
       checks: {
         database: false,
-        flask: false,
-        docker: false
+        flask: false
       }
     };
 
@@ -148,7 +147,7 @@ export function registerRoutes(app: Express): void {
 
       // Check Flask service
       try {
-        const flaskResponse = await axios.get(`${ServiceConfig.FLASK_URL}/api/health`, {
+        const flaskResponse = await axios.get(`${ServiceConfig.services.flask.url}/api/health`, {
           timeout: 3000
         });
         healthCheck.dependencies.flask = flaskResponse.data.status || 'healthy';
@@ -158,28 +157,6 @@ export function registerRoutes(app: Express): void {
         // Don't mark overall status as unhealthy for Flask, as it's a dependency
       }
 
-      // Check Docker availability (in production)
-      const forceDocker = process.env.FORCE_DOCKER_EXECUTION === 'true';
-      if (forceDocker) {
-        try {
-          // Basic check - just verify docker command is available
-          const { exec } = require('child_process');
-          await new Promise((resolve, reject) => {
-            exec('docker info', (error: Error | null) => {
-              if (error) reject(error);
-              else resolve(true);
-            });
-          });
-          healthCheck.checks.docker = true;
-        } catch (error) {
-          healthCheck.checks.docker = false;
-          if (forceDocker) {
-            healthCheck.status = 'unhealthy';
-          }
-        }
-      } else {
-        healthCheck.checks.docker = true; // Not required in dev
-      }
 
     } catch (error) {
       healthCheck.status = 'unhealthy';
@@ -192,7 +169,7 @@ export function registerRoutes(app: Express): void {
   // Flask service health check
   app.get("/api/flask-health", async (req, res) => {
     try {
-      const response = await axios.get(`${ServiceConfig.FLASK_URL}/api/health`, {
+      const response = await axios.get(`${ServiceConfig.services.flask.url}/api/health`, {
         timeout: 5000
       });
       res.json({
@@ -277,7 +254,7 @@ export function registerRoutes(app: Express): void {
       res.json(progress);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid progress data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid progress data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to update progress" });
     }
@@ -344,7 +321,7 @@ export function registerRoutes(app: Express): void {
       res.status(201).json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid project data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid project data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create project" });
     }
@@ -396,7 +373,7 @@ export function registerRoutes(app: Express): void {
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid project data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid project data", errors: error.issues });
       }
       if (error instanceof Error && error.message === "Project not found") {
         return res.status(404).json({ message: "Project not found" });

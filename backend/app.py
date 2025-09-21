@@ -25,5 +25,6 @@ if __name__ == '__main__':
         port=port,
         debug=debug,
         use_reloader=False,  # Disable reloader to prevent double startup
-        log_output=True
+        log_output=True,
+        allow_unsafe_werkzeug=True  # Allow development server for testing
     )

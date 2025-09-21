@@ -1,22 +1,20 @@
 # Security Implementation for Game Executor
 
 ## Overview
-This backend implements secure sandboxing for executing untrusted Python game code using Docker containerization and enhanced security validation.
+This backend implements secure sandboxing for executing untrusted Python game code using subprocess execution with enhanced security validation.
 
 ## Security Features
 
-### 1. Docker Containerization
-- **Isolated Execution**: All game code runs in Docker containers with strict isolation
+### 1. Subprocess Execution
+- **Isolated Execution**: All game code runs in separate processes
 - **Resource Limits**: 
   - Memory: 256MB max
   - CPU: 50% of one core
   - Process limit: 50 processes
   - Timeout: 5 minutes max execution
-- **Network Isolation**: Containers run with `--network=none`
-- **Filesystem Protection**: Read-only filesystem except `/tmp`
-- **Non-root Execution**: Games run as unprivileged `gamerunner` user
-- **Capability Dropping**: All Linux capabilities dropped
-- **No New Privileges**: Prevents privilege escalation
+- **Environment Control**: Limited environment variables
+- **Filesystem Protection**: Games run in temporary directories
+- **Non-privileged Execution**: Games run without special privileges
 
 ### 2. Code Validation (AST-based)
 - **Whitelist Approach**: Only allowed modules can be imported
@@ -34,37 +32,30 @@ This backend implements secure sandboxing for executing untrusted Python game co
 - **Rate Limiting**: Prevents abuse of execution endpoints
 - **CORS Protection**: Explicit origin whitelist
 
-### 4. Xvfb Security
-- **Authentication**: Uses `.Xauthority` file instead of `-ac` flag
-- **Display Isolation**: Each container gets its own virtual display
-- **No Access Control Bypass**: Removed insecure `-ac` flag
+### 4. Virtual Display Security
+- **Headless Execution**: Uses SDL dummy driver for graphics
+- **Display Isolation**: Each process gets isolated display context
+- **No GUI Access**: Games cannot access system GUI
 
 ## Setup Instructions
 
 ### 1. Install Dependencies
 ```bash
 # Python dependencies (already installed)
-pip install docker flask flask-cors flask-socketio flask-limiter pygame-ce pillow
+pip install flask flask-cors flask-socketio flask-limiter pygame-ce pillow
 
-# System dependencies
-apt-get update && apt-get install -y docker.io xvfb
+# System dependencies for pygame (if needed)
+apt-get update && apt-get install -y libsdl2-dev
 ```
 
-### 2. Build Docker Image
-```bash
-cd backend
-./build_docker.sh
-```
-
-### 3. Environment Variables
+### 2. Environment Variables
 For production, set these environment variables:
 ```bash
 export FLASK_ENV=production
 export FLASK_SECRET_KEY="your-secure-random-secret-key-here"
-export USE_DOCKER=true  # Force Docker usage
 ```
 
-### 4. Run the Backend
+### 3. Run the Backend
 ```bash
 python backend/app.py
 ```
@@ -73,90 +64,38 @@ python backend/app.py
 
 Edit `backend/security_config.py` to adjust:
 - Sandbox resource limits
-- Allowed Python modules
-- Blacklisted functions
-- Docker container settings
+- Allowed modules whitelist
+- Blacklisted functions and patterns
+- Code validation rules
+
+## Security Validation
+
+The system performs multiple layers of validation:
+
+1. **Static Analysis**: AST parsing to detect dangerous patterns
+2. **Import Validation**: Only safe modules allowed
+3. **Runtime Limits**: Resource and time constraints
+4. **Process Isolation**: Each game runs in its own subprocess
+
+## Whitelist of Allowed Modules
+
+- `pygame` and all pygame submodules
+- Safe standard library modules: `math`, `random`, `time`, `sys`, `json`, `collections`, etc.
+- No filesystem, network, or system access modules
+
+## Blacklisted Patterns
+
+- File operations (`open`, `file`)
+- Network operations (`socket`, `urllib`, `requests`)
+- System operations (`os`, `subprocess`)
+- Dynamic imports (`__import__`, `importlib`)
+- Code execution (`eval`, `exec`, `compile`)
 
 ## Testing Security
 
-### Test 1: Attempt File Access
-```python
-# This should be blocked
-with open('/etc/passwd', 'r') as f:
-    print(f.read())
+Run the security test suite:
+```bash
+python backend/test_security.py
 ```
 
-### Test 2: Attempt Network Access
-```python
-# This should be blocked
-import socket
-s = socket.socket()
-s.connect(('google.com', 80))
-```
-
-### Test 3: Attempt Process Spawn
-```python
-# This should be blocked
-import subprocess
-subprocess.run(['ls', '/'])
-```
-
-### Test 4: Valid Game Code
-```python
-# This should work
-import pygame
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-pygame.display.set_caption("Safe Game")
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    screen.fill((0, 0, 0))
-    pygame.display.flip()
-
-pygame.quit()
-```
-
-## Monitoring & Logs
-
-- Container logs: `docker logs game_<session_id>`
-- Flask logs: Check console output
-- Security violations: Logged to stderr
-
-## Troubleshooting
-
-### Docker Not Available
-If Docker is not available, the system falls back to subprocess execution with:
-- Resource limits via `resource` module
-- Code validation still enforced
-- Xvfb with authentication
-- Warning logged about reduced security
-
-### Building Docker Image Fails
-1. Ensure Docker daemon is running: `sudo systemctl start docker`
-2. Check Docker permissions: `sudo usermod -aG docker $USER`
-3. Verify Dockerfile syntax
-
-### Game Execution Fails
-1. Check Docker image exists: `docker images | grep game-executor`
-2. Verify container can start: `docker run --rm game-executor:latest echo "test"`
-3. Check Flask logs for validation errors
-
-## Security Considerations
-
-1. **Never disable code validation** - This is the first line of defense
-2. **Always use Docker in production** - Subprocess fallback is development-only
-3. **Monitor resource usage** - Containers enforce limits but monitor for DoS
-4. **Regular updates** - Keep Docker, Python packages, and system packages updated
-5. **Audit logs** - Review execution logs for suspicious patterns
-
-## Future Improvements
-
-1. **Kubernetes Integration**: For better orchestration at scale
-2. **gVisor/Firecracker**: Alternative sandboxing technologies
-3. **Code Signing**: Validate trusted code sources
-4. **Machine Learning**: Detect malicious patterns
-5. **Distributed Execution**: Run games on separate worker nodes
+This validates that dangerous code patterns are properly blocked and safe code executes correctly.

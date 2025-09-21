@@ -1,28 +1,10 @@
 """
-Security configuration for game sandbox execution
+Security configuration for game sandbox execution using subprocess
 """
 
 import ast
 import re
 from typing import List, Dict, Set, Tuple
-
-# Docker container configuration
-DOCKER_CONFIG = {
-    'image_name': 'game-executor:latest',
-    'memory_limit': '256m',
-    'cpu_quota': 0.5,
-    'pids_limit': 50,
-    'timeout': 300,  # 5 minutes max
-    'network_mode': 'none',
-    'read_only': True,
-    'security_opts': [
-        'no-new-privileges:true',
-    ],
-    'cap_drop': ['ALL'],
-    'tmpfs': {
-        '/tmp': 'size=100M,mode=1777'
-    }
-}
 
 # Resource limits for sandbox
 SANDBOX_LIMITS = {

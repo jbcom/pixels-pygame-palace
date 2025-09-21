@@ -15,11 +15,17 @@ from .game_manager import (
     cleanup_expired_sessions, create_game_session, 
     stop_game_session, get_active_sessions
 )
+from .web_game_compiler import web_game_manager
+from .web_game_server import setup_web_game_server
 
 
 def register_api_routes(app, limiter, socketio):
     """Register all API routes."""
     config = get_config()
+    
+    # Setup web game server
+    compiled_games_dir = os.path.join(os.path.dirname(__file__), '..', 'compiled_games')
+    web_game_server = setup_web_game_server(app, compiled_games_dir)
     
     @app.route('/api/health', methods=['GET'])
     def health_check():
@@ -30,7 +36,7 @@ def register_api_routes(app, limiter, socketio):
         health_data = {
             'status': 'healthy',
             'service': 'pygame-execution-backend',
-            'port': config['FLASK_PORT'],
+            'port': config.flask_port,
             'version': '2.1.0',
             'timestamp': datetime.utcnow().isoformat() + 'Z',
             'environment': os.environ.get('FLASK_ENV', 'development'),
@@ -42,27 +48,13 @@ def register_api_routes(app, limiter, socketio):
             },
             'game_sessions': {
                 'active_count': len(game_sessions),
-                'max_allowed': config['GAME']['MAX_CONCURRENT_SESSIONS'],
+                'max_allowed': config.game.max_concurrent_sessions,
                 'sessions': list(game_sessions.keys())
             },
             'checks': {
-                'docker_available': False,
                 'subprocess_executor': True
             }
         }
-        
-        # Check Docker availability (optional)
-        try:
-            import docker
-            health_data['checks']['docker_available'] = True
-            try:
-                client = docker.from_env()
-                client.ping()
-                health_data['checks']['docker_daemon'] = True
-            except:
-                health_data['checks']['docker_daemon'] = False
-        except ImportError:
-            health_data['checks']['docker_available'] = False
         
         # Resource checks
         if health_data['system']['memory_available'] < 100 * 1024 * 1024:
@@ -77,7 +69,7 @@ def register_api_routes(app, limiter, socketio):
         return jsonify(health_data), status_code
 
     @app.route('/api/compile', methods=['POST'])
-    @limiter.limit(f"{config['RATE_LIMITS']['GAME_EXECUTION']['MAX']} per {config['RATE_LIMITS']['GAME_EXECUTION']['WINDOW_MS']//1000} seconds")
+    @limiter.limit(f"{config.rate_limits['game_execution'].max} per {config.rate_limits['game_execution'].window_ms//1000} seconds")
     @verify_token
     def compile_game():
         """Compile game from components into Python code."""
@@ -105,7 +97,7 @@ def register_api_routes(app, limiter, socketio):
             }), 400
 
     @app.route('/api/execute', methods=['POST'])
-    @limiter.limit(f"{config['RATE_LIMITS']['GAME_EXECUTION']['MAX']} per {config['RATE_LIMITS']['GAME_EXECUTION']['WINDOW_MS']//1000} seconds")
+    @limiter.limit(f"{config.rate_limits['game_execution'].max} per {config.rate_limits['game_execution'].window_ms//1000} seconds")
     @verify_token
     def execute_game():
         """Execute Python game code."""
@@ -117,15 +109,15 @@ def register_api_routes(app, limiter, socketio):
             code = data['code']
             
             # Security checks
-            if len(code) > config['GAME']['MAX_CODE_SIZE']:
+            if len(code) > config.game.max_code_size:
                 return jsonify({
                     'success': False,
-                    'error': f'Code size exceeds limit ({config["GAME"]["MAX_CODE_SIZE"]} bytes)'
+                    'error': f'Code size exceeds limit ({config.game.max_code_size} bytes)'
                 }), 400
             
             # Check session limits
-            max_sessions = config['GAME']['MAX_CONCURRENT_SESSIONS']
-            max_time = config['GAME']['MAX_SESSION_TIME']
+            max_sessions = config.game.max_concurrent_sessions
+            max_time = config.game.max_session_time
             
             if len(game_sessions) >= max_sessions:
                 # Clean up expired sessions first
@@ -187,7 +179,7 @@ def register_api_routes(app, limiter, socketio):
                         
                         yield f"data: {json.dumps({'type': 'frame', 'data': img_str})}\n\n"
                 
-                time.sleep(1.0 / config['GAME']['STREAM_FPS'])
+                time.sleep(1.0 / config.game.stream_fps)
             
             yield f"data: {json.dumps({'type': 'end', 'message': 'Game ended'})}\n\n"
             
@@ -200,7 +192,7 @@ def register_api_routes(app, limiter, socketio):
         return Response(generate(), mimetype='text/event-stream')
 
     @app.route('/api/stop-game/<session_id>', methods=['POST'])
-    @limiter.limit(f"{config['RATE_LIMITS']['STRICT']['MAX']} per {config['RATE_LIMITS']['STRICT']['WINDOW_MS']//1000} seconds")
+    @limiter.limit(f"{config.rate_limits['strict'].max} per {config.rate_limits['strict'].window_ms//1000} seconds")
     @verify_token
     def stop_game_endpoint(session_id):
         """Stop a game session."""
@@ -266,10 +258,131 @@ def register_api_routes(app, limiter, socketio):
             return jsonify({
                 'success': True,
                 'sessions': sessions,
-                'max_concurrent': config['GAME']['MAX_CONCURRENT_SESSIONS'],
+                'max_concurrent': config.game.max_concurrent_sessions,
                 'current_count': len(sessions)
             }), 200
             
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    @app.route('/api/compile-web-game', methods=['POST'])
+    @limiter.limit(f"{config.rate_limits['game_execution'].max} per {config.rate_limits['game_execution'].window_ms//1000} seconds")
+    @verify_token
+    def compile_web_game():
+        """Compile game to WebAssembly using pygbag."""
+        try:
+            data = request.json
+            if not data or 'code' not in data:
+                raise BadRequest("No code provided")
+            
+            code = data['code']
+            game_id = data.get('game_id')
+            assets = data.get('assets', [])
+            
+            # Security checks
+            if len(code) > config.game.max_code_size:
+                return jsonify({
+                    'success': False,
+                    'error': f'Code size exceeds limit ({config.game.max_code_size} bytes)'
+                }), 400
+            
+            # Start compilation
+            compilation_id = web_game_manager.start_compilation(code, game_id, assets)
+            
+            return jsonify({
+                'success': True,
+                'compilation_id': compilation_id,
+                'message': 'Web game compilation started'
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
+
+    @app.route('/api/compilation-status/<compilation_id>', methods=['GET'])
+    @verify_token
+    def get_compilation_status(compilation_id):
+        """Get compilation status."""
+        try:
+            status = web_game_manager.get_compilation_status(compilation_id)
+            
+            if status is None:
+                return jsonify({
+                    'success': False,
+                    'error': 'Compilation not found'
+                }), 404
+            
+            return jsonify({
+                'success': True,
+                'status': status
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    @app.route('/api/web-games/manage', methods=['GET'])
+    @verify_token
+    def manage_web_games():
+        """Get web games management info."""
+        try:
+            # Get list of compiled games
+            compiled_games = web_game_manager.compiler.list_compiled_games()
+            
+            # Clean up old compilations
+            cleaned = web_game_manager.cleanup_old_compilations()
+            
+            games_info = []
+            for game_id in compiled_games:
+                game_path = web_game_manager.compiler.get_compiled_game_path(game_id)
+                if game_path:
+                    games_info.append({
+                        'id': game_id,
+                        'path': game_path,
+                        'url': f'/web-games/{game_id}/',
+                        'created': os.path.getctime(game_path),
+                        'modified': os.path.getmtime(game_path)
+                    })
+            
+            return jsonify({
+                'success': True,
+                'games': games_info,
+                'total_games': len(games_info),
+                'cleaned_compilations': cleaned
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    @app.route('/api/web-games/<game_id>/delete', methods=['DELETE'])
+    @limiter.limit(f"{config.rate_limits['strict'].max} per {config.rate_limits['strict'].window_ms//1000} seconds")
+    @verify_token
+    def delete_web_game_api(game_id):
+        """Delete a compiled web game."""
+        try:
+            success = web_game_manager.compiler.delete_compiled_game(game_id)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': f'Web game {game_id} deleted successfully'
+                }), 200
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'Failed to delete web game {game_id}'
+                }), 404
+                
         except Exception as e:
             return jsonify({
                 'success': False,
