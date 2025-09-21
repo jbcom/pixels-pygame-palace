@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["street_bg", "neon_ui", "urban_music", "street_cars"]
         },
-        "next": "titleScreen"
+        "next": "projectSetup"
       },
       {
         "text": "B: Formula Racing - Professional circuits, pit crews, championship glory",
@@ -28,6 +28,25 @@
           "variant": "B",
           "bundle": ["circuit_bg", "pro_ui", "orchestral_music", "formula_cars"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Awesome racing style! Now let's brand your racing game. What name will get engines revving?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "titleScreen"
+      },
+      {
+        "text": "B: Generate a high-octane racing name",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "racing" },
         "next": "titleScreen"
       }
     ]
