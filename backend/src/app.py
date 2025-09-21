@@ -41,7 +41,7 @@ def create_app():
     # Configure CORS
     CORS(app, resources={
         r"/api/*": {
-            "origins": config['ALLOWED_ORIGINS'],
+            "origins": config.allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -52,14 +52,14 @@ def create_app():
         app=app,
         key_func=get_remote_address,
         default_limits=[
-            f"{config['RATE_LIMITS']['GENERAL']['MAX']} per {config['RATE_LIMITS']['GENERAL']['WINDOW_MS']//1000} seconds"
+            f"{config.rate_limits['general'].max} per {config.rate_limits['general'].window_ms//1000} seconds"
         ]
     )
 
     # Initialize SocketIO
     socketio = SocketIO(
         app, 
-        cors_allowed_origins=config['ALLOWED_ORIGINS'],
+        cors_allowed_origins=config.allowed_origins,
         async_mode='threading',
         logger=False,
         engineio_logger=False

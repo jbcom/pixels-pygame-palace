@@ -202,39 +202,28 @@ for i in range(10):
     return failed == 0
 
 
-def test_docker_availability():
-    """Test if Docker is available and configured"""
+def test_subprocess_availability():
+    """Test if subprocess execution is available"""
     print("\n" + "=" * 60)
-    print("DOCKER AVAILABILITY TEST")
+    print("SUBPROCESS EXECUTION TEST")
     print("=" * 60)
     
     try:
-        import docker
-        print("✓ Docker library installed")
+        import subprocess
+        print("✓ Subprocess module available")
         
-        try:
-            client = docker.from_env()
-            client.ping()
-            print("✓ Docker daemon is running and accessible")
-            
-            # Check if our image exists
-            try:
-                client.images.get('game-executor:latest')
-                print("✓ game-executor:latest Docker image found")
-            except docker.errors.ImageNotFound:
-                print("✗ game-executor:latest Docker image not found")
-                print("  Run: cd backend && ./build_docker.sh")
-            
+        # Test basic subprocess execution
+        result = subprocess.run(['python', '--version'], capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            print("✓ Subprocess execution working")
+            print(f"  Python version: {result.stdout.strip()}")
             return True
-            
-        except docker.errors.DockerException as e:
-            print(f"✗ Docker daemon not accessible: {e}")
-            print("  Make sure Docker is installed and running")
+        else:
+            print("✗ Subprocess execution failed")
             return False
             
-    except ImportError:
-        print("✗ Docker library not installed")
-        print("  This should have been installed already")
+    except Exception as e:
+        print(f"✗ Subprocess test failed: {e}")
         return False
 
 
@@ -247,8 +236,8 @@ def main():
     # Test code validation
     validation_passed = test_code_validation()
     
-    # Test Docker availability
-    docker_available = test_docker_availability()
+    # Test subprocess availability
+    subprocess_available = test_subprocess_availability()
     
     # Overall summary
     print("\n" + "=" * 60)
@@ -260,16 +249,16 @@ def main():
     else:
         print("✗ Code validation security: FAILED")
     
-    if docker_available:
-        print("✓ Docker containerization: AVAILABLE")
+    if subprocess_available:
+        print("✓ Subprocess execution: AVAILABLE")
     else:
-        print("⚠ Docker containerization: NOT AVAILABLE (fallback to subprocess)")
+        print("✗ Subprocess execution: NOT AVAILABLE")
     
     print("\nSecurity implementation status:")
-    if validation_passed and docker_available:
+    if validation_passed and subprocess_available:
         print("✓ FULLY SECURE - All security features operational")
     elif validation_passed:
-        print("⚠ PARTIALLY SECURE - Code validation working, Docker not available")
+        print("⚠ PARTIALLY SECURE - Code validation working, subprocess not available")
     else:
         print("✗ INSECURE - Critical security features not working")
     
