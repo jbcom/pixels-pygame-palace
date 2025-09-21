@@ -109,6 +109,11 @@ export default function UniversalWizard({
       setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (currentNode.action === 'openLessons') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
+    } else if (currentNode.action === 'transitionToSpecializedFlow') {
+      // The transition happens automatically through the dialogue engine
+      // when gameType is set, so we don't need to do anything extra here
+      // The dialogue engine will detect the gameType and load the appropriate flow
+      console.log('Transitioning to specialized flow for:', sessionActions.gameType);
     } else if (currentNode.action === 'showAssets') {
       // Open asset browser with specific type if provided
       const assetType = currentNode.params?.type || 'all';

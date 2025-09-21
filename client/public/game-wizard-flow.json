@@ -30,105 +30,61 @@
           "text": "An epic adventure with heroes and quests",
           "next": "rpgIntro",
           "setVariable": { "gameType": "rpg" }
+        },
+        {
+          "text": "Dark dungeons, monsters, and treasure!",
+          "next": "dungeonIntro",
+          "setVariable": { "gameType": "dungeon" }
         }
       ]
+    },
+    
+    "dungeonIntro": {
+      "id": "dungeonIntro",
+      "speaker": "Pixel",
+      "text": "A DUNGEON CRAWLER! Dark corridors, treasure, monsters lurking in shadows!",
+      "followUp": "We'll build your dungeon floor by floor, room by room!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "platformerIntro": {
       "id": "platformerIntro",
       "speaker": "Pixel",
       "text": "Awesome! I LOVE platformers! There's something so satisfying about nailing that perfect jump! 🏃‍♂️💎",
-      "followUp": "First things first - who's gonna be bouncing around in your game?",
-      "action": "showPreview",
-      "actionParams": { "type": "platformer", "stage": "intro" },
-      "options": [
-        {
-          "text": "Show me some cool characters!",
-          "next": "platformerCharacterSelect"
-        }
-      ]
+      "followUp": "Let's build this scene by scene - first up: your title screen!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "spaceIntro": {
       "id": "spaceIntro",
       "speaker": "Pixel",
       "text": "YES! Space shooters are so cool! I'm already imagining the laser sounds... pew pew! 🚀",
-      "followUp": "Who's gonna be flying through the stars blasting aliens?",
-      "action": "showPreview",
-      "actionParams": { "type": "space", "stage": "intro" },
-      "options": [
-        {
-          "text": "Let me see the space heroes!",
-          "next": "spaceCharacterSelect"
-        }
-      ]
+      "followUp": "We'll build an epic galactic battle scene by scene!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "puzzleIntro": {
       "id": "puzzleIntro",
       "speaker": "Pixel",
       "text": "Ooh, smart choice! There's nothing like that 'aha!' moment when you solve a tricky puzzle! 🧩",
-      "followUp": "What kind of brain-teasers are we talking about here?",
-      "options": [
-        {
-          "text": "You know those games where you match colorful things? Like that!",
-          "next": "puzzleMatch3Setup",
-          "setVariable": { "puzzleType": "match3" }
-        },
-        {
-          "text": "I'm thinking boxes you push around to solve levels",
-          "next": "puzzleSokobanSetup",
-          "setVariable": { "puzzleType": "sokoban" }
-        },
-        {
-          "text": "Something with realistic physics - balls rolling, things falling",
-          "next": "puzzlePhysicsSetup",
-          "setVariable": { "puzzleType": "physics" }
-        }
-      ]
+      "followUp": "Let's create your brain-teasing challenge!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "racingIntro": {
       "id": "racingIntro",
       "speaker": "Pixel",
       "text": "VROOM VROOM! I can already feel the adrenaline! 🏎️",
-      "followUp": "How do you want to see the action - from above or from the side?",
-      "options": [
-        {
-          "text": "From above - I want to see the whole track!",
-          "next": "racingTopDownSetup",
-          "setVariable": { "racingView": "topdown" }
-        },
-        {
-          "text": "Side view - like those endless runner games!",
-          "next": "racingSideScrollSetup",
-          "setVariable": { "racingView": "sidescroll" }
-        }
-      ]
+      "followUp": "Let's build something FAST - track by track!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "rpgIntro": {
       "id": "rpgIntro",
       "speaker": "Pixel",
       "text": "Ooh, an epic adventure! I'm getting goosebumps already! ⚔️",
-      "followUp": "Every legend needs a hero... who's yours going to be?",
-      "options": [
-        {
-          "text": "Someone noble with shining armor!",
-          "next": "rpgCharacterSelect",
-          "setVariable": { "heroType": "knight" }
-        },
-        {
-          "text": "A mysterious figure who knows ancient magic",
-          "next": "rpgCharacterSelect",
-          "setVariable": { "heroType": "wizard" }
-        },
-        {
-          "text": "Quick and sneaky - they stick to the shadows",
-          "next": "rpgCharacterSelect",
-          "setVariable": { "heroType": "rogue" }
-        }
-      ]
+      "followUp": "Let's craft your epic quest from start to finish!",
+      "action": "transitionToSpecializedFlow"
     },
     
     "platformerCharacterSelect": {
