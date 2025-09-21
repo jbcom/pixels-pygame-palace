@@ -249,6 +249,183 @@ test.describe('Wizard Flow Tests', () => {
       
     }, false); // Don't automatically assert no errors since we're testing error handling
   });
+
+  test('Wizard state persists across page refresh', async ({ page }) => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        // Navigate to wizard
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Make some progress in the wizard
+        let state = await navigator.getWizardState();
+        const initialDialogue = state.currentDialogue;
+        
+        // Select first option to progress
+        await navigator.selectOption(0);
+        await page.waitForTimeout(1000);
+        
+        // Get current state after progression
+        state = await navigator.getWizardState();
+        const progressedDialogue = state.currentDialogue;
+        expect(progressedDialogue).not.toBe(initialDialogue);
+        
+        // Refresh the page
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Check state is restored
+        state = await navigator.getWizardState();
+        expect(state.currentDialogue).toBe(progressedDialogue);
+        
+        await page.screenshot({ path: 'test-results/screenshots/persistence-after-refresh.png' });
+        
+      }, errorDetector);
+    });
+  });
+
+  test('Forest theme selection persists correctly', async ({ page }) => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        // Navigate to wizard
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Navigate to theme selection
+        const wizardFlow = [
+          { action: 'select-option' as const, optionText: 'jump straight into making a game' },
+          { action: 'wait' as const, duration: 1000 },
+          { action: 'select-option' as const, optionText: 'platform' },
+          { action: 'wait' as const, duration: 1000 },
+        ];
+        
+        await navigator.navigateWizardFlow(wizardFlow);
+        
+        // Select Forest theme if available
+        const forestOption = page.locator('[data-testid^="option-"]:has-text("Forest"), [data-testid^="option-"]:has-text("forest")');
+        if (await forestOption.isVisible().catch(() => false)) {
+          await forestOption.click();
+          await page.waitForTimeout(1000);
+          
+          // Continue to title presentation
+          let state = await navigator.getWizardState();
+          if (state.availableOptions && state.availableOptions.length > 0) {
+            await navigator.selectOption(0); // Select first option to proceed
+            await page.waitForTimeout(1000);
+          }
+          
+          // Get state at title presentation
+          state = await navigator.getWizardState();
+          const titlePresentationDialogue = state.currentDialogue;
+          
+          // Refresh page
+          await page.reload({ waitUntil: 'networkidle' });
+          await navigator.waitForWizardLoad();
+          
+          // Verify we're still at title presentation, not back at theme selection
+          state = await navigator.getWizardState();
+          expect(state.currentDialogue).toBe(titlePresentationDialogue);
+          expect(state.currentDialogue).not.toContain('Forest');
+          expect(state.currentDialogue).not.toContain('theme');
+          
+          await page.screenshot({ path: 'test-results/screenshots/forest-theme-persistence.png' });
+        }
+        
+      }, errorDetector);
+    });
+  });
+
+  test('Clear progress and reset wizard', async ({ page }) => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        // Navigate to wizard and make progress
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Make some progress
+        await navigator.selectOption(0);
+        await page.waitForTimeout(1000);
+        let state = await navigator.getWizardState();
+        const progressedDialogue = state.currentDialogue;
+        
+        // Clear localStorage to reset progress
+        await page.evaluate(() => {
+          localStorage.removeItem('dialogueState');
+          localStorage.removeItem('wizardProgress');
+          localStorage.removeItem('currentNodeId');
+          localStorage.removeItem('activeFlowPath');
+          localStorage.clear();
+        });
+        
+        // Refresh page
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Verify we're back at the start
+        state = await navigator.getWizardState();
+        expect(state.currentDialogue).toContain('Pixel');
+        expect(state.currentDialogue).not.toBe(progressedDialogue);
+        
+        await page.screenshot({ path: 'test-results/screenshots/wizard-reset.png' });
+        
+      }, errorDetector);
+    });
+  });
+
+  test('Flow transitions maintain saved state', async ({ page }) => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        const checkpoints: { nodeId: string; dialogue: string }[] = [];
+        
+        // Navigate through multiple checkpoints
+        for (let i = 0; i < 3; i++) {
+          let state = await navigator.getWizardState();
+          
+          // Save checkpoint
+          checkpoints.push({
+            nodeId: `checkpoint_${i}`,
+            dialogue: state.currentDialogue || ''
+          });
+          
+          // Progress if options available
+          if (state.availableOptions && state.availableOptions.length > 0) {
+            await navigator.selectOption(0);
+            await page.waitForTimeout(1000);
+          } else {
+            break;
+          }
+        }
+        
+        // Refresh and verify last checkpoint
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        let state = await navigator.getWizardState();
+        const lastCheckpoint = checkpoints[checkpoints.length - 1];
+        expect(state.currentDialogue).toBe(lastCheckpoint.dialogue);
+        
+        // Navigate back using browser back button if possible
+        const canGoBack = await page.evaluate(() => window.history.length > 1);
+        if (canGoBack) {
+          await page.goBack({ waitUntil: 'networkidle' });
+          await navigator.waitForWizardLoad();
+          
+          // Check state after going back
+          state = await navigator.getWizardState();
+          // State should still be maintained from localStorage, not reset
+          expect(state.currentDialogue).toBe(lastCheckpoint.dialogue);
+        }
+        
+      }, errorDetector);
+    });
+  });
 });
 
 test.describe('Wizard Responsive Behavior', () => {
