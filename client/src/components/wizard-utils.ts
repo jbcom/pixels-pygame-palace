@@ -129,6 +129,19 @@ export const updateSessionActionsForOption = (
     choices: [...sessionActions.choices, optionText]
   };
 
+  // Only update gameType from option text if:
+  // 1. We don't already have a gameType set (prevents overriding existing flow)
+  // 2. The option text is for initial game type selection (not component variants)
+  // Check if this is a game type selection by looking for specific patterns
+  const isGameTypeSelection = !sessionActions.gameType && 
+    (optionText.match(/^(Platformer|RPG|Dungeon|Racing|Puzzle|Adventure)\s*-/i) ||
+     optionText.match(/^(Jumpy|Epic|Creepy|Speed|Brain|Point-and-Click)/i));
+  
+  if (!isGameTypeSelection) {
+    // Don't modify gameType if this isn't an initial game selection
+    return updatedActions;
+  }
+  
   // Handle special game type actions based on option text
   const lowerText = optionText.toLowerCase();
   
