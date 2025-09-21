@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["logic_patterns", "match_mechanics", "strategic_sounds"]
         },
-        "next": "visualTheme"
+        "next": "projectSetup"
       },
       {
         "text": "B: Spatial Puzzles - Shape fitting, rotation, physical placement",
@@ -28,6 +28,25 @@
           "variant": "B",
           "bundle": ["shape_pieces", "rotation_mechanics", "placement_sounds"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Nice puzzle type! Now let's give your brain-teaser a clever name. What should we call your puzzle game?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "visualTheme"
+      },
+      {
+        "text": "B: Generate a clever puzzle game name",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "puzzle" },
         "next": "visualTheme"
       }
     ]

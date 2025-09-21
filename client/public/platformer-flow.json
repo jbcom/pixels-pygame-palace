@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["forest_bg", "wood_platforms", "nature_music"]
         },
-        "next": "titlePresentation"
+        "next": "projectSetup"
       },
       {
         "text": "B: Desert Challenge - Sandy dunes, stone blocks, mystical ambience",
@@ -28,6 +28,25 @@
           "variant": "B",
           "bundle": ["desert_bg", "stone_platforms", "mystic_music"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Perfect choice! Now let's make this YOUR game. What should we call your platformer adventure?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "titlePresentation"
+      },
+      {
+        "text": "B: Generate a cool name based on my theme",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "platformer" },
         "next": "titlePresentation"
       }
     ]

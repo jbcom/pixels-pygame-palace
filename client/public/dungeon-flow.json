@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["dark_bg", "stone_tiles", "horror_music", "torch_system"]
         },
-        "next": "dungeonTheme"
+        "next": "projectSetup"
       },
       {
         "text": "B: Bright Adventure - Colorful ruins, magical crystals, heroic exploration",
@@ -28,6 +28,25 @@
           "variant": "B",
           "bundle": ["bright_bg", "crystal_tiles", "adventure_music", "crystal_light"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Great atmosphere! Now let's name your dungeon crawler. What title will strike fear into adventurers' hearts?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "dungeonTheme"
+      },
+      {
+        "text": "B: Generate a dark and mysterious name",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "dungeon" },
         "next": "dungeonTheme"
       }
     ]

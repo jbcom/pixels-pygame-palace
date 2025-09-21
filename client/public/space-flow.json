@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["pixel_ui", "8bit_fonts", "crt_effect", "neon_palette"]
         },
-        "next": "gameTheme"
+        "next": "projectSetup"
       },
       {
         "text": "B: Modern Sci-Fi - Sleek graphics, holographic UI, lens flares, metallic theme",
@@ -28,6 +28,25 @@
           "variant": "B",
           "bundle": ["modern_ui", "futuristic_fonts", "lens_flare", "metal_palette"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Stellar visual style! Now let's give your space shooter an out-of-this-world name. What should we call it?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "gameTheme"
+      },
+      {
+        "text": "B: Generate a galactic game name",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "space" },
         "next": "gameTheme"
       }
     ]
