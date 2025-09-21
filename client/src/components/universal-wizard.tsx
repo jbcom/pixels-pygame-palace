@@ -114,7 +114,7 @@ export default function UniversalWizard({
       // when gameType is set, so we don't need to do anything extra here
       // The dialogue engine will detect the gameType and load the appropriate flow
       console.log('Transitioning to specialized flow for:', sessionActions.gameType);
-    } else if (currentNode.action === 'showAssets') {
+    } else if (currentNode.action === 'showAssets' || currentNode.action === 'showAssetBrowser') {
       // Open asset browser with specific type if provided
       const assetType = currentNode.params?.type || 'all';
       const gameType = currentNode.params?.gameType || dialogueState.currentNode?.params?.gameType;
@@ -161,15 +161,27 @@ export default function UniversalWizard({
         embeddedComponent: 'pygame-runner',
         previewMode: 'full'
       }));
-    } else if (currentNode.action === 'showComponentChoice') {
-      // Show A/B component variants for selection
-      const componentId = currentNode.params?.componentId;
-      const category = currentNode.params?.category;
-      setUiState(prev => ({ 
+    // REMOVED: showComponentChoice action handler
+    // The A/B choices should display inline as regular dialogue options
+    // } else if (currentNode.action === 'showComponentChoice') {
+    //   // Show A/B component variants for selection
+    //   const componentId = currentNode.params?.componentId;
+    //   const category = currentNode.params?.category;
+    //   setUiState(prev => ({ 
+    //     ...prev, 
+    //     componentChoiceOpen: true,
+    //     currentComponentId: componentId,
+    //     currentComponentCategory: category
+    //   }));
+    } else if (currentNode.action === 'compileScene') {
+      // Compile a specific scene with selected components
+      const scene = currentNode.params?.scene || 'title';
+      setSessionActions(prev => ({ 
         ...prev, 
-        componentChoiceOpen: true,
-        currentComponentId: componentId,
-        currentComponentCategory: category
+        compiledScenes: {
+          ...prev.compiledScenes,
+          [scene]: true
+        }
       }));
     } else if (currentNode.action === 'compileFullGame') {
       // Compile all scenes with selected components
@@ -218,7 +230,7 @@ export default function UniversalWizard({
       setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
     } else if (option.action === 'openLessons') {
       setUiState(prev => ({ ...prev, embeddedComponent: 'code-editor' }));
-    } else if (option.action === 'showAssets') {
+    } else if (option.action === 'showAssets' || option.action === 'showAssetBrowser') {
       // Open asset browser with specific type if provided
       const assetType = option.actionParams?.type || 'all';
       const gameType = option.actionParams?.gameType || sessionActions.gameType;
@@ -301,16 +313,18 @@ export default function UniversalWizard({
         embeddedComponent: 'code-editor',
         viewMode: 'generated'
       }));
-    } else if (option.action === 'showComponentChoice') {
-      // Show A/B component variants for user to choose
-      const componentId = option.actionParams?.componentId;
-      const category = option.actionParams?.category;
-      setUiState(prev => ({ 
-        ...prev, 
-        componentChoiceOpen: true,
-        currentComponentId: componentId,
-        currentComponentCategory: category
-      }));
+    // REMOVED: showComponentChoice action handler from options
+    // The A/B choices should display inline as regular dialogue options
+    // } else if (option.action === 'showComponentChoice') {
+    //   // Show A/B component variants for user to choose
+    //   const componentId = option.actionParams?.componentId;
+    //   const category = option.actionParams?.category;
+    //   setUiState(prev => ({ 
+    //     ...prev, 
+    //     componentChoiceOpen: true,
+    //     currentComponentId: componentId,
+    //     currentComponentCategory: category
+    //   }});
     } else if (option.action === 'selectComponentVariant') {
       // Store selected component variant
       const componentId = option.actionParams?.componentId;
@@ -607,33 +621,33 @@ export default function UniversalWizard({
     );
   }
 
-  // Show component selector if it's open
-  if (uiState.componentChoiceOpen) {
-    return (
-      <>
-        <PygameComponentSelector
-          componentId={uiState.currentComponentId}
-          category={uiState.currentComponentCategory}
-          onSelect={(componentId, variant) => {
-            // Store the selection
-            setSessionActions(prev => ({ 
-              ...prev, 
-              selectedComponents: {
-                ...prev.selectedComponents,
-                [componentId]: variant
-              }
-            }));
-            // Close selector and advance dialogue
-            setUiState(prev => ({ ...prev, componentChoiceOpen: false }));
-            advance();
-          }}
-          onClose={() => setUiState(prev => ({ ...prev, componentChoiceOpen: false }))}
-        />
-        {/* Keep wizard dialogue in background */}
-        {renderDialogue()}
-      </>
-    );
-  }
+  // REMOVED: Component selector modal - A/B choices now display inline
+  // if (uiState.componentChoiceOpen) {
+  //   return (
+  //     <>
+  //       <PygameComponentSelector
+  //         componentId={uiState.currentComponentId}
+  //         category={uiState.currentComponentCategory}
+  //         onSelect={(componentId, variant) => {
+  //           // Store the selection
+  //           setSessionActions(prev => ({ 
+  //             ...prev, 
+  //             selectedComponents: {
+  //               ...prev.selectedComponents,
+  //               [componentId]: variant
+  //             }
+  //           }));
+  //           // Close selector and advance dialogue
+  //           setUiState(prev => ({ ...prev, componentChoiceOpen: false }));
+  //           advance();
+  //         }}
+  //         onClose={() => setUiState(prev => ({ ...prev, componentChoiceOpen: false }))}
+  //       />
+  //       {/* Keep wizard dialogue in background */}
+  //       {renderDialogue()}
+  //     </>
+  //   );
+  // }
   
   // Show asset browser if it's open
   if (uiState.assetBrowserOpen) {

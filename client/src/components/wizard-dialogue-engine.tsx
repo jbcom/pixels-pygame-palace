@@ -48,6 +48,9 @@ export function useWizardDialogue({
     completedSteps: [],
     unlockedEditor: false
   });
+  
+  // Track the currently loaded flow path
+  const [loadedFlowPath, setLoadedFlowPath] = useState<string | null>(null);
 
   // Load wizard flow data
   useEffect(() => {
@@ -58,33 +61,45 @@ export function useWizardDialogue({
     // Check both gameType and selectedGameType for compatibility
     const gameType = sessionActions.selectedGameType || sessionActions.gameType;
     
-    // Check if current node has transitionToSpecializedFlow action
-    const shouldTransition = dialogueState.currentNode?.action === 'transitionToSpecializedFlow';
+    // Check if we should load a specialized flow
+    // This happens when:
+    // 1. We have a gameType set AND
+    // 2. Either we're transitioning to specialized flow OR we don't have wizard data yet
+    const shouldLoadSpecializedFlow = gameType && (
+      sessionActions.transitionToSpecializedFlow || 
+      !wizardData ||
+      (loadedFlowPath && !loadedFlowPath.includes(gameType))
+    );
     
-    if (gameType && shouldTransition) {
-      // Load specialized flow when we have gameType AND the action to transition
+    if (shouldLoadSpecializedFlow) {
+      // Load specialized flow when we have gameType
       const specializedFlowPath = `/${gameType}-flow.json`;
       flowPath = specializedFlowPath;
-      console.log('Loading specialized flow:', specializedFlowPath);
-    } else if (gameType && !dialogueState.currentNode) {
-      // Also load specialized flow if we have gameType but no current node (initial load)
-      const specializedFlowPath = `/${gameType}-flow.json`;
-      flowPath = specializedFlowPath;
+      console.log('Loading specialized flow for gameType:', gameType, 'Path:', specializedFlowPath);
     } else if (flowType === 'game-dev' && !gameType) {
       // Fallback to generic game flow if no specific type selected
       flowPath = '/game-wizard-flow.json';
+      console.log('Loading generic game flow');
     }
     
     // Skip loading if we already have the right flow loaded
-    if (wizardData && flowPath === wizardFlowPath && !shouldTransition) {
+    if (loadedFlowPath === flowPath && wizardData) {
+      console.log('Flow already loaded, skipping:', flowPath);
       return;
     }
     
+    console.log('Loading flow from:', flowPath, 'Previously loaded:', loadedFlowPath);
+    
     loadWizardFlow(flowPath)
       .then(nodes => {
+        console.log('Successfully loaded flow:', flowPath, 'Nodes count:', Object.keys(nodes).length);
         setWizardData(nodes);
+        setLoadedFlowPath(flowPath);
+        
         // When loading a specialized flow, start from the beginning
-        const startNodeId = gameType ? 'start' : initialNodeId;
+        const startNodeId = gameType && flowPath.includes(gameType) ? 'start' : initialNodeId;
+        console.log('Setting start node to:', startNodeId);
+        
         if (nodes[startNodeId]) {
           setDialogueState(prev => ({
             ...prev,
@@ -94,16 +109,27 @@ export function useWizardDialogue({
             carouselIndex: 0,
             showAllChoices: false
           }));
+          console.log('Dialogue state updated with node:', nodes[startNodeId]?.text?.substring(0, 50) + '...');
+        } else {
+          console.error('Start node not found in loaded flow:', startNodeId, 'Available nodes:', Object.keys(nodes));
         }
+        
+        // Clear the transition flag after successful load
+        if (sessionActions.transitionToSpecializedFlow) {
+          setSessionActions(prev => ({ ...prev, transitionToSpecializedFlow: false }));
+        }
+        
         setIsLoading(false);
       })
       .catch(error => {
         console.error(`Failed to load wizard flow from ${flowPath}:`, error);
         // Try fallback to default flow
         if (flowPath !== wizardFlowPath) {
+          console.log('Attempting fallback to default flow:', wizardFlowPath);
           loadWizardFlow(wizardFlowPath)
             .then(nodes => {
               setWizardData(nodes);
+              setLoadedFlowPath(wizardFlowPath);
               if (nodes[initialNodeId]) {
                 setDialogueState(prev => ({
                   ...prev,
@@ -124,7 +150,7 @@ export function useWizardDialogue({
           setIsLoading(false);
         }
       });
-  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType, dialogueState.currentNode]);
+  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType, sessionActions.transitionToSpecializedFlow, loadedFlowPath]);
 
   // Update current node when ID changes
   useEffect(() => {
@@ -151,6 +177,8 @@ export function useWizardDialogue({
   }, []);
 
   const handleOptionSelect = useCallback((option: any) => {
+    console.log('Option selected:', option.text, 'Action:', option.action);
+    
     // Update session actions
     if (option.text) {
       setSessionActions(prev => updateSessionActionsForOption(prev, option.text));
@@ -164,11 +192,33 @@ export function useWizardDialogue({
         // Ensure selectedGameType is also set for flow loading
         selectedGameType: option.setVariable.gameType || prev.selectedGameType
       }));
+      console.log('Set variable:', option.setVariable);
     }
     
-    // Navigate to next node
+    // Handle transitionToSpecializedFlow action
+    if (option.action === 'transitionToSpecializedFlow') {
+      console.log('Setting transitionToSpecializedFlow flag');
+      setSessionActions(prev => ({ 
+        ...prev, 
+        transitionToSpecializedFlow: true
+      }));
+      
+      // If there's no explicit next node, we'll navigate to a placeholder
+      // The specialized flow will override this when it loads
+      if (!option.next) {
+        console.log('No next node specified, will load specialized flow start node');
+        // Don't navigate here - let the flow loading handle it
+      }
+    }
+    
+    // Navigate to next node (unless we're transitioning to specialized flow without a next)
     if (option.next) {
+      console.log('Navigating to next node:', option.next);
       navigateToNode(option.next);
+    } else if (option.action === 'transitionToSpecializedFlow') {
+      // For transitionToSpecializedFlow without a next, trigger a state change
+      // This ensures the useEffect will run to load the new flow
+      console.log('Triggering flow transition without explicit navigation');
     }
     
     // Return the option for additional handling in the parent component
