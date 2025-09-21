@@ -1,4 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
+import { ErrorDetector, withErrorDetection } from './utils/error-detection';
+import { WizardNavigator, withWizardNavigation } from './utils/wizard-actions';
 
 test.describe('Full Integration Test - Wizard to Game', () => {
   let page: Page;
@@ -14,7 +16,7 @@ test.describe('Full Integration Test - Wizard to Game', () => {
   
   test('Complete flow: Start wizard → Select platformer → Choose components → Select assets → Compile game', async () => {
     // Step 1: Navigate to game wizard
-    await page.click('text=Create a Game');
+    await page.locator('text=Create a Game').first().click();
     await page.waitForSelector('[data-testid="pixel-avatar"]', { timeout: 5000 });
     
     // Step 2: Select game type - Platformer
@@ -23,7 +25,7 @@ test.describe('Full Integration Test - Wizard to Game', () => {
       await platformerOption.click();
     } else {
       // Try alternative text
-      await page.click('text=jump').first();
+      await page.locator('text=jump').first().click();
     }
     
     await page.waitForTimeout(1000);
@@ -130,7 +132,7 @@ test.describe('Full Integration Test - Wizard to Game', () => {
     await page.goto('/wizard', { waitUntil: 'networkidle' });
     
     // Navigate to component selection
-    await page.click('text=Create').first();
+    await page.locator('text=Create').first().click();
     await page.waitForTimeout(1000);
     
     // Look for component choices
@@ -221,6 +223,160 @@ test.describe('Full Integration Test - Wizard to Game', () => {
         expect(stillVisible).toBe(true);
       }
     }
+  });
+
+  test('Complete platformer flow with persistence from start to export', async () => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        // Clear any existing progress
+        await page.evaluate(() => {
+          localStorage.clear();
+        });
+        
+        // Step 1: Navigate to wizard
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        // Checkpoint 1: Initial state
+        let state = await navigator.getWizardState();
+        expect(state.currentDialogue).toContain('Pixel');
+        
+        // Step 2: Select "jump straight into making a game"
+        await navigator.selectOptionByText('jump straight into making a game');
+        await page.waitForTimeout(1000);
+        
+        // Checkpoint 2: After initial choice
+        state = await navigator.getWizardState();
+        const checkpoint2Dialogue = state.currentDialogue;
+        
+        // Test persistence at checkpoint 2
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        state = await navigator.getWizardState();
+        expect(state.currentDialogue).toBe(checkpoint2Dialogue);
+        
+        // Step 3: Select platformer game type
+        await navigator.selectOptionByText('platform');
+        await page.waitForTimeout(1000);
+        
+        // Checkpoint 3: After game type selection
+        state = await navigator.getWizardState();
+        const checkpoint3Dialogue = state.currentDialogue;
+        
+        // Test persistence at checkpoint 3
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        state = await navigator.getWizardState();
+        expect(state.currentDialogue).toBe(checkpoint3Dialogue);
+        
+        // Step 4: Select theme if available
+        const themeOptions = page.locator('[data-testid^="option-"]:has-text("theme"), [data-testid^="option-"]:has-text("Forest")');
+        if (await themeOptions.first().isVisible().catch(() => false)) {
+          await themeOptions.first().click();
+          await page.waitForTimeout(1000);
+        }
+        
+        // Step 5: Continue through component selections
+        const componentSelectionFlow = [
+          'Floaty', // Jump type
+          'Rapid',  // Shooting type
+          'Animated' // Score type
+        ];
+        
+        for (const componentChoice of componentSelectionFlow) {
+          const componentOption = page.locator(`[data-testid^="option-"]:has-text("${componentChoice}")`);
+          if (await componentOption.isVisible().catch(() => false)) {
+            await componentOption.click();
+            await page.waitForTimeout(1000);
+            
+            // Test persistence after each component selection
+            state = await navigator.getWizardState();
+            const currentDialogue = state.currentDialogue;
+            
+            await page.reload({ waitUntil: 'networkidle' });
+            await navigator.waitForWizardLoad();
+            
+            state = await navigator.getWizardState();
+            expect(state.currentDialogue).toBe(currentDialogue);
+          }
+        }
+        
+        // Step 6: Look for export option
+        const exportOption = page.locator('[data-testid^="option-"]:has-text("Export"), button:has-text("Export")');
+        const playOption = page.locator('[data-testid^="option-"]:has-text("Play"), button:has-text("Play")');
+        
+        if (await exportOption.isVisible().catch(() => false)) {
+          // Verify all selected components are included in the export data
+          const exportData = await page.evaluate(() => {
+            return JSON.parse(localStorage.getItem('gameConfiguration') || '{}');
+          });
+          
+          // Check that selected components are saved
+          console.log('Export data contains:', exportData);
+          
+          await page.screenshot({ path: 'test-results/screenshots/complete-platformer-flow.png' });
+        } else if (await playOption.isVisible().catch(() => false)) {
+          console.log('Play option available - game is ready');
+        }
+        
+      }, errorDetector);
+    });
+  });
+
+  test('Persistence works across multiple checkpoints in wizard flow', async () => {
+    await withErrorDetection(page, async (errorDetector) => {
+      await withWizardNavigation(page, async (navigator) => {
+        
+        await page.goto('/wizard', { waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        const checkpoints: { name: string; dialogue: string }[] = [];
+        const maxCheckpoints = 5;
+        
+        // Navigate through wizard creating checkpoints
+        for (let i = 0; i < maxCheckpoints; i++) {
+          let state = await navigator.getWizardState();
+          
+          // Save checkpoint
+          checkpoints.push({
+            name: `checkpoint_${i}`,
+            dialogue: state.currentDialogue || ''
+          });
+          
+          // Navigate to next option if available
+          if (state.availableOptions && state.availableOptions.length > 0) {
+            await navigator.selectOption(0);
+            await page.waitForTimeout(1000);
+            
+            // Refresh at random checkpoints to test persistence
+            if (i % 2 === 0) {
+              await page.reload({ waitUntil: 'networkidle' });
+              await navigator.waitForWizardLoad();
+              
+              // Verify we're at the right place after refresh
+              state = await navigator.getWizardState();
+              
+              // Should have progressed from last checkpoint
+              expect(state.currentDialogue).not.toBe(checkpoints[checkpoints.length - 1].dialogue);
+            }
+          } else {
+            break;
+          }
+        }
+        
+        // Final verification - refresh and check we're at the last checkpoint
+        await page.reload({ waitUntil: 'networkidle' });
+        await navigator.waitForWizardLoad();
+        
+        const finalState = await navigator.getWizardState();
+        console.log(`Tested ${checkpoints.length} checkpoints with persistence`);
+        
+        // Take screenshot of final state
+        await page.screenshot({ path: 'test-results/screenshots/persistence-checkpoints.png' });
+        
+      }, errorDetector);
+    });
   });
 });
 

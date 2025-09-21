@@ -271,16 +271,45 @@ export default function UniversalWizard({
 
   // Wrap handleOptionSelect to handle actions
   const handleOptionSelectWithAction = useCallback((option: any) => {
-    // ALWAYS call the original handler first to ensure dialogue flow works properly
+    // For selectComponentVariant, handle the action first before dialogue navigation
+    // This ensures the selection is saved properly without triggering flow changes
+    if (option.action === 'selectComponentVariant') {
+      // Store selected component variant
+      const componentId = option.actionParams?.componentId;
+      const variant = option.actionParams?.variant;
+      const bundle = option.actionParams?.bundle;
+      
+      console.log(`Selecting component variant - ID: ${componentId}, Variant: ${variant}, Bundle:`, bundle);
+      
+      setSessionActions(prev => ({ 
+        ...prev, 
+        selectedComponents: {
+          ...prev.selectedComponents,
+          [componentId]: variant
+        },
+        // Store bundle selections if provided
+        ...(bundle && { 
+          selectedBundles: {
+            ...prev.selectedBundles,
+            [componentId]: bundle
+          }
+        })
+      }));
+    }
+    
+    // ALWAYS call the original handler to ensure dialogue flow works properly
     // This ensures that setVariable actions (like setting gameType) are processed
     // and flow transitions happen correctly
     handleOptionSelect(option);
     
-    // Then handle UI-specific actions
+    // Then handle UI-specific actions (skip selectComponentVariant as we handled it above)
     if (option.action === 'transitionToSpecializedFlow') {
       // The transition is handled by the dialogue engine through handleOptionSelect above
       // Just log for debugging
       console.log('Transitioning to specialized flow for game type:', option.setVariable?.gameType || sessionActions.gameType);
+    } else if (option.action === 'selectComponentVariant') {
+      // Already handled above, skip to avoid duplicate processing
+      return;
     } else if (option.action === 'openWYSIWYGEditor') {
       // Open the pro editor with all selected components and assets
       const message = "You've got this! I'm here if you need me!";
@@ -390,17 +419,7 @@ export default function UniversalWizard({
     //     currentComponentId: componentId,
     //     currentComponentCategory: category
     //   }});
-    } else if (option.action === 'selectComponentVariant') {
-      // Store selected component variant
-      const componentId = option.actionParams?.componentId;
-      const variant = option.actionParams?.variant;
-      setSessionActions(prev => ({ 
-        ...prev, 
-        selectedComponents: {
-          ...prev.selectedComponents,
-          [componentId]: variant
-        }
-      }));
+    // Removed duplicate selectComponentVariant handling - it's now handled before handleOptionSelect
     } else if (option.action === 'compileGameplayScene' || option.action === 'compileEndScene' || option.action === 'compileFullGame') {
       // Compile the scene with selected components and assets
       const sceneType = option.action.includes('Gameplay') ? 'gameplay' : 
