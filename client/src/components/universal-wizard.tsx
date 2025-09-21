@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import PixelMenu from './pixel-menu';
 import { 
@@ -25,6 +25,15 @@ import { GameAsset } from '@/lib/asset-library/asset-types';
 import { assetManager } from '@/lib/asset-library/asset-manager';
 import { ICON_SIZES, STYLES } from './wizard-constants';
 import { compilePythonGame, downloadPythonFile } from '@/lib/pygame-game-compiler';
+import {
+  saveSessionState,
+  loadSessionState,
+  saveUserPreferences,
+  loadUserPreferences,
+  clearWizardState,
+  clearAllData,
+  PersistedSessionState
+} from '@/lib/persistence';
 
 interface ExtendedWizardProps extends UniversalWizardProps {
   flowType?: 'default' | 'game-dev';
@@ -51,24 +60,80 @@ export default function UniversalWizard({
   // Device state management
   const [deviceState, setDeviceState] = useState<DeviceState>(detectDevice());
   
+  // Track if we've loaded persisted state
+  const [hasLoadedPersistedState, setHasLoadedPersistedState] = useState(false);
+  const persistenceInitializedRef = useRef(false);
+  
+  // Load UI state from sessionStorage
+  const getInitialUIState = (): UIState => {
+    const persistedSession = loadSessionState();
+    if (persistedSession && persistedSession.uiState) {
+      return persistedSession.uiState as UIState;
+    }
+    return {
+      pixelMenuOpen: false,
+      embeddedComponent: 'none',
+      pixelState: 'center-stage',
+      wysiwygEditorOpen: false,
+      assetBrowserOpen: false,
+      assetBrowserType: 'all',
+      selectedGameType: undefined,
+      isMinimizing: false,
+      minimizeMessage: undefined,
+      previewMode: undefined,
+      viewMode: undefined
+    };
+  };
+  
   // UI state management
-  const [uiState, setUiState] = useState<UIState>({
-    pixelMenuOpen: false,
-    embeddedComponent: 'none',
-    pixelState: 'center-stage',
-    wysiwygEditorOpen: false,
-    assetBrowserOpen: false,
-    assetBrowserType: 'all',
-    selectedGameType: undefined,
-    isMinimizing: false,
-    minimizeMessage: undefined,
-    previewMode: undefined,
-    viewMode: undefined
-  });
+  const [uiState, setUiState] = useState<UIState>(getInitialUIState);
   
   // Selected assets state
   const [selectedAssets, setSelectedAssets] = useState<GameAsset[]>([]);
+  
+  // User preferences state
+  const [userPreferences, setUserPreferences] = useState(() => loadUserPreferences());
 
+  // Load and apply theme preference on mount
+  useEffect(() => {
+    if (userPreferences.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (userPreferences.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      // System preference
+      const darkModePreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (darkModePreference) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [userPreferences.theme]);
+  
+  // Persist UI state changes to sessionStorage
+  useEffect(() => {
+    if (!persistenceInitializedRef.current) {
+      persistenceInitializedRef.current = true;
+      setHasLoadedPersistedState(true);
+      return;
+    }
+    
+    // Save UI state to sessionStorage whenever it changes
+    saveSessionState({
+      version: '1.0.0',
+      uiState: uiState,
+      updatedAt: new Date().toISOString()
+    });
+  }, [uiState]);
+  
+  // Save user preferences when they change
+  useEffect(() => {
+    if (hasLoadedPersistedState) {
+      saveUserPreferences(userPreferences);
+    }
+  }, [userPreferences, hasLoadedPersistedState]);
+  
   // Responsive detection
   useEffect(() => {
     const checkDevice = () => {
@@ -460,6 +525,29 @@ export default function UniversalWizard({
     );
   }, [dialogueState, dialogueHelpers, handleOptionSelectWithAction, advance, deviceState.isMobile]);
 
+  // Reset progress handler
+  const handleResetProgress = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset your progress? This will clear all saved wizard data.')) {
+      clearWizardState();
+      window.location.reload();
+    }
+  }, []);
+  
+  // Clear all data handler
+  const handleClearAllData = useCallback(() => {
+    if (window.confirm('Are you sure you want to clear ALL data including preferences? This action cannot be undone.')) {
+      clearAllData();
+      window.location.reload();
+    }
+  }, []);
+  
+  // Toggle theme handler
+  const handleToggleTheme = useCallback(() => {
+    const newTheme = userPreferences.theme === 'dark' ? 'light' : 
+                     userPreferences.theme === 'light' ? 'system' : 'dark';
+    setUserPreferences(prev => ({ ...prev, theme: newTheme }));
+  }, [userPreferences.theme]);
+  
   // Pixel Menu action handlers
   const handlePixelMenuAction = useCallback((action: string) => {
     setUiState(prev => ({ ...prev, pixelMenuOpen: false }));
@@ -479,11 +567,20 @@ export default function UniversalWizard({
         // TODO: Implement progress view
         console.log('View progress');
         break;
+      case 'resetProgress':
+        handleResetProgress();
+        break;
+      case 'clearAllData':
+        handleClearAllData();
+        break;
+      case 'toggleTheme':
+        handleToggleTheme();
+        break;
       case 'returnCurrent':
         // Just close the menu
         break;
     }
-  }, [navigateToNode]);
+  }, [navigateToNode, handleResetProgress, handleClearAllData, handleToggleTheme]);
 
   // Edge swipe handlers for mobile
   const edgeSwipeHandlers = useLayoutEdgeSwipe(() => {
