@@ -210,35 +210,39 @@ export function useWizardDialogue({
         });
         console.log('Available nodes in loaded flow:', Object.keys(nodes));
         
-        // Priority 1: If we have a persisted currentNodeId that exists in the loaded nodes, use it
-        // This ensures we resume from saved state after page refresh
-        // IMPORTANT: Check if we're loading the same flow as the persisted one
-        const isRestoringPersistedFlow = persistedState?.activeFlowPath === flowPath;
-        
-        if (isRestoringPersistedFlow && persistedState && persistedState.currentNodeId && nodes[persistedState.currentNodeId]) {
-          // We're loading the same flow that was saved, restore the exact position
-          startNodeId = persistedState.currentNodeId;
-          console.log('✅ Resuming from persisted node in same flow:', startNodeId);
-        } 
-        // Priority 2: If this is an explicit transition to a specialized flow, start from beginning
-        else if (sessionActions.transitionToSpecializedFlow && gameType && flowPath.includes(gameType)) {
+        // Priority 1: If this is an explicit transition to a specialized flow, ALWAYS start from beginning
+        // This ensures we don't try to restore incompatible nodes when switching flows
+        if (sessionActions.transitionToSpecializedFlow && gameType && flowPath.includes(gameType)) {
           startNodeId = 'start';
           console.log('🔄 Starting new specialized flow from beginning (explicit transition)');
         }
-        // Priority 3: If we're loading a different flow than what was persisted, start fresh
-        else if (!isRestoringPersistedFlow && gameType && flowPath.includes(gameType)) {
-          startNodeId = 'start';
-          console.log('🆕 Starting specialized flow from beginning (different flow)');
-        }
-        // Priority 4: Fall back to initial node ID or start
+        // Priority 2: Check if we're loading the same flow as persisted
         else {
-          // If we have persisted state but the node doesn't exist in this flow, use start
-          if (persistedState && persistedState.currentNodeId && !nodes[persistedState.currentNodeId]) {
+          const isRestoringPersistedFlow = persistedState?.activeFlowPath === flowPath;
+          
+          // Only restore persisted node if:
+          // 1. We're loading the same flow as what was persisted AND
+          // 2. The persisted node actually exists in the loaded flow
+          if (isRestoringPersistedFlow && persistedState && persistedState.currentNodeId && nodes[persistedState.currentNodeId]) {
+            // We're loading the same flow that was saved, restore the exact position
+            startNodeId = persistedState.currentNodeId;
+            console.log('✅ Resuming from persisted node in same flow:', startNodeId);
+          } 
+          // Priority 3: If we're loading a different flow than what was persisted, start fresh
+          else if (!isRestoringPersistedFlow && gameType && flowPath.includes(gameType)) {
+            startNodeId = 'start';
+            console.log('🆕 Starting specialized flow from beginning (different flow)');
+          }
+          // Priority 4: If we have persisted state but the node doesn't exist in this flow, use start
+          else if (persistedState && persistedState.currentNodeId && !nodes[persistedState.currentNodeId]) {
             startNodeId = 'start';
             console.log('⚠️ Persisted node not found in flow, starting from beginning');
-          } else {
-            startNodeId = initialNodeId;
-            console.log('📍 Using initial node:', startNodeId);
+          }
+          // Priority 5: Fall back to initial node ID or start
+          else {
+            // Use 'start' if available, otherwise fall back to initialNodeId
+            startNodeId = nodes['start'] ? 'start' : initialNodeId;
+            console.log('📍 Using node:', startNodeId);
           }
         }
         console.log('=== End Restoration Sequence ===');
