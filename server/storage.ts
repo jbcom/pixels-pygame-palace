@@ -1,5 +1,8 @@
 import { type User, type InsertUser, type Lesson, type InsertLesson, type UserProgress, type InsertUserProgress, type Project, type InsertProject } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+import * as schema from "../shared/db-schema";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1372,5 +1375,420 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Export a singleton storage instance
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DBStorage implements IStorage {
+  constructor() {
+    // Initialize lessons on startup
+    this.initializeLessons();
+  }
+
+  private async initializeLessons() {
+    // Initialize the same lessons as MemStorage but in the database
+    const memStorage = new MemStorage();
+    const lessons = await memStorage.getLessons();
+    
+    for (const lesson of lessons) {
+      try {
+        await db.insert(schema.lessons)
+          .values({
+            id: lesson.id,
+            title: lesson.title,
+            description: lesson.description,
+            order: lesson.order,
+            intro: lesson.intro,
+            learningObjectives: lesson.learningObjectives,
+            goalDescription: lesson.goalDescription,
+            previewCode: lesson.previewCode,
+            content: lesson.content,
+            prerequisites: lesson.prerequisites,
+            difficulty: lesson.difficulty,
+            estimatedTime: lesson.estimatedTime,
+          })
+          .onConflictDoNothing();
+      } catch (error) {
+        // Lessons might already exist, that's fine
+      }
+    }
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    return {
+      id: result[0].id,
+      username: result[0].username,
+    };
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select()
+      .from(schema.users)
+      .where(eq(schema.users.username, username))
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    return {
+      id: result[0].id,
+      username: result[0].username,
+    };
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await db.insert(schema.users)
+      .values({
+        username: user.username,
+        email: 'placeholder@example.com', // Add email support later
+        passwordHash: 'placeholder', // Add auth support later
+      })
+      .returning();
+    
+    return {
+      id: result[0].id,
+      username: result[0].username,
+    };
+  }
+
+  async getLessons(): Promise<Lesson[]> {
+    const result = await db.select()
+      .from(schema.lessons)
+      .orderBy(schema.lessons.order);
+    
+    return result.map(lesson => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      order: lesson.order,
+      intro: lesson.intro,
+      learningObjectives: lesson.learningObjectives as string[],
+      goalDescription: lesson.goalDescription,
+      previewCode: lesson.previewCode,
+      content: lesson.content as Lesson['content'],
+      prerequisites: lesson.prerequisites as string[],
+      difficulty: lesson.difficulty,
+      estimatedTime: lesson.estimatedTime,
+    }));
+  }
+
+  async getLesson(id: string): Promise<Lesson | undefined> {
+    const result = await db.select()
+      .from(schema.lessons)
+      .where(eq(schema.lessons.id, id))
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    const lesson = result[0];
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      order: lesson.order,
+      intro: lesson.intro,
+      learningObjectives: lesson.learningObjectives as string[],
+      goalDescription: lesson.goalDescription,
+      previewCode: lesson.previewCode,
+      content: lesson.content as Lesson['content'],
+      prerequisites: lesson.prerequisites as string[],
+      difficulty: lesson.difficulty,
+      estimatedTime: lesson.estimatedTime,
+    };
+  }
+
+  async createLesson(lessonData: InsertLesson): Promise<Lesson> {
+    const result = await db.insert(schema.lessons)
+      .values({
+        id: lessonData.id,
+        title: lessonData.title,
+        description: lessonData.description,
+        order: lessonData.order,
+        intro: lessonData.intro,
+        learningObjectives: lessonData.learningObjectives,
+        goalDescription: lessonData.goalDescription,
+        previewCode: lessonData.previewCode,
+        content: lessonData.content,
+        prerequisites: lessonData.prerequisites,
+        difficulty: lessonData.difficulty,
+        estimatedTime: lessonData.estimatedTime,
+      })
+      .returning();
+    
+    const lesson = result[0];
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      order: lesson.order,
+      intro: lesson.intro,
+      learningObjectives: lesson.learningObjectives as string[],
+      goalDescription: lesson.goalDescription,
+      previewCode: lesson.previewCode,
+      content: lesson.content as Lesson['content'],
+      prerequisites: lesson.prerequisites as string[],
+      difficulty: lesson.difficulty,
+      estimatedTime: lesson.estimatedTime,
+    };
+  }
+
+  async getUserProgress(userId: string): Promise<UserProgress[]> {
+    const result = await db.select()
+      .from(schema.userProgress)
+      .where(eq(schema.userProgress.userId, userId));
+    
+    return result.map(progress => ({
+      id: progress.id,
+      userId: progress.userId,
+      lessonId: progress.lessonId,
+      currentStep: progress.currentStep,
+      completed: progress.completed,
+      code: progress.code,
+    }));
+  }
+
+  async getUserProgressForLesson(userId: string, lessonId: string): Promise<UserProgress | undefined> {
+    const result = await db.select()
+      .from(schema.userProgress)
+      .where(
+        and(
+          eq(schema.userProgress.userId, userId),
+          eq(schema.userProgress.lessonId, lessonId)
+        )
+      )
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    const progress = result[0];
+    return {
+      id: progress.id,
+      userId: progress.userId,
+      lessonId: progress.lessonId,
+      currentStep: progress.currentStep,
+      completed: progress.completed,
+      code: progress.code,
+    };
+  }
+
+  async updateUserProgress(
+    userId: string,
+    lessonId: string,
+    progressUpdate: Partial<UserProgress>
+  ): Promise<UserProgress> {
+    const existing = await this.getUserProgressForLesson(userId, lessonId);
+    
+    if (existing) {
+      // Update existing progress
+      const result = await db.update(schema.userProgress)
+        .set({
+          currentStep: progressUpdate.currentStep ?? existing.currentStep,
+          completed: progressUpdate.completed ?? existing.completed,
+          code: progressUpdate.code ?? existing.code,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.userProgress.id, existing.id))
+        .returning();
+      
+      const progress = result[0];
+      return {
+        id: progress.id,
+        userId: progress.userId,
+        lessonId: progress.lessonId,
+        currentStep: progress.currentStep,
+        completed: progress.completed,
+        code: progress.code,
+      };
+    } else {
+      // Create new progress record
+      const result = await db.insert(schema.userProgress)
+        .values({
+          userId,
+          lessonId,
+          currentStep: progressUpdate.currentStep ?? 0,
+          completed: progressUpdate.completed ?? false,
+          code: progressUpdate.code ?? null,
+        })
+        .returning();
+      
+      const progress = result[0];
+      return {
+        id: progress.id,
+        userId: progress.userId,
+        lessonId: progress.lessonId,
+        currentStep: progress.currentStep,
+        completed: progress.completed,
+        code: progress.code,
+      };
+    }
+  }
+
+  async listProjects(userId: string): Promise<Project[]> {
+    const result = await db.select()
+      .from(schema.gameProjects)
+      .where(eq(schema.gameProjects.userId, userId))
+      .orderBy(schema.gameProjects.createdAt);
+    
+    return result.map(project => ({
+      id: project.id,
+      userId: project.userId,
+      name: project.name,
+      template: project.gameType,
+      description: project.description,
+      published: project.published,
+      createdAt: project.createdAt,
+      publishedAt: project.publishedAt,
+      thumbnailDataUrl: project.thumbnailDataUrl,
+      files: project.files as Project['files'],
+      assets: project.assets as Project['assets'],
+    }));
+  }
+
+  async getProject(id: string): Promise<Project | undefined> {
+    const result = await db.select()
+      .from(schema.gameProjects)
+      .where(eq(schema.gameProjects.id, id))
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    const project = result[0];
+    return {
+      id: project.id,
+      userId: project.userId,
+      name: project.name,
+      template: project.gameType,
+      description: project.description,
+      published: project.published,
+      createdAt: project.createdAt,
+      publishedAt: project.publishedAt,
+      thumbnailDataUrl: project.thumbnailDataUrl,
+      files: project.files as Project['files'],
+      assets: project.assets as Project['assets'],
+    };
+  }
+
+  async createProject(projectData: InsertProject): Promise<Project> {
+    const result = await db.insert(schema.gameProjects)
+      .values({
+        userId: projectData.userId,
+        name: projectData.name,
+        gameType: projectData.template,
+        components: {}, // Initialize as empty object
+        description: projectData.description,
+        published: projectData.published ?? false,
+        publishedAt: projectData.published ? new Date() : null,
+        thumbnailDataUrl: projectData.thumbnailDataUrl,
+        files: projectData.files ?? [],
+        assets: projectData.assets ?? [],
+      })
+      .returning();
+    
+    const project = result[0];
+    return {
+      id: project.id,
+      userId: project.userId,
+      name: project.name,
+      template: project.gameType,
+      description: project.description,
+      published: project.published,
+      createdAt: project.createdAt,
+      publishedAt: project.publishedAt,
+      thumbnailDataUrl: project.thumbnailDataUrl,
+      files: project.files as Project['files'],
+      assets: project.assets as Project['assets'],
+    };
+  }
+
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project> {
+    const existing = await this.getProject(id);
+    if (!existing) {
+      throw new Error("Project not found");
+    }
+    
+    // Handle publishedAt timestamp automatically when published flag changes
+    const publishedChanging = 'published' in updates && existing.published !== updates.published;
+    
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+    
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.template !== undefined) updateData.gameType = updates.template;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.published !== undefined) updateData.published = updates.published;
+    if (updates.thumbnailDataUrl !== undefined) updateData.thumbnailDataUrl = updates.thumbnailDataUrl;
+    if (updates.files !== undefined) updateData.files = updates.files;
+    if (updates.assets !== undefined) updateData.assets = updates.assets;
+    
+    // Automatically manage publishedAt when published state changes
+    if (publishedChanging) {
+      if (updates.published) {
+        updateData.publishedAt = new Date();
+      } else {
+        updateData.publishedAt = null;
+      }
+    }
+    
+    const result = await db.update(schema.gameProjects)
+      .set(updateData)
+      .where(eq(schema.gameProjects.id, id))
+      .returning();
+    
+    const project = result[0];
+    return {
+      id: project.id,
+      userId: project.userId,
+      name: project.name,
+      template: project.gameType,
+      description: project.description,
+      published: project.published,
+      createdAt: project.createdAt,
+      publishedAt: project.publishedAt,
+      thumbnailDataUrl: project.thumbnailDataUrl,
+      files: project.files as Project['files'],
+      assets: project.assets as Project['assets'],
+    };
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    await db.delete(schema.gameProjects)
+      .where(eq(schema.gameProjects.id, id));
+  }
+
+  // Gallery methods
+  async listPublishedProjects(): Promise<Project[]> {
+    const result = await db.select()
+      .from(schema.gameProjects)
+      .where(eq(schema.gameProjects.published, true))
+      .orderBy(schema.gameProjects.publishedAt);
+    
+    return result.map(project => ({
+      id: project.id,
+      userId: project.userId,
+      name: project.name,
+      template: project.gameType,
+      description: project.description,
+      published: project.published,
+      createdAt: project.createdAt,
+      publishedAt: project.publishedAt,
+      thumbnailDataUrl: project.thumbnailDataUrl,
+      files: project.files as Project['files'],
+      assets: project.assets as Project['assets'],
+    }));
+  }
+
+  async publishProject(id: string): Promise<Project> {
+    return this.updateProject(id, { published: true });
+  }
+
+  async unpublishProject(id: string): Promise<Project> {
+    return this.updateProject(id, { published: false });
+  }
+}
+
+// Export a singleton storage instance - use DBStorage now
+export const storage = new DBStorage();
