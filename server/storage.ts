@@ -1,4 +1,11 @@
-import { type User, type InsertUser, type Lesson, type InsertLesson, type UserProgress, type InsertUserProgress, type Project, type InsertProject } from "@shared/schema";
+import { type User, type InsertUser, type Lesson, type InsertLesson, type UserProgress, type InsertUserProgress, type Project, type InsertProject, type RegistryComponent, type RegistryMechanic, type RegistryTemplate, type RegistryAsset, type RegistryBuildTarget } from "@shared/schema";
+import { 
+  RegistryComponentArraySchema, 
+  RegistryMechanicArraySchema, 
+  RegistryTemplateArraySchema, 
+  RegistryAssetArraySchema, 
+  RegistryBuildTargetArraySchema 
+} from "@shared/registry-schemas";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -27,6 +34,18 @@ export interface IStorage {
   listPublishedProjects(): Promise<Project[]>;
   publishProject(id: string): Promise<Project>;
   unpublishProject(id: string): Promise<Project>;
+  
+  // Registry methods
+  getRegistryComponents(): Promise<RegistryComponent[]>;
+  getRegistryComponent(id: string): Promise<RegistryComponent | undefined>;
+  getRegistryMechanics(): Promise<RegistryMechanic[]>;
+  getRegistryMechanic(id: string): Promise<RegistryMechanic | undefined>;
+  getRegistryTemplates(): Promise<RegistryTemplate[]>;
+  getRegistryTemplate(id: string): Promise<RegistryTemplate | undefined>;
+  getRegistryAssets(): Promise<RegistryAsset[]>;
+  getRegistryAsset(id: string): Promise<RegistryAsset | undefined>;
+  getRegistryBuildTargets(): Promise<RegistryBuildTarget[]>;
+  getRegistryBuildTarget(id: string): Promise<RegistryBuildTarget | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -34,15 +53,29 @@ export class MemStorage implements IStorage {
   private lessons: Map<string, Lesson>;
   private userProgress: Map<string, UserProgress>;
   private projects: Map<string, Project>;
+  
+  // Registry data stores
+  private registryComponents: Map<string, RegistryComponent>;
+  private registryMechanics: Map<string, RegistryMechanic>;
+  private registryTemplates: Map<string, RegistryTemplate>;
+  private registryAssets: Map<string, RegistryAsset>;
+  private registryBuildTargets: Map<string, RegistryBuildTarget>;
 
   constructor() {
     this.users = new Map();
     this.lessons = new Map();
     this.userProgress = new Map();
     this.projects = new Map();
+    this.registryComponents = new Map();
+    this.registryMechanics = new Map();
+    this.registryTemplates = new Map();
+    this.registryAssets = new Map();
+    this.registryBuildTargets = new Map();
     
     // Initialize with comprehensive fundamentals curriculum
     this.initializeLessons();
+    // Initialize registry with seed data
+    this.initializeRegistryData();
   }
 
   private initializeLessons() {
@@ -1377,9 +1410,24 @@ export class MemStorage implements IStorage {
 
 // Database Storage Implementation
 export class DBStorage implements IStorage {
+  // Registry data stores (in-memory as per guidelines)
+  private registryComponents: Map<string, RegistryComponent>;
+  private registryMechanics: Map<string, RegistryMechanic>;
+  private registryTemplates: Map<string, RegistryTemplate>;
+  private registryAssets: Map<string, RegistryAsset>;
+  private registryBuildTargets: Map<string, RegistryBuildTarget>;
+
   constructor() {
+    this.registryComponents = new Map();
+    this.registryMechanics = new Map();
+    this.registryTemplates = new Map();
+    this.registryAssets = new Map();
+    this.registryBuildTargets = new Map();
+    
     // Initialize lessons on startup
     this.initializeLessons();
+    // Initialize registry with seed data
+    this.initializeRegistryData();
   }
 
   private async initializeLessons() {
@@ -1787,6 +1835,143 @@ export class DBStorage implements IStorage {
 
   async unpublishProject(id: string): Promise<Project> {
     return this.updateProject(id, { published: false });
+  }
+
+  private async initializeRegistryData() {
+    // Load and validate seed data from JSON files using Zod schemas
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      console.log('🔄 Initializing registry data with Zod validation...');
+      
+      // Load and validate components
+      try {
+        const componentsPath = path.join(process.cwd(), 'shared/seed-data/components.json');
+        const componentsRawData = JSON.parse(fs.readFileSync(componentsPath, 'utf8'));
+        const validatedComponents = RegistryComponentArraySchema.parse(componentsRawData);
+        
+        validatedComponents.forEach(component => {
+          this.registryComponents.set(component.id, component);
+        });
+        
+        console.log(`✅ Loaded ${this.registryComponents.size} validated components`);
+      } catch (error) {
+        console.error('❌ Failed to load/validate components:', error);
+        throw error;
+      }
+
+      // Load and validate mechanics
+      try {
+        const mechanicsPath = path.join(process.cwd(), 'shared/seed-data/mechanics.json');
+        const mechanicsRawData = JSON.parse(fs.readFileSync(mechanicsPath, 'utf8'));
+        const validatedMechanics = RegistryMechanicArraySchema.parse(mechanicsRawData);
+        
+        validatedMechanics.forEach(mechanic => {
+          this.registryMechanics.set(mechanic.id, mechanic);
+        });
+        
+        console.log(`✅ Loaded ${this.registryMechanics.size} validated mechanics`);
+      } catch (error) {
+        console.error('❌ Failed to load/validate mechanics:', error);
+        throw error;
+      }
+
+      // Load and validate templates
+      try {
+        const templatesPath = path.join(process.cwd(), 'shared/seed-data/templates.json');
+        const templatesRawData = JSON.parse(fs.readFileSync(templatesPath, 'utf8'));
+        const validatedTemplates = RegistryTemplateArraySchema.parse(templatesRawData);
+        
+        validatedTemplates.forEach(template => {
+          this.registryTemplates.set(template.id, template);
+        });
+        
+        console.log(`✅ Loaded ${this.registryTemplates.size} validated templates`);
+      } catch (error) {
+        console.error('❌ Failed to load/validate templates:', error);
+        throw error;
+      }
+
+      // Load and validate assets (NEW!)
+      try {
+        const assetsPath = path.join(process.cwd(), 'shared/seed-data/assets.json');
+        const assetsRawData = JSON.parse(fs.readFileSync(assetsPath, 'utf8'));
+        const validatedAssets = RegistryAssetArraySchema.parse(assetsRawData);
+        
+        validatedAssets.forEach(asset => {
+          this.registryAssets.set(asset.id, asset);
+        });
+        
+        console.log(`✅ Loaded ${this.registryAssets.size} validated assets`);
+      } catch (error) {
+        console.error('❌ Failed to load/validate assets:', error);
+        throw error;
+      }
+
+      // Load and validate build targets
+      try {
+        const buildTargetsPath = path.join(process.cwd(), 'shared/seed-data/buildTargets.json');
+        const buildTargetsRawData = JSON.parse(fs.readFileSync(buildTargetsPath, 'utf8'));
+        const validatedBuildTargets = RegistryBuildTargetArraySchema.parse(buildTargetsRawData);
+        
+        validatedBuildTargets.forEach(target => {
+          this.registryBuildTargets.set(target.id, target);
+        });
+        
+        console.log(`✅ Loaded ${this.registryBuildTargets.size} validated build targets`);
+      } catch (error) {
+        console.error('❌ Failed to load/validate build targets:', error);
+        throw error;
+      }
+
+      console.log(`🎉 Registry fully initialized: ${this.registryComponents.size} components, ${this.registryMechanics.size} mechanics, ${this.registryTemplates.size} templates, ${this.registryAssets.size} assets, ${this.registryBuildTargets.size} build targets`);
+    } catch (error) {
+      console.error('💥 Critical error loading registry seed data:', error);
+      console.error('Registry system may not function correctly!');
+      // Don't throw - allow the app to continue with empty registry
+    }
+  }
+
+  // Registry methods
+  async getRegistryComponents(): Promise<RegistryComponent[]> {
+    return Array.from(this.registryComponents.values());
+  }
+
+  async getRegistryComponent(id: string): Promise<RegistryComponent | undefined> {
+    return this.registryComponents.get(id);
+  }
+
+  async getRegistryMechanics(): Promise<RegistryMechanic[]> {
+    return Array.from(this.registryMechanics.values());
+  }
+
+  async getRegistryMechanic(id: string): Promise<RegistryMechanic | undefined> {
+    return this.registryMechanics.get(id);
+  }
+
+  async getRegistryTemplates(): Promise<RegistryTemplate[]> {
+    return Array.from(this.registryTemplates.values());
+  }
+
+  async getRegistryTemplate(id: string): Promise<RegistryTemplate | undefined> {
+    return this.registryTemplates.get(id);
+  }
+
+  async getRegistryAssets(): Promise<RegistryAsset[]> {
+    return Array.from(this.registryAssets.values());
+  }
+
+  async getRegistryAsset(id: string): Promise<RegistryAsset | undefined> {
+    return this.registryAssets.get(id);
+  }
+
+  async getRegistryBuildTargets(): Promise<RegistryBuildTarget[]> {
+    return Array.from(this.registryBuildTargets.values());
+  }
+
+  async getRegistryBuildTarget(id: string): Promise<RegistryBuildTarget | undefined> {
+    return this.registryBuildTargets.get(id);
   }
 }
 

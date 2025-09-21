@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pixel-pygame-palace.com/schemas/component.json",
+  "title": "Game Component Schema",
+  "description": "Schema for game components in the visual game builder",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the component",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["player", "enemy", "collectible", "platform", "background", "sound", "ui", "particle", "trigger", "decoration"],
+      "description": "The type/category of the component"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the component"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what the component does"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the component"
+    },
+    "paramsSchema": {
+      "type": "object",
+      "description": "JSON Schema defining the parameters this component accepts",
+      "properties": {
+        "type": { "const": "object" },
+        "properties": { "type": "object" },
+        "required": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["type", "properties"]
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "description": "ID of the required component"
+          },
+          "version": {
+            "type": "string",
+            "description": "Required version or version range"
+          },
+          "optional": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this dependency is optional"
+          }
+        },
+        "required": ["componentId"]
+      },
+      "description": "Other components this component depends on"
+    },
+    "assetReferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "type": "string",
+            "description": "Identifier for this asset slot"
+          },
+          "assetType": {
+            "type": "string",
+            "enum": ["sprite", "sound", "music", "tileset", "font"],
+            "description": "Type of asset expected in this slot"
+          },
+          "required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this asset is required"
+          },
+          "multiple": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether multiple assets can be assigned to this slot"
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tags to filter compatible assets"
+          },
+          "defaultAsset": {
+            "type": "string",
+            "description": "Default asset ID to use if none specified"
+          }
+        },
+        "required": ["slotId", "assetType"]
+      },
+      "description": "Asset slots that this component uses"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the event"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of when this event fires"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Schema for event parameters"
+          }
+        },
+        "required": ["name", "description"]
+      },
+      "description": "Events that this component can emit"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["core", "gameplay", "visual", "audio", "ui", "physics", "ai", "custom"],
+      "description": "Category for organizing components in the UI"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags for searching and filtering components"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier for the component"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Preview image or animation for the component"
+    },
+    "documentation": {
+      "type": "object",
+      "properties": {
+        "usage": {
+          "type": "string",
+          "description": "How to use this component"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "config": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "buildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["desktop", "web", "mobile"]
+      },
+      "description": "Which platforms this component supports",
+      "default": ["desktop", "web"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the component was created"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the component was last updated"
+    }
+  },
+  "required": [
+    "id",
+    "type", 
+    "name",
+    "description",
+    "version",
+    "paramsSchema",
+    "category"
+  ]
+}

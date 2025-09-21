@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pixel-pygame-palace.com/schemas/template.json",
+  "title": "Game Template Schema",
+  "description": "Schema for game templates that define complete game structures",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the template",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the template"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the game template"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the template"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["platformer", "shooter", "puzzle", "racing", "rpg", "strategy", "arcade", "adventure", "custom"],
+      "description": "Game genre/category"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced", "expert"],
+      "description": "Complexity level for developers"
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this slot"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the slot"
+          },
+          "description": {
+            "type": "string",
+            "description": "What goes in this slot"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["component", "asset", "mechanic", "scene", "system"],
+            "description": "Type of content this slot accepts"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this slot must be filled"
+          },
+          "multiple": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether multiple items can be assigned"
+          },
+          "acceptedTypes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Specific types/categories accepted in this slot"
+          },
+          "defaultValue": {
+            "description": "Default value or ID to use if not specified"
+          },
+          "constraints": {
+            "type": "object",
+            "description": "Additional constraints for slot contents"
+          }
+        },
+        "required": ["id", "name", "type"]
+      },
+      "description": "Configurable slots that users can fill"
+    },
+    "requiredSystems": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "System IDs that must be present for this template"
+    },
+    "requiredMechanics": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Mechanic IDs that must be present for this template"
+    },
+    "sceneGraph": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "type": { "type": "string" },
+            "properties": { "type": "object" },
+            "children": {
+              "type": "array",
+              "items": { "$ref": "#/properties/sceneGraph/properties/root" }
+            }
+          },
+          "required": ["id", "name", "type"]
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" },
+              "backgroundColor": { "type": "string" },
+              "entities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "componentId": { "type": "string" },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "number" },
+                        "y": { "type": "number" }
+                      }
+                    },
+                    "configuration": { "type": "object" }
+                  },
+                  "required": ["componentId", "position"]
+                }
+              }
+            },
+            "required": ["id", "name", "width", "height"]
+          }
+        }
+      },
+      "description": "Structure defining scenes and entity hierarchy"
+    },
+    "defaultConfiguration": {
+      "type": "object",
+      "description": "Default settings and parameters for the template"
+    },
+    "gameSettings": {
+      "type": "object",
+      "properties": {
+        "screenWidth": { "type": "integer", "default": 800 },
+        "screenHeight": { "type": "integer", "default": 600 },
+        "targetFPS": { "type": "integer", "default": 60 },
+        "physics": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "gravity": { "type": "number", "default": 9.81 }
+          }
+        },
+        "audio": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "volume": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.7 }
+          }
+        }
+      },
+      "description": "Game engine settings for this template"
+    },
+    "buildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["desktop", "web", "mobile"]
+      },
+      "description": "Which platforms this template supports",
+      "default": ["desktop", "web"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags for searching and filtering templates"
+    },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "image": { "type": "string" },
+        "video": { "type": "string" },
+        "playable": { "type": "string" }
+      },
+      "description": "Preview media for the template"
+    },
+    "documentation": {
+      "type": "object",
+      "properties": {
+        "tutorial": { "type": "string" },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "configuration": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description",
+    "version",
+    "category",
+    "slots",
+    "sceneGraph"
+  ]
+}
