@@ -546,79 +546,11 @@ def validate_user_code(code):
 
 def generate_python_code(components, game_type):
     """Generate Python pygame code from visual components"""
-    # Basic pygame template
-    code = '''import pygame
-import sys
-import random
-
-# Initialize Pygame
-pygame.init()
-
-# Set up the display
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Generated Game")
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-# Game clock
-clock = pygame.time.Clock()
-FPS = 60
-
-# Game variables
-running = True
-
-# Main game loop
-while running:
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
+    # Import the GameCompiler from game_engine module
+    from game_engine import GameCompiler
     
-    # Clear screen
-    screen.fill(BLACK)
-    
-    # Draw components
-'''
-    
-    # Add component-specific code
-    for component in components:
-        comp_type = component.get('type', '')
-        props = component.get('props', {})
-        
-        if comp_type == 'sprite':
-            x = props.get('x', 100)
-            y = props.get('y', 100)
-            color = props.get('color', 'RED')
-            code += f'''    pygame.draw.rect(screen, {color}, ({x}, {y}, 50, 50))\n'''
-        elif comp_type == 'text':
-            text = props.get('text', 'Hello World')
-            x = props.get('x', 100)
-            y = props.get('y', 100)
-            code += f'''    font = pygame.font.Font(None, 36)
-    text_surface = font.render("{text}", True, WHITE)
-    screen.blit(text_surface, ({x}, {y}))\n'''
-    
-    code += '''    
-    # Update display
-    pygame.display.flip()
-    clock.tick(FPS)
-
-# Quit
-pygame.quit()
-sys.exit()
-'''
-    
-    return code
+    # Use the GameCompiler to generate appropriate code for the game type
+    return GameCompiler.compile(components, game_type)
 
 if __name__ == '__main__':
     # Run the Flask app with SocketIO
