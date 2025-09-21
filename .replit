@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["freetype", "git-lfs", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "unzip", "wget", "zlib", "vim-full", "python311Packages.pygame-ce", "python311Packages.selenium", "python311Packages.selenium-wire", "selenium-manager", "selenium-server-standalone", "chromium", "glib", "nspr", "nss", "dbus", "atk", "cups", "cairo", "pango", "alsa-lib", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "libxkbcommon"]
+packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "alsa-lib", "atk", "cairo", "chromium", "cups", "dbus", "fontconfig", "freetype", "git-lfs", "glib", "iana-etc", "lcms2", "libimagequant", "libjpeg", "libpng", "libtiff", "libwebp", "libxcrypt", "libxkbcommon", "nspr", "nss", "openjpeg", "pango", "pkg-config", "portmidi", "python311Packages.pygame-ce", "python311Packages.selenium", "python311Packages.selenium-wire", "selenium-manager", "selenium-server-standalone", "tcl", "tk", "unzip", "vim-full", "wget", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.xorgserver", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
