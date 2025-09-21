@@ -194,8 +194,17 @@ export default function UniversalWizard({
 
   // Wrap handleOptionSelect to handle actions
   const handleOptionSelectWithAction = useCallback((option: any) => {
-    // Check if option has an action
-    if (option.action === 'openWYSIWYGEditor') {
+    // ALWAYS call the original handler first to ensure dialogue flow works properly
+    // This ensures that setVariable actions (like setting gameType) are processed
+    // and flow transitions happen correctly
+    handleOptionSelect(option);
+    
+    // Then handle UI-specific actions
+    if (option.action === 'transitionToSpecializedFlow') {
+      // The transition is handled by the dialogue engine through handleOptionSelect above
+      // Just log for debugging
+      console.log('Transitioning to specialized flow for game type:', option.setVariable?.gameType || sessionActions.gameType);
+    } else if (option.action === 'openWYSIWYGEditor') {
       // Open the pro editor with all selected components and assets
       const message = "You've got this! I'm here if you need me!";
       setUiState(prev => ({ 
@@ -396,8 +405,8 @@ export default function UniversalWizard({
       }));
     }
     
-    // Call the original handler
-    handleOptionSelect(option);
+    // Note: handleOptionSelect(option) is called at the beginning of this function
+    // to ensure dialogue flow transitions work properly before UI actions
   }, [handleOptionSelect, dialogueState.currentNode, setSessionActions]);
 
   // Render dialogue content for desktop/tablet
