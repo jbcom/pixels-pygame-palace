@@ -1,5 +1,15 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import PixelMenu from './pixel-menu';
 import { 
   UniversalWizardProps, 
@@ -91,6 +101,10 @@ export default function UniversalWizard({
   
   // Selected assets state
   const [selectedAssets, setSelectedAssets] = useState<GameAsset[]>([]);
+  
+  // Game naming dialog state
+  const [gameNameDialogOpen, setGameNameDialogOpen] = useState(false);
+  const [tempGameName, setTempGameName] = useState('');
   
   // User preferences state
   const [userPreferences, setUserPreferences] = useState(() => loadUserPreferences());
@@ -402,6 +416,42 @@ export default function UniversalWizard({
         embeddedComponent: 'pygame-runner',
         previewMode: 'full'
       }));
+    } else if (option.action === 'promptGameName') {
+      // Open dialog for user to enter custom game name
+      setGameNameDialogOpen(true);
+      setTempGameName('');
+      // Note: We don't call handleOptionSelect here yet - wait for dialog completion
+      return;
+    } else if (option.action === 'generateGameName') {
+      // Generate a cool name based on game type
+      const gameType = option.actionParams?.gameType || sessionActions.gameType || 'game';
+      const generatedNames = {
+        platformer: ['Jump Quest', 'Platform Adventures', 'Sky Runner', 'Leap Legend', 'Bounce Battle'],
+        rpg: ['Epic Quest', 'Heroes of Destiny', 'Realm Warriors', 'Crystal Chronicles', 'Legend Rising'],
+        dungeon: ['Dungeon Depths', 'Shadow Crawler', 'Cave Quest', 'Dark Descent', 'Treasure Hunter'],
+        racing: ['Speed Racer', 'Turbo Rush', 'Velocity King', 'Race Champions', 'Fast Track'],
+        puzzle: ['Mind Bender', 'Puzzle Master', 'Brain Storm', 'Logic Quest', 'Think Tank'],
+        space: ['Galactic Wars', 'Star Fighter', 'Cosmic Battle', 'Space Ranger', 'Nova Blast']
+      };
+      const names = generatedNames[gameType as keyof typeof generatedNames] || ['Amazing Game'];
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      
+      // Save the generated name
+      setSessionActions(prev => ({ 
+        ...prev, 
+        gameName: randomName
+      }));
+      
+      // Store in localStorage
+      const persistedState = loadSessionState();
+      saveSessionState({
+        ...persistedState,
+        gameName: randomName,
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Continue with the flow
+      handleOptionSelect(option);
     } else if (option.action === 'viewGeneratedCode') {
       // Show the generated Python code
       setUiState(prev => ({ 
@@ -915,6 +965,8 @@ export default function UniversalWizard({
         uiState={uiState}
         onPixelMenuAction={handlePixelMenuAction}
         renderDialogue={renderDialogue}
+        showProgressSidebar={flowType === 'game-dev' || !!sessionActions.gameType}
+        gameName={sessionActions.gameName}
       />
       {uiState.embeddedComponent === 'code-editor' && (
         <WizardCodeRunner
@@ -930,6 +982,91 @@ export default function UniversalWizard({
           onClose={() => handleEmbeddedComponentChange('none')}
         />
       )}
+      
+      {/* Game Name Dialog */}
+      <Dialog open={gameNameDialogOpen} onOpenChange={setGameNameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name Your Game</DialogTitle>
+            <DialogDescription>
+              Give your game a unique name that captures its essence!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              id="game-name"
+              value={tempGameName}
+              onChange={(e) => setTempGameName(e.target.value)}
+              placeholder="Enter your game name..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tempGameName.trim()) {
+                  // Save the game name
+                  setSessionActions(prev => ({ 
+                    ...prev, 
+                    gameName: tempGameName.trim()
+                  }));
+                  
+                  // Store in localStorage
+                  const persistedState = loadSessionState();
+                  saveSessionState({
+                    ...persistedState,
+                    gameName: tempGameName.trim(),
+                    updatedAt: new Date().toISOString()
+                  });
+                  
+                  // Close dialog and continue flow
+                  setGameNameDialogOpen(false);
+                  
+                  // Continue with the flow by finding and selecting the option
+                  const currentNode = dialogueState.currentNode;
+                  if (currentNode?.options) {
+                    const promptOption = currentNode.options.find((opt: any) => opt.action === 'promptGameName');
+                    if (promptOption) {
+                      handleOptionSelect(promptOption);
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                if (tempGameName.trim()) {
+                  // Save the game name
+                  setSessionActions(prev => ({ 
+                    ...prev, 
+                    gameName: tempGameName.trim()
+                  }));
+                  
+                  // Store in localStorage
+                  const persistedState = loadSessionState();
+                  saveSessionState({
+                    ...persistedState,
+                    gameName: tempGameName.trim(),
+                    updatedAt: new Date().toISOString()
+                  });
+                  
+                  // Close dialog and continue flow
+                  setGameNameDialogOpen(false);
+                  
+                  // Continue with the flow by finding and selecting the option
+                  const currentNode = dialogueState.currentNode;
+                  if (currentNode?.options) {
+                    const promptOption = currentNode.options.find((opt: any) => opt.action === 'promptGameName');
+                    if (promptOption) {
+                      handleOptionSelect(promptOption);
+                    }
+                  }
+                }
+              }}
+              disabled={!tempGameName.trim()}
+            >
+              Create Game
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

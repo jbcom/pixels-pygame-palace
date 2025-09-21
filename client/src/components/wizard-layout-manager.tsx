@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Menu, Gamepad2, Sparkles } from 'lucide-react';
 import { useEdgeSwipe } from '@/hooks/use-edge-swipe';
 import PixelMenu from './pixel-menu';
+import GameProgressSidebar from './game-progress-sidebar';
 import { PortraitAvatar, LandscapeAvatar, CenteredAvatar } from './wizard-avatar-display';
 import { DialogueBox, DialogueText } from './wizard-dialogue-engine';
 import WizardOptionHandler, { ContinueButton } from './wizard-option-handler';
@@ -151,6 +152,8 @@ interface DesktopLayoutProps extends LayoutProps {
   uiState: UIState;
   onPixelMenuAction: (action: string) => void;
   renderDialogue: () => JSX.Element | null;
+  showProgressSidebar?: boolean;
+  gameName?: string;
 }
 
 // Desktop Layout
@@ -159,40 +162,58 @@ export function DesktopLayout({
   deviceState,
   onOpenMenu,
   onPixelMenuAction,
-  renderDialogue
+  renderDialogue,
+  sessionActions,
+  showProgressSidebar,
+  gameName
 }: DesktopLayoutProps) {
+  const showSidebar = showProgressSidebar && sessionActions?.gameType;
+  
   return (
-    <div className={`min-h-screen ${STYLES.GRADIENT_BG}`}>
-      <DesktopHeader />
+    <div className={`min-h-screen ${STYLES.GRADIENT_BG} relative`}>
+      <div className={`${showSidebar ? 'pr-80' : ''} transition-all duration-300`}>
+        <DesktopHeader />
+        
+        <PixelMenu
+          isOpen={uiState.pixelMenuOpen}
+          onClose={() => onPixelMenuAction('returnCurrent')}
+          onChangeGame={() => onPixelMenuAction('changeGame')}
+          onSwitchLesson={() => onPixelMenuAction('switchLesson')}
+          onExportGame={() => onPixelMenuAction('exportGame')}
+          onViewProgress={() => onPixelMenuAction('viewProgress')}
+          onReturnCurrent={() => onPixelMenuAction('returnCurrent')}
+          sessionActions={[]}
+        />
+
+        <TabletMenuButton onOpenMenu={onOpenMenu} />
+
+        <AnimatePresence mode="wait">
+          {uiState.pixelState === 'center-stage' && uiState.embeddedComponent === 'none' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none px-4 pt-20 lg:pt-4"
+              style={{ paddingRight: showSidebar ? '20rem' : undefined }}
+            >
+              <Card className={`relative max-w-2xl w-full p-6 sm:p-8 ${STYLES.CARD_BG} shadow-2xl border-2 border-purple-500/20 pointer-events-auto`}>
+                <CenteredAvatar className="mb-6" />
+                {renderDialogue()}
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       
-      <PixelMenu
-        isOpen={uiState.pixelMenuOpen}
-        onClose={() => onPixelMenuAction('returnCurrent')}
-        onChangeGame={() => onPixelMenuAction('changeGame')}
-        onSwitchLesson={() => onPixelMenuAction('switchLesson')}
-        onExportGame={() => onPixelMenuAction('exportGame')}
-        onViewProgress={() => onPixelMenuAction('viewProgress')}
-        onReturnCurrent={() => onPixelMenuAction('returnCurrent')}
-        sessionActions={[]}
-      />
-
-      <TabletMenuButton onOpenMenu={onOpenMenu} />
-
-      <AnimatePresence mode="wait">
-        {uiState.pixelState === 'center-stage' && uiState.embeddedComponent === 'none' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none px-4 pt-20 lg:pt-4"
-          >
-            <Card className={`relative max-w-2xl w-full p-6 sm:p-8 ${STYLES.CARD_BG} shadow-2xl border-2 border-purple-500/20 pointer-events-auto`}>
-              <CenteredAvatar className="mb-6" />
-              {renderDialogue()}
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Game Progress Sidebar */}
+      {showSidebar && sessionActions && (
+        <div className="fixed top-0 right-0 h-full z-20">
+          <GameProgressSidebar 
+            sessionActions={sessionActions}
+            gameName={gameName}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@
           "variant": "A",
           "bundle": ["fantasy_bg", "medieval_tiles", "orchestral_music", "sword_combat"]
         },
-        "next": "titlePresentation"
+        "next": "projectSetup"
       },
       {
         "text": "B: Sci-Fi Universe - Lasers, tech, aliens, and space colonies",
@@ -28,6 +28,24 @@
           "variant": "B",
           "bundle": ["scifi_bg", "tech_tiles", "synth_music", "laser_combat"]
         },
+        "next": "projectSetup"
+      }
+    ]
+  },
+  "projectSetup": {
+    "id": "projectSetup",
+    "speaker": "Pixel",
+    "text": "Excellent setting! Now let's give your RPG a legendary name. What shall we call this epic adventure?",
+    "options": [
+      {
+        "text": "A: Let me type my own game name",
+        "action": "promptGameName",
+        "next": "titlePresentation"
+      },
+      {
+        "text": "B: Generate an epic name based on my world",
+        "action": "generateGameName",
+        "actionParams": { "gameType": "rpg" },
         "next": "titlePresentation"
       }
     ]
