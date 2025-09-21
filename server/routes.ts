@@ -1,9 +1,149 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { z } from "zod";
 import { InsertProject } from "@shared/schema";
+import { ServiceConfig } from "@shared/config";
+import axios from "axios";
+import jwt from "jsonwebtoken";
+
+// Middleware to generate JWT token for Flask service calls
+function generateFlaskAuthToken(userId: string = "mock-user-id"): string {
+  const payload = {
+    user: userId,
+    session_id: Math.random().toString(36).substring(7),
+    exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour expiry
+    iat: Math.floor(Date.now() / 1000)
+  };
+  
+  return jwt.sign(payload, ServiceConfig.SECURITY.JWT_SECRET, {
+    algorithm: 'HS256'
+  });
+}
+
+// Proxy middleware for Flask game execution service
+async function proxyToFlask(
+  endpoint: string,
+  req: Request,
+  res: Response,
+  method: 'GET' | 'POST' = 'POST'
+): Promise<void> {
+  try {
+    const userId = "mock-user-id"; // In a real app, this would come from authentication
+    const token = generateFlaskAuthToken(userId);
+    
+    const config = {
+      method,
+      url: `${ServiceConfig.FLASK_URL}${endpoint}`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      data: method === 'POST' ? req.body : undefined,
+      params: method === 'GET' ? req.query : undefined,
+      timeout: 30000 // 30 second timeout
+    };
+    
+    const response = await axios(config);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        res.status(error.response.status).json(error.response.data);
+      } else if (error.request) {
+        res.status(503).json({ 
+          message: "Game execution service is unavailable",
+          error: "Service connection failed",
+          details: "Flask backend is not running on port 5001. Please start it with: cd backend && python app.py"
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to process request",
+          error: error.message
+        });
+      }
+    } else {
+      res.status(500).json({ 
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  }
+}
+
+// SSE Proxy for game streaming
+async function proxySSEToFlask(
+  endpoint: string,
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const userId = "mock-user-id";
+    const token = generateFlaskAuthToken(userId);
+    
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    const response = await axios({
+      method: 'GET',
+      url: `${ServiceConfig.FLASK_URL}${endpoint}`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/event-stream'
+      },
+      responseType: 'stream'
+    });
+    
+    // Pipe the Flask SSE response to the client
+    response.data.pipe(res);
+    
+    // Clean up on client disconnect
+    req.on('close', () => {
+      response.data.destroy();
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      message: "Game streaming service unavailable",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
 
 export function registerRoutes(app: Express): void {
+  // === SYSTEM HEALTH CHECKS ===
+  
+  // Express service health check
+  app.get("/api/health", async (req, res) => {
+    res.json({
+      status: 'healthy',
+      service: 'express-backend',
+      port: ServiceConfig.EXPRESS_PORT,
+      version: '2.0.0',
+      flask_url: ServiceConfig.FLASK_URL
+    });
+  });
+  
+  // Flask service health check
+  app.get("/api/flask-health", async (req, res) => {
+    try {
+      const response = await axios.get(`${ServiceConfig.FLASK_URL}/api/health`, {
+        timeout: 5000
+      });
+      res.json({
+        ...response.data,
+        reachable: true
+      });
+    } catch (error) {
+      res.status(503).json({
+        status: 'unhealthy',
+        service: 'pygame-execution-backend',
+        reachable: false,
+        error: error instanceof Error ? error.message : "Service unreachable",
+        hint: "Start Flask backend with: cd backend && python app.py"
+      });
+    }
+  });
   // Get all lessons
   app.get("/api/lessons", async (req, res) => {
     try {
@@ -78,26 +218,42 @@ export function registerRoutes(app: Express): void {
     }
   });
 
-  // Execute Python code endpoint (for validation/testing)
-  app.post("/api/execute", async (req, res) => {
-    try {
-      const { code } = req.body;
-      
-      if (!code || typeof code !== 'string') {
-        return res.status(400).json({ message: "Code is required" });
-      }
-      
-      // In a real implementation, you might want to validate Python syntax server-side
-      // For now, we'll just return a success response
-      res.json({
-        success: true,
-        output: "Code received successfully. Execution handled client-side.",
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to process code" });
-    }
+  // === GAME EXECUTION ENDPOINTS - PROXIED TO FLASK ===
+  
+  // Compile game from components (proxied to Flask)
+  app.post("/api/compile", async (req, res) => {
+    await proxyToFlask("/api/compile", req, res);
   });
+  
+  // Execute Python game code (proxied to Flask)
+  app.post("/api/execute", async (req, res) => {
+    await proxyToFlask("/api/execute", req, res);
+  });
+  
+  // Stream game output (proxied to Flask with SSE)
+  app.get("/api/game-stream/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+    await proxySSEToFlask(`/api/game-stream/${sessionId}`, req, res);
+  });
+  
+  // Stop a running game session (proxied to Flask)
+  app.post("/api/stop-game/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+    await proxyToFlask(`/api/stop-game/${sessionId}`, req, res);
+  });
+  
+  // Send input to a running game (proxied to Flask)
+  app.post("/api/game-input/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+    await proxyToFlask(`/api/game-input/${sessionId}`, req, res);
+  });
+  
+  // Get active game sessions (proxied to Flask)
+  app.get("/api/sessions", async (req, res) => {
+    await proxyToFlask("/api/sessions", req, res, 'GET');
+  });
+  
+  // === EXPRESS BACKEND ENDPOINTS (Database, Projects, Lessons, etc.) ===
 
   // Get user's projects
   app.get("/api/projects", async (req, res) => {
@@ -252,35 +408,11 @@ export function registerRoutes(app: Express): void {
     }
   });
 
-  // Compile game from components
-  app.post("/api/compile", async (req, res) => {
-    try {
-      const { components, gameType, assets } = req.body;
-      
-      if (!gameType) {
-        return res.status(400).json({ message: "Game type is required" });
-      }
-      
-      // Generate Python code based on game type
-      const code = generateGameCode(gameType, components || [], assets || []);
-      
-      res.json({
-        success: true,
-        code,
-        message: "Game compiled successfully"
-      });
-    } catch (error) {
-      console.error("Compilation error:", error);
-      res.status(400).json({ 
-        success: false,
-        error: error instanceof Error ? error.message : "Compilation failed"
-      });
-    }
-  });
 }
 
-// Helper function to generate game code
-function generateGameCode(gameType: string, components: any[], assets: any[]): string {
+// Note: Game code generation has been moved to Flask backend
+// The generateGameCode function below is kept for reference but not used
+function generateGameCodeLegacy(gameType: string, components: any[], assets: any[]): string {
   // Import the racing game template
   const racingTemplate = `import pygame
 import sys
