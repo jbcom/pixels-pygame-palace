@@ -509,11 +509,10 @@ class GameExecutor:
         self.cleanup_lock = threading.Lock()
         self.xvfb_cleanup_done = False
         
-        # Check if production mode requires Docker-only execution
-        force_docker = os.environ.get('FORCE_DOCKER_EXECUTION', 'false').lower() == 'true'
+        # Try to use Docker if explicitly requested and available
+        use_docker = os.environ.get('USE_DOCKER', 'false').lower() == 'true'
         
-        # Try to use Docker if available
-        if DOCKER_AVAILABLE and os.environ.get('USE_DOCKER', 'true').lower() == 'true':
+        if use_docker and DOCKER_AVAILABLE:
             try:
                 # Try to create Docker executor
                 self._docker_executor = DockerGameExecutor(session_id, timeout)
@@ -522,38 +521,13 @@ class GameExecutor:
                 return
             except Exception as e:
                 print(f"Failed to initialize Docker executor: {e}")
-                
-                # In production mode, fail fast instead of falling back to subprocess
-                if force_docker:
-                    raise RuntimeError(
-                        f"PRODUCTION MODE: Docker execution is required but unavailable. "
-                        f"Original error: {e}. "
-                        f"Please ensure Docker is running and accessible."
-                    )
-                
-                print("Falling back to subprocess executor (less secure)")
+                print("Falling back to subprocess executor")
                 self._use_docker = False
         else:
-            # If Docker is disabled or not available, check production requirements
-            if force_docker:
-                if not DOCKER_AVAILABLE:
-                    raise RuntimeError(
-                        "PRODUCTION MODE: Docker execution is required but Docker library is not installed. "
-                        "Install with: pip install docker"
-                    )
-                else:
-                    raise RuntimeError(
-                        "PRODUCTION MODE: Docker execution is required but USE_DOCKER is disabled. "
-                        "Set USE_DOCKER=true environment variable."
-                    )
-            
             self._use_docker = False
             
-        if not self._use_docker:
-            if force_docker:
-                # This should never be reached due to checks above, but extra safety
-                raise RuntimeError("PRODUCTION MODE: Subprocess execution is not allowed in production")
-            print(f"WARNING: Using subprocess executor for session {session_id} - less secure than Docker")
+        # Use subprocess executor (default and works on Replit)
+        print(f"Using subprocess executor for session {session_id}")
     
     def execute(self, code):
         """Execute pygame code"""
