@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test runner script for the TypeScript-Python pygame builder
+# Test runner script for the TypeScript-Python pygame-ce builder
 
 echo "TypeScript-Python Pygame Builder Test Suite"
 echo "==========================================="
