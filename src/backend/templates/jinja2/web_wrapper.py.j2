@@ -1,0 +1,47 @@
+"""
+Web-compatible wrapper for {{ template_id }}
+This file makes the game compatible with pygbag/WebAssembly
+"""
+
+import asyncio
+import pygame
+import sys
+
+# Import the original game
+{{ game_code }}
+
+# Async wrapper for web compatibility
+async def async_main():
+    """Async wrapper for the main game loop."""
+    game = Game()
+    
+    # Modify the run method for async compatibility
+    last_time = pygame.time.get_ticks() / 1000.0
+    
+    while game.running:
+        # Calculate delta time
+        current_time = pygame.time.get_ticks() / 1000.0
+        delta_time = current_time - last_time
+        last_time = current_time
+        
+        # Limit delta time
+        delta_time = min(delta_time, 1.0 / 15.0)
+        
+        # Game loop
+        game.handle_events()
+        game.update(delta_time)
+        game.render()
+        
+        # Essential for pygbag - yield control to browser
+        await asyncio.sleep(0)
+        
+        # Maintain target FPS
+        game.clock.tick(TARGET_FPS)
+    
+    # Cleanup
+    game.world.stop()
+    pygame.quit()
+
+# Entry point for web
+if __name__ == "__main__":
+    asyncio.run(async_main())

@@ -20,7 +20,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from .config import get_config
-from security_config import CodeValidator
+from .security_config import CodeValidator
 
 
 class WebGameCompiler:
@@ -476,9 +476,9 @@ name = "{config["pygbag"]["name"]}"
     
     def _run_pygbag_compilation(self, project_dir: str, game_id: str) -> Dict[str, Any]:
         """Run pygbag compilation process."""
+        original_cwd = os.getcwd()  # Save this immediately
         try:
             # Change to project directory for compilation
-            original_cwd = os.getcwd()
             os.chdir(project_dir)
             
             # Run pygbag command
@@ -518,13 +518,19 @@ name = "{config["pygbag"]["name"]}"
                 }
                 
         except subprocess.TimeoutExpired:
-            os.chdir(original_cwd)
+            try:
+                os.chdir(original_cwd)
+            except:
+                pass  # Ignore chdir errors in cleanup
             return {
                 'success': False,
                 'error': 'Compilation timeout after 2 minutes'
             }
         except Exception as e:
-            os.chdir(original_cwd)
+            try:
+                os.chdir(original_cwd)
+            except:
+                pass  # Ignore chdir errors in cleanup
             return {
                 'success': False,
                 'error': f'Compilation error: {str(e)}'

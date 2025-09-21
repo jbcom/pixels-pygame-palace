@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+"""
+Generated Game - {{ template.name }}
+Created with Pixel's PyGame Palace
+
+Template: {{ template.id }}
+Category: {{ template.category }}
+Components: {{ components | map(attribute='id') | join(', ') }}
+"""
+
+import pygame
+import sys
+import os
+from typing import Dict, Any
+
+# ECS Runtime imports
+from ecs_runtime import (
+    World, Entity, EventBus,
+    TransformComponent, VelocityComponent, SpriteComponent, 
+    CollisionComponent, AnimationComponent, HealthComponent,
+    InputComponent, AudioComponent,
+    InputSystem, PhysicsSystem, PlatformerPhysicsSystem,
+    CollisionSystem, AnimationSystem, AudioSystem,
+    UISystem, HUDSystem, SceneManager
+)
+
+# Game configuration
+SCREEN_WIDTH = {{ game_settings.screenWidth | default(800) }}
+SCREEN_HEIGHT = {{ game_settings.screenHeight | default(600) }}
+TARGET_FPS = {{ game_settings.targetFPS | default(60) }}
+GAME_TITLE = "{{ template.name }}"
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+BACKGROUND_COLOR = {{ game_settings.backgroundColor | default('#87CEEB') | parse_color }}
+
+class Game:
+    """Main game class."""
+    
+    def __init__(self):
+        """Initialize the game."""
+        # Initialize pygame
+        pygame.init()
+        
+        # Create display
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption(GAME_TITLE)
+        self.clock = pygame.time.Clock()
+        
+        # Create ECS world
+        self.world = World()
+        self.running = True
+        
+        # Initialize systems
+        self._setup_systems()
+        
+        # Initialize game entities
+        self._setup_entities()
+        
+        # Start the world
+        self.world.start()
+    
+    def _setup_systems(self):
+        """Set up ECS systems."""
+        # Input System
+        input_system = InputSystem(priority=10)
+        self.world.add_system(input_system)
+        
+        # Physics System
+        {% if template.category == 'platformer' %}
+        physics_system = PlatformerPhysicsSystem(priority=20, gravity={{ game_settings.physics.gravity | default(980) }})
+        {% else %}
+        physics_system = PhysicsSystem(priority=20, gravity={{ game_settings.physics.gravity | default(0) }})
+        {% endif %}
+        self.world.add_system(physics_system)
+        
+        {% if needs_collision %}
+        # Collision System
+        collision_system = CollisionSystem(priority=30)
+        self.world.add_system(collision_system)
+        {% endif %}
+        
+        {% if needs_animation %}
+        # Animation System
+        animation_system = AnimationSystem(priority=40)
+        self.world.add_system(animation_system)
+        {% endif %}
+        
+        {% if needs_audio %}
+        # Audio System
+        audio_system = AudioSystem(priority=50)
+        self.world.add_system(audio_system)
+        {% endif %}
+        
+        # UI Systems
+        ui_system = UISystem(priority=900, screen=self.screen)
+        self.world.add_system(ui_system)
+        
+        hud_system = HUDSystem(priority=910, screen=self.screen)
+        self.world.add_system(hud_system)
+    
+    def _setup_entities(self):
+        """Set up game entities."""
+        {% for scene in scenes %}
+        # Scene: {{ scene.name }}
+        {% for entity in scene.entities %}
+        # Entity: {{ entity.componentId }}
+        entity_{{ loop.index }} = Entity(name='{{ entity.componentId }}_{{ loop.index }}')
+        
+        # Transform
+        transform_{{ loop.index }} = TransformComponent({{ entity.position.x }}, {{ entity.position.y }})
+        entity_{{ loop.index }}.add_component(transform_{{ loop.index }})
+        
+        {% set component_id = entity.componentId %}
+        {% set config = entity.configuration %}
+        
+        {% if component_id == 'player-sprite' %}
+        # Player components
+        velocity_{{ loop.index }} = VelocityComponent()
+        entity_{{ loop.index }}.add_component(velocity_{{ loop.index }})
+        
+        sprite_{{ loop.index }} = SpriteComponent('player.png', 32, 32)
+        entity_{{ loop.index }}.add_component(sprite_{{ loop.index }})
+        
+        collision_{{ loop.index }} = CollisionComponent(32, 32)
+        entity_{{ loop.index }}.add_component(collision_{{ loop.index }})
+        
+        health_{{ loop.index }} = HealthComponent({{ config.health | default(3) }})
+        entity_{{ loop.index }}.add_component(health_{{ loop.index }})
+        
+        input_{{ loop.index }} = InputComponent()
+        entity_{{ loop.index }}.add_component(input_{{ loop.index }})
+        
+        entity_{{ loop.index }}.add_tag('player')
+        
+        {% elif component_id == 'platform-ground' %}
+        # Platform components
+        sprite_{{ loop.index }} = SpriteComponent('platform.png', {{ config.width | default(128) }}, {{ config.height | default(32) }})
+        entity_{{ loop.index }}.add_component(sprite_{{ loop.index }})
+        
+        collision_{{ loop.index }} = CollisionComponent({{ config.width | default(128) }}, {{ config.height | default(32) }}, solid=True)
+        entity_{{ loop.index }}.add_component(collision_{{ loop.index }})
+        
+        entity_{{ loop.index }}.add_tag('platform')
+        
+        {% elif component_id == 'collectible-item' %}
+        # Collectible components
+        sprite_{{ loop.index }} = SpriteComponent('collectible.png', 24, 24)
+        entity_{{ loop.index }}.add_component(sprite_{{ loop.index }})
+        
+        collision_{{ loop.index }} = CollisionComponent(24, 24, trigger=True)
+        entity_{{ loop.index }}.add_component(collision_{{ loop.index }})
+        
+        animation_{{ loop.index }} = AnimationComponent('spin')
+        entity_{{ loop.index }}.add_component(animation_{{ loop.index }})
+        
+        entity_{{ loop.index }}.add_tag('collectible')
+        
+        {% elif component_id == 'basic-enemy' %}
+        # Enemy components
+        velocity_{{ loop.index }} = VelocityComponent()
+        entity_{{ loop.index }}.add_component(velocity_{{ loop.index }})
+        
+        sprite_{{ loop.index }} = SpriteComponent('enemy.png', 32, 32)
+        entity_{{ loop.index }}.add_component(sprite_{{ loop.index }})
+        
+        collision_{{ loop.index }} = CollisionComponent(32, 32)
+        entity_{{ loop.index }}.add_component(collision_{{ loop.index }})
+        
+        health_{{ loop.index }} = HealthComponent({{ config.health | default(1) }})
+        entity_{{ loop.index }}.add_component(health_{{ loop.index }})
+        
+        entity_{{ loop.index }}.add_tag('enemy')
+        {% endif %}
+        
+        self.world.add_entity(entity_{{ loop.index }})
+        
+        {% endfor %}
+        {% endfor %}
+    
+    def handle_events(self):
+        """Handle pygame events."""
+        events = pygame.event.get()
+        
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+        
+        # Update input system with events
+        input_system = self.world.get_system(InputSystem)
+        if input_system:
+            input_system.process_pygame_events(events)
+    
+    def update(self, delta_time: float):
+        """Update game logic."""
+        if not self.world.paused:
+            self.world.update(delta_time)
+    
+    def render(self):
+        """Render the game."""
+        # Clear screen
+        self.screen.fill(BACKGROUND_COLOR)
+        
+        # Render UI
+        ui_system = self.world.get_system(UISystem)
+        if ui_system:
+            ui_system.render()
+        
+        hud_system = self.world.get_system(HUDSystem)
+        if hud_system:
+            hud_system.render()
+        
+        # Update display
+        pygame.display.flip()
+    
+    def run(self):
+        """Main game loop."""
+        last_time = pygame.time.get_ticks() / 1000.0
+        
+        while self.running:
+            # Calculate delta time
+            current_time = pygame.time.get_ticks() / 1000.0
+            delta_time = current_time - last_time
+            last_time = current_time
+            
+            # Limit delta time to prevent large jumps
+            delta_time = min(delta_time, 1.0 / 15.0)
+            
+            # Game loop
+            self.handle_events()
+            self.update(delta_time)
+            self.render()
+            
+            # Maintain target FPS
+            self.clock.tick(TARGET_FPS)
+        
+        # Cleanup
+        self.world.stop()
+        pygame.quit()
+        sys.exit()
+
+
+def main():
+    """Main entry point."""
+    try:
+        game = Game()
+        game.run()
+    except Exception as e:
+        print(f"Game error: {e}")
+        pygame.quit()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
