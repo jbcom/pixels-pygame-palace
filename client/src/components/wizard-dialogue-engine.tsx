@@ -57,8 +57,11 @@ export function useWizardDialogue({
     // If we have a selected game type, load that specific flow
     // Check both gameType and selectedGameType for compatibility
     const gameType = sessionActions.selectedGameType || sessionActions.gameType;
-    if (gameType) {
-      flowPath = `/${gameType}-flow.json`;
+    if (gameType) { // Load specialized flow for any game type
+      // Only load specialized flow if we're transitioning to it
+      const specializedFlowPath = `/${gameType}-flow.json`;
+      // Check if the file exists by trying to load it
+      flowPath = specializedFlowPath;
     } else if (flowType === 'game-dev') {
       // Fallback to generic game flow if no specific type selected
       flowPath = '/game-wizard-flow.json';
@@ -67,10 +70,16 @@ export function useWizardDialogue({
     loadWizardFlow(flowPath)
       .then(nodes => {
         setWizardData(nodes);
-        if (nodes[initialNodeId]) {
+        // When loading a specialized flow, start from the beginning
+        const startNodeId = gameType ? 'start' : initialNodeId;
+        if (nodes[startNodeId]) {
           setDialogueState(prev => ({
             ...prev,
-            currentNode: nodes[initialNodeId]
+            currentNodeId: startNodeId,
+            currentNode: nodes[startNodeId],
+            dialogueStep: 0,
+            carouselIndex: 0,
+            showAllChoices: false
           }));
         }
         setIsLoading(false);
@@ -85,7 +94,11 @@ export function useWizardDialogue({
               if (nodes[initialNodeId]) {
                 setDialogueState(prev => ({
                   ...prev,
-                  currentNode: nodes[initialNodeId]
+                  currentNodeId: initialNodeId,
+                  currentNode: nodes[initialNodeId],
+                  dialogueStep: 0,
+                  carouselIndex: 0,
+                  showAllChoices: false
                 }));
               }
               setIsLoading(false);
@@ -132,7 +145,12 @@ export function useWizardDialogue({
     
     // Handle setVariable if present
     if (option.setVariable) {
-      setSessionActions(prev => ({ ...prev, ...option.setVariable }));
+      setSessionActions(prev => ({ 
+        ...prev, 
+        ...option.setVariable,
+        // Ensure selectedGameType is also set for flow loading
+        selectedGameType: option.setVariable.gameType || prev.selectedGameType
+      }));
     }
     
     // Navigate to next node
