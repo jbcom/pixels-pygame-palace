@@ -113,15 +113,80 @@ async function proxySSEToFlask(
 export function registerRoutes(app: Express): void {
   // === SYSTEM HEALTH CHECKS ===
   
-  // Express service health check
+  // Express service health check with comprehensive diagnostics
   app.get("/api/health", async (req, res) => {
-    res.json({
-      status: 'healthy',
+    const healthCheck = {
+      status: 'healthy' as 'healthy' | 'unhealthy',
       service: 'express-backend',
       port: ServiceConfig.EXPRESS_PORT,
       version: '2.0.0',
-      flask_url: ServiceConfig.FLASK_URL
-    });
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      dependencies: {
+        database: 'unknown',
+        flask: 'unknown'
+      },
+      checks: {
+        database: false,
+        flask: false,
+        docker: false
+      }
+    };
+
+    try {
+      // Check database connection
+      try {
+        await storage.getLessons(); // Simple query to test DB
+        healthCheck.dependencies.database = 'healthy';
+        healthCheck.checks.database = true;
+      } catch (error) {
+        healthCheck.dependencies.database = 'unhealthy';
+        healthCheck.status = 'unhealthy';
+      }
+
+      // Check Flask service
+      try {
+        const flaskResponse = await axios.get(`${ServiceConfig.FLASK_URL}/api/health`, {
+          timeout: 3000
+        });
+        healthCheck.dependencies.flask = flaskResponse.data.status || 'healthy';
+        healthCheck.checks.flask = true;
+      } catch (error) {
+        healthCheck.dependencies.flask = 'unhealthy';
+        // Don't mark overall status as unhealthy for Flask, as it's a dependency
+      }
+
+      // Check Docker availability (in production)
+      const forceDocker = process.env.FORCE_DOCKER_EXECUTION === 'true';
+      if (forceDocker) {
+        try {
+          // Basic check - just verify docker command is available
+          const { exec } = require('child_process');
+          await new Promise((resolve, reject) => {
+            exec('docker info', (error: Error | null) => {
+              if (error) reject(error);
+              else resolve(true);
+            });
+          });
+          healthCheck.checks.docker = true;
+        } catch (error) {
+          healthCheck.checks.docker = false;
+          if (forceDocker) {
+            healthCheck.status = 'unhealthy';
+          }
+        }
+      } else {
+        healthCheck.checks.docker = true; // Not required in dev
+      }
+
+    } catch (error) {
+      healthCheck.status = 'unhealthy';
+    }
+
+    const statusCode = healthCheck.status === 'healthy' ? 200 : 503;
+    res.status(statusCode).json(healthCheck);
   });
   
   // Flask service health check
