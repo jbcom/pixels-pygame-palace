@@ -1,33 +1,41 @@
 [project]
-name = "pygame-palace-backend"
+name = "backend"
 version = "0.1.0"
 description = "Flask backend for Pixel's PyGame Palace"
-requires-python = ">=3.13"
-
-dependencies = [
-    "flask==3.0.0",
-    "flask-cors==4.0.0", 
-    "flask-socketio==5.3.4",
-    "flask-limiter==3.5.0",
-    "pygame==2.5.2",
-    "pillow==10.1.0",
-    "python-dotenv==1.0.0",
-    "psycopg2-binary==2.9.9",
-    "python-engineio==4.8.0",
-    "python-socketio==5.10.0",
-    "numpy==1.24.3",
-    "docker==7.0.0",
-    "psutil==5.9.8",
-    "pyjwt==2.8.0",
-    "requests==2.31.0",
-    "gunicorn==21.2.0",
+readme = "README.md"
+authors = [
+    { name = "Jon Bogaty", email = "jon@jonbogaty.com" }
 ]
+requires-python = ">=3.13"
+dependencies = [
+    "docker>=7.1.0",
+    "flask>=3.1.2",
+    "flask-cors>=6.0.1",
+    "flask-limiter>=3.13",
+    "flask-socketio>=5.5.1",
+    "gunicorn>=23.0.0",
+    "numpy>=2.3.3",
+    "pillow>=11.3.0",
+    "psutil>=7.1.0",
+    "pygame-ce>=2.5.5",
+    "pyjwt>=2.10.1",
+    "python-dotenv>=1.1.1",
+    "python-engineio>=4.12.2",
+    "python-socketio>=5.13.0",
+    "requests>=2.32.5",
+    "rich>=14.1.0",
+]
+
+[project.scripts]
+backend = "backend:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = []
+[tool.hatch.envs.default]
+type = "virtual"
+path = ".venv"
 
-[tool.uv.sources]
+[tool.uv]
+required-version = ">=0.5.0"

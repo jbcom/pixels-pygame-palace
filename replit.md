@@ -1,146 +1,228 @@
-# Pixel's PyGame Palace
+# Pixel's PyGame Palace - Replit Architecture
 
 ## Overview
 
-Pixel's PyGame Palace is a conversational, mascot-driven React application that teaches kids Python game development through reusable guided components. The platform features "Pixel," a cyberpunk mascot who guides users through organic conversational experiences with natural A/B choices for initial decisions, offering both a guided wizard flow for beginners and a professional WYSIWYG editor unlocked through conversation. The guided mode provides continuous linear progression where Pixel leads users through pre-built game components for Title Screen → Gameplay → End Credits, with stage-specific conditional content that adapts to the selected game type (platformer, RPG, dungeon, racing, puzzle, adventure).
+Full-stack educational platform teaching Python game development through conversational guidance. Features a React frontend with Express server and Flask backend that executes real Pygame code with live streaming.
 
-## User Preferences
+## Architecture
 
-- **Communication Style**: Simple, everyday language without technical jargon
-- **Visual Design**: Warm, soft colors (no harsh black/white contrast)
-- **Educational Philosophy**: Teach concepts, not memorization
-- **Accessibility**: All lessons available immediately (no artificial gating)
-- **Layout**: Efficient use of space with minimal negative areas
+### Mixed Stack Orchestration
+- **Frontend**: React + TypeScript + Vite (port 5173 dev / 5000 prod)
+- **API Server**: Express.js with TypeScript (port 5000)
+- **Game Engine**: Flask + Python with Pygame execution (port 5001)
+- **Orchestration**: npm manages both Node.js and Python environments
 
-## System Architecture
+### Process Management
+All services managed through npm scripts using `concurrently`:
+```bash
+npm run dev      # Starts all services in development mode
+npm run build    # Builds frontend, server, and syncs Python deps
+npm run start    # Production mode with all services
+```
 
-The application is a full-stack web platform combining a React frontend with a Flask backend that executes real pygame code on the server.
+## Configuration
 
-### Frontend Architecture
-The frontend is built as a React single-page application using TypeScript and modern web technologies:
+### Unified Config System
+Single source of truth in `shared/config.json`:
+- TypeScript: Loaded and validated with Zod in `shared/config.ts`
+- Python: Loaded with environment overrides in `backend/config.py`
+- Environment variables override defaults for both stacks
 
-- **React Router**: Uses `wouter` for lightweight client-side routing between home page and individual lesson pages
-- **State Management**: Leverages React Query (`@tanstack/react-query`) for server state management and caching, with local React state for UI interactions
-- **UI Framework**: Built with shadcn/ui components library providing a comprehensive set of accessible, customizable components based on Radix UI primitives
-- **Styling**: Tailwind CSS with custom design tokens and CSS variables for theming support
-- **Code Editor**: Integrates Monaco Editor for syntax highlighting and Python code editing
-- **Build System**: Vite for fast development and optimized production builds
-- **Game Streaming**: Receives real-time game frames from backend via Server-Sent Events (SSE) and renders on HTML5 canvas
+### Environment Variables
+```env
+PORT=5000                    # Express server port
+FLASK_PORT=5001             # Flask backend port
+FLASK_ENV=development       # Flask environment
+NODE_ENV=development        # Node environment
+JWT_SECRET=dev-secret       # Authentication secret
+```
 
-### Backend Architecture
-The server provides real pygame execution and game streaming capabilities:
+## Development Workflow
 
-- **Framework**: Flask with Python, running on port 5001
-- **CORS Support**: Configured to allow cross-origin requests from the React frontend
-- **Real Pygame Execution**: Runs actual pygame code in subprocess with SDL2 backend
-- **Virtual Display**: Uses Xvfb for headless pygame execution when no physical display is available
-- **Frame Capture**: Captures pygame frames and converts to base64-encoded PNG images
-- **Streaming**: Server-Sent Events (SSE) for real-time game frame streaming to frontend
-- **API Endpoints**:
-  - `/api/compile`: Compiles visual components into executable pygame code
-  - `/api/execute`: Executes pygame code and returns session ID for streaming
-  - `/api/game-stream/<session_id>`: SSE endpoint for streaming game frames
-  - `/api/projects`: CRUD operations for game project management
-- **Game Engine**: Custom GameExecutor class manages pygame subprocess, frame capture, and streaming
-- **WebSocket Support**: Flask-SocketIO for bidirectional communication (game input, control commands)
-- **Data Storage**: In-memory storage for projects (easily replaceable with database)
+### Initial Setup
+```bash
+npm install          # Installs Node deps + Python env via postinstall
+```
 
-### Code Execution System
-The application executes real pygame code on the server with streaming to the frontend:
+### Development Commands
+```bash
+npm run dev          # Start all services with hot reload
+npm run check        # TypeScript + Python type checking
+npm run test:all     # Run tests for both stacks
+npm run lint         # Lint TypeScript and Python
+npm run format       # Format all code
+```
 
-- **Server-Side Pygame**: Real pygame with SDL2 backend runs on the Flask server
-- **Virtual Display**: Xvfb provides a virtual framebuffer for headless pygame execution
-- **Process Isolation**: Each game runs in its own subprocess with temporary directory
-- **Frame Streaming**: Game frames are captured, encoded as PNG, and streamed via SSE
-- **Input Handling**: User input is sent from frontend to backend via WebSocket
-- **Session Management**: Each game execution gets a unique session ID for tracking
-- **Safety**: Process isolation and automatic cleanup ensure security
+### Service-Specific Commands
+```bash
+npm run dev:client   # Vite dev server only
+npm run dev:server   # Express server only
+npm run dev:python   # Flask backend only
+```
 
-### Database Schema
-The data model includes three main entities:
+## Project Structure
 
-- **Users**: Basic user authentication with username/password
-- **Lessons**: Structured content with steps, code examples, and solutions
-- **UserProgress**: Tracks completion status, current step, and user's code for each lesson
+```
+/
+├── client/              # React frontend
+│   ├── src/
+│   │   ├── components/  # UI components
+│   │   ├── hooks/       # Custom React hooks
+│   │   └── pages/       # Route components
+│   └── index.html       # Entry point
+├── server/              # Express backend
+│   ├── index.ts         # Server entry
+│   ├── routes/          # API routes
+│   └── db/             # Database schema
+├── backend/            # Python Flask backend
+│   ├── app.py          # Flask application
+│   ├── config.py       # Configuration loader
+│   ├── game_executor.py # Pygame execution engine
+│   └── pyproject.toml  # Python dependencies
+├── shared/             # Shared between stacks
+│   ├── config.json     # Configuration source
+│   └── config.ts       # TypeScript config loader
+├── package.json        # Node dependencies & scripts
+└── .replit            # Replit configuration
+```
 
-### Flask Backend Setup
-The Flask backend (`backend/app.py`) provides the game execution infrastructure:
+## Backend Services
 
-- **Port Configuration**: Runs on port 5001 to avoid conflicts with frontend development server
-- **Dependencies**: Flask, Flask-CORS, Flask-SocketIO, Pygame, Pillow for image processing
-- **Environment Setup**: Requires SDL2, Xvfb for virtual display, and Python 3.8+
-- **Running the Backend**:
-  ```bash
-  cd backend
-  python app.py  # Starts Flask server on port 5001
-  ```
+### Express API Server (Port 5000)
+- Serves React application
+- Handles user authentication
+- Manages project storage
+- Proxies WebSocket to Flask
 
-### Real Pygame Execution
-The backend executes actual pygame code with full SDL2 support:
+### Flask Game Engine (Port 5001)
+- Executes real Pygame code
+- Streams game frames via SSE
+- Handles game input via WebSocket
+- Manages virtual display with Xvfb
 
-- **SDL2 Backend**: Real pygame runs with proper SDL2 video and dummy audio drivers
-- **Display Management**: Automatically detects and uses physical display or creates virtual display with Xvfb
-- **Frame Capture**: Modified pygame code captures frames using `pygame.image.tostring()` and PIL
-- **Performance**: Streams at ~30 FPS with frame throttling and queue management
-- **Resource Cleanup**: Automatic cleanup of Xvfb processes, temporary files, and display locks
+## Real Pygame Execution
 
-### API Communication Flow
-1. **Game Compilation**: Frontend sends component data to `/api/compile`, receives pygame code
-2. **Game Execution**: Frontend posts code to `/api/execute`, receives session ID
-3. **Frame Streaming**: Frontend connects to `/api/game-stream/<session_id>` SSE endpoint
-4. **Input Handling**: Frontend sends input via WebSocket `game_input` events
-5. **Project Management**: CRUD operations via `/api/projects` endpoints
+### Server-Side Execution
+- **Process Isolation**: Each game runs in subprocess
+- **Virtual Display**: Xvfb provides headless framebuffer
+- **Frame Capture**: SDL2 frames encoded as PNG
+- **Stream Protocol**: Server-Sent Events at 30 FPS
+- **Input Handling**: WebSocket for keyboard/mouse events
 
-### Component Architecture
-The frontend is organized into reusable components:
+### API Endpoints
+```
+POST /api/compile          # Convert components to Pygame code
+POST /api/execute          # Start game execution, returns session ID
+GET  /api/game-stream/:id  # SSE stream of game frames
+WS   /socket.io           # WebSocket for game input
+GET  /api/projects        # List user projects
+POST /api/projects        # Create new project
+```
 
-- **Layout Components**: Header, sidebar navigation, and responsive layouts
-- **Interactive Components**: Code editor, game canvas, floating feedback system
-- **UI Components**: Comprehensive shadcn/ui component library for consistent design
-- **Custom Components**: Specialized components for lesson content, progress tracking, and code execution
+## Port Configuration
 
-## External Dependencies
+| Service | Dev Port | Prod Port | Purpose |
+|---------|----------|-----------|---------|
+| Vite | 5173 | - | Frontend dev server |
+| Express | 5000 | 5000 | API & static serving |
+| Flask | 5001 | 5001 | Game execution |
 
-### Core Framework Dependencies
-- **React 18**: Frontend framework with modern hooks and concurrent features
-- **Express.js**: Backend web framework for Node.js
-- **TypeScript**: Type system for enhanced development experience and code reliability
+## Replit Configuration
 
-### Database and ORM
-- **Drizzle ORM**: Type-safe SQL query builder and ORM
-- **Neon Database**: PostgreSQL-compatible serverless database (configured but using in-memory storage currently)
-- **connect-pg-simple**: PostgreSQL session store for Express sessions
+### Nix Dependencies
+The `replit.nix` includes all required system packages:
+- **Python**: 3.13 with uv package manager
+- **Node.js**: v24 (via modules)
+- **SDL2**: Full SDL2 stack for Pygame
+- **Xvfb**: Virtual display for headless execution
+- **Build Tools**: gcc, make, pkg-config
+- **Browser Testing**: Chromium, ChromeDriver
 
-### UI and Styling
-- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
-- **shadcn/ui**: Pre-built component library with accessibility features
-- **Radix UI**: Headless UI primitives for complex interactive components
-- **Lucide React**: Icon library with consistent design language
+### Auto-Bootstrap
+On container boot:
+1. `npm install` runs automatically
+2. `postinstall` sets up Python environment
+3. `predev` validates configuration
+4. All services start with `npm run dev`
 
-### Development and Tooling
-- **Vite**: Build tool and development server with hot module replacement
-- **Replit Integration**: Special plugins for Replit development environment
-- **Monaco Editor**: Web-based code editor (loaded via CDN)
-- **Flask Development Server**: Backend development with auto-reload
-- **Xvfb**: X Virtual Framebuffer for headless pygame execution
+## Dependencies Management
 
-### Code Execution and Game Rendering
-- **Pygame**: Real pygame library runs on server with full SDL2 support
-- **Virtual Display**: Xvfb provides framebuffer for headless environments
-- **Frame Capture**: Server captures pygame frames and encodes as PNG
-- **SSE Streaming**: Server-Sent Events deliver frames to frontend in real-time
-- **Canvas Rendering**: Frontend displays streamed frames on HTML5 canvas
-- **WebSocket**: Bidirectional communication for game input and control
+### Node.js (package.json)
+- **Frontend**: React, Radix UI, Tailwind CSS
+- **Backend**: Express, Drizzle ORM, Passport
+- **Tooling**: Vite, TypeScript, ESLint, Prettier
+- **Process**: Concurrently for multi-service orchestration
 
-### State Management and Data Fetching
-- **TanStack Query**: Server state management with caching and synchronization
-- **React Hook Form**: Form state management with validation
-- **Zod**: Runtime type validation and schema parsing
+### Python (pyproject.toml)
+- **Framework**: Flask, Flask-CORS, Flask-SocketIO
+- **Game Engine**: Pygame, Pillow
+- **Tooling**: Black, Ruff, MyPy, Pytest
 
-The application is designed as a full-stack platform easily deployable on Replit:
+## Deployment
 
-- **Frontend Server**: Vite dev server with Express.js serves the React app on port 5000
-- **Backend Server**: Flask server runs pygame execution engine on port 5001
-- **Communication**: Frontend communicates with backend via REST API, SSE, and WebSocket
-- **Development Setup**: Both servers support hot reloading for rapid development
-- **Production Ready**: Can be deployed with proper process management and scaling
+### Build Process
+```bash
+npm run build
+# - Builds React app with Vite
+# - Bundles Express server with esbuild  
+# - Syncs Python dependencies with uv
+```
+
+### Production Start
+```bash
+npm run start
+# - Starts Flask with Gunicorn (eventlet worker)
+# - Starts Express in production mode
+# - All managed by concurrently
+```
+
+## Development Tips
+
+### Config Changes
+1. Edit `shared/config.json`
+2. Run `npm run validate:config` to verify
+3. Both TypeScript and Python auto-load changes
+
+### Adding Dependencies
+```bash
+# Node.js dependency
+npm install <package>
+
+# Python dependency
+cd backend && uv add <package>
+```
+
+### Debugging Services
+Each service logs with color-coded prefix:
+- 🟡 Yellow: Python/Flask backend
+- 🔵 Cyan: Express server
+- 🟢 Green: Vite frontend
+
+### Performance Optimization
+- Vite provides HMR for instant frontend updates
+- Flask debug mode for backend auto-reload
+- Shared config prevents drift between services
+- Process isolation ensures clean game execution
+
+## Troubleshooting
+
+### Common Issues
+1. **Port conflicts**: Check nothing else uses 5000/5001/5173
+2. **Python env issues**: Run `cd backend && uv sync`
+3. **Display errors**: Ensure Xvfb is installed (in replit.nix)
+4. **Config mismatch**: Run `npm run validate:config`
+
+### Logs Location
+- Frontend: Browser console
+- Express: Terminal output (cyan prefix)
+- Flask: Terminal output (yellow prefix)
+- Pygame: Subprocess stdout captured by Flask
+
+## Security Notes
+
+- Game execution isolated in subprocesses
+- Temporary directories cleaned automatically
+- JWT secrets must be changed in production
+- CORS configured for local development only
+- Virtual display prevents GUI access
+- 
