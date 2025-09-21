@@ -1,4 +1,5 @@
 // Simple TypeScript types for Pixel's PyGame Palace - no database dependencies!
+// This is the single source of truth for all data structures
 
 export interface User {
   id: string;
@@ -101,6 +102,49 @@ export type InsertUser = Omit<User, 'id'>;
 export type InsertLesson = Omit<Lesson, 'id'>;
 export type InsertUserProgress = Omit<UserProgress, 'id'>;
 export type InsertProject = Omit<Project, 'id' | 'createdAt' | 'publishedAt'>;
+
+// Game Execution Types (shared between Express and Flask)
+export interface GameExecutionRequest {
+  code?: string;
+  components?: any[];
+  gameType?: string;
+  assets?: any[];
+}
+
+export interface GameExecutionResponse {
+  success: boolean;
+  session_id?: string;
+  code?: string;
+  message?: string;
+  error?: string;
+  user?: string;
+}
+
+export interface GameSession {
+  session_id: string;
+  user_id: string;
+  running_time: number;
+  is_running: boolean;
+  max_time: number;
+}
+
+export interface GameStreamEvent {
+  type: 'frame' | 'end' | 'error';
+  data?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface ServiceHealthCheck {
+  status: 'healthy' | 'unhealthy';
+  service: string;
+  port?: number;
+  version?: string;
+  reachable?: boolean;
+  flask_url?: string;
+  error?: string;
+  hint?: string;
+}
 
 // Visual Game Builder Types
 export interface GameConfig {

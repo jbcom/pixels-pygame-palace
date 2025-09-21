@@ -17,10 +17,15 @@ import queue
 import time
 import atexit
 import signal
-from datetime import timedelta
+from datetime import timedelta, datetime
+import jwt
+from functools import wraps
 
 # Initialize Flask app with secure configuration
 app = Flask(__name__)
+
+# Load configuration
+from config import SERVICE_CONFIG
 
 # Security: Generate secure SECRET_KEY
 if os.environ.get('FLASK_ENV') == 'production':
@@ -38,36 +43,35 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session timeout
 
-# Security Configuration
-MAX_CONCURRENT_SESSIONS = 10  # Limit concurrent game sessions
-MAX_SESSION_TIME = 300  # 5 minutes max per session
-MAX_CODE_SIZE = 100000  # 100KB max code size
+# Load configuration from shared config
+MAX_CONCURRENT_SESSIONS = SERVICE_CONFIG['GAME']['MAX_CONCURRENT_SESSIONS']
+MAX_SESSION_TIME = SERVICE_CONFIG['GAME']['MAX_SESSION_TIME']
+MAX_CODE_SIZE = SERVICE_CONFIG['GAME']['MAX_CODE_SIZE']
 
-# Configure CORS to allow requests from the React frontend
+# Configure CORS using shared configuration
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:5000", "http://localhost:5173", "http://127.0.0.1:5000"],
+        "origins": SERVICE_CONFIG['ALLOWED_ORIGINS'],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
-# Initialize rate limiter
+# Initialize rate limiter with shared configuration
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=[
+        f"{SERVICE_CONFIG['RATE_LIMITS']['GENERAL']['MAX']} per {SERVICE_CONFIG['RATE_LIMITS']['GENERAL']['WINDOW_MS']//1000} seconds"
+    ]
 )
 
 # Initialize SocketIO with specific CORS origins (not wildcard)
 socketio = SocketIO(
     app, 
-    cors_allowed_origins=["http://localhost:5000", "http://localhost:5173", "http://127.0.0.1:5000"],
+    cors_allowed_origins=SERVICE_CONFIG['ALLOWED_ORIGINS'],
     async_mode='threading'
 )
-
-# In-memory storage for projects (replace with database later)
-projects_db = {}
 
 # Game execution sessions with tracking
 game_sessions = {}
@@ -91,13 +95,58 @@ atexit.register(cleanup_all_sessions)
 signal.signal(signal.SIGINT, lambda s, f: cleanup_all_sessions())
 signal.signal(signal.SIGTERM, lambda s, f: cleanup_all_sessions())
 
+# JWT Authentication decorator
+def verify_token(f):
+    """Verify JWT token from Express backend"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            return jsonify({'error': 'No authorization token provided'}), 401
+        
+        try:
+            # Remove 'Bearer ' prefix if present
+            if token.startswith('Bearer '):
+                token = token[7:]
+            
+            # Verify the JWT token
+            payload = jwt.decode(
+                token, 
+                SERVICE_CONFIG['SECURITY']['JWT_SECRET'],
+                algorithms=['HS256']
+            )
+            
+            # Check if token has expired
+            if 'exp' in payload:
+                if datetime.utcnow().timestamp() > payload['exp']:
+                    return jsonify({'error': 'Token has expired'}), 401
+            
+            # Add user info to request context
+            request.user = payload.get('user')
+            request.session_id = payload.get('session_id')
+            
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError as e:
+            return jsonify({'error': f'Invalid token: {str(e)}'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'service': 'pygame-backend'}), 200
+    return jsonify({
+        'status': 'healthy', 
+        'service': 'pygame-execution-backend',
+        'port': SERVICE_CONFIG['FLASK_PORT'],
+        'version': '2.0.0'
+    }), 200
 
 @app.route('/api/compile', methods=['POST'])
-@limiter.limit("10 per minute")
+@limiter.limit(f"{SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['MAX']} per {SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['WINDOW_MS']//1000} seconds")
+@verify_token
 def compile_game():
     """Compile game from components into executable Python code"""
     try:
@@ -123,7 +172,8 @@ def compile_game():
         }), 400
 
 @app.route('/api/execute', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit(f"{SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['MAX']} per {SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['WINDOW_MS']//1000} seconds")
+@verify_token
 def execute_game():
     """Execute Python game code with pygame"""
     try:
@@ -207,6 +257,7 @@ def execute_game():
         }), 400
 
 @app.route('/api/game-stream/<session_id>', methods=['GET'])
+@verify_token
 def game_stream(session_id):
     """Stream game output using Server-Sent Events"""
     def generate():
@@ -226,7 +277,7 @@ def game_stream(session_id):
                 
                 yield f"data: {json.dumps({'type': 'frame', 'data': img_str})}\n\n"
             
-            time.sleep(0.033)  # ~30 FPS
+            time.sleep(1.0 / SERVICE_CONFIG['GAME']['STREAM_FPS'])  # Stream FPS from config
         
         yield f"data: {json.dumps({'type': 'end', 'message': 'Game ended'})}\n\n"
         
@@ -236,137 +287,7 @@ def game_stream(session_id):
     
     return Response(generate(), mimetype='text/event-stream')
 
-@app.route('/api/projects', methods=['POST'])
-def save_project():
-    """Save a game project"""
-    try:
-        data = request.json
-        if not data or 'name' not in data:
-            raise BadRequest("Project name required")
-        
-        project_id = str(uuid.uuid4())
-        project = {
-            'id': project_id,
-            'name': data['name'],
-            'description': data.get('description', ''),
-            'gameType': data.get('gameType', 'platformer'),
-            'components': data.get('components', []),
-            'code': data.get('code', ''),
-            'created_at': time.time(),
-            'updated_at': time.time()
-        }
-        
-        projects_db[project_id] = project
-        
-        return jsonify({
-            'success': True,
-            'project': project
-        }), 201
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-@app.route('/api/projects', methods=['GET'])
-def list_projects():
-    """List all saved projects"""
-    try:
-        projects = list(projects_db.values())
-        # Sort by updated_at descending
-        projects.sort(key=lambda x: x['updated_at'], reverse=True)
-        
-        return jsonify({
-            'success': True,
-            'projects': projects
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-@app.route('/api/projects/<project_id>', methods=['GET'])
-def get_project(project_id):
-    """Get a specific project by ID"""
-    try:
-        if project_id not in projects_db:
-            return jsonify({
-                'success': False,
-                'error': 'Project not found'
-            }), 404
-        
-        return jsonify({
-            'success': True,
-            'project': projects_db[project_id]
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-@app.route('/api/projects/<project_id>', methods=['PUT'])
-def update_project(project_id):
-    """Update an existing project"""
-    try:
-        if project_id not in projects_db:
-            return jsonify({
-                'success': False,
-                'error': 'Project not found'
-            }), 404
-        
-        data = request.json
-        if not data:
-            raise BadRequest("No update data provided")
-        
-        project = projects_db[project_id]
-        
-        # Update fields
-        if 'name' in data:
-            project['name'] = data['name']
-        if 'description' in data:
-            project['description'] = data['description']
-        if 'gameType' in data:
-            project['gameType'] = data['gameType']
-        if 'components' in data:
-            project['components'] = data['components']
-        if 'code' in data:
-            project['code'] = data['code']
-        
-        project['updated_at'] = time.time()
-        
-        return jsonify({
-            'success': True,
-            'project': project
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-@app.route('/api/projects/<project_id>', methods=['DELETE'])
-def delete_project(project_id):
-    """Delete a project"""
-    try:
-        if project_id not in projects_db:
-            return jsonify({
-                'success': False,
-                'error': 'Project not found'
-            }), 404
-        
-        del projects_db[project_id]
-        
-        return jsonify({
-            'success': True,
-            'message': 'Project deleted successfully'
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
+# Project management endpoints have been removed - handled by Express backend
 
 # WebSocket event handlers
 @socketio.on('connect')
@@ -407,8 +328,9 @@ def handle_stop_game(data):
         emit('stop_error', {'error': 'Invalid session'})
 
 # Add new REST API endpoints for game control
-@app.route('/api/stop/<session_id>', methods=['POST'])
-@limiter.limit("20 per minute")
+@app.route('/api/stop-game/<session_id>', methods=['POST'])
+@limiter.limit(f"{SERVICE_CONFIG['RATE_LIMITS']['STRICT']['MAX']} per {SERVICE_CONFIG['RATE_LIMITS']['STRICT']['WINDOW_MS']//1000} seconds")
+@verify_token
 def stop_game_endpoint(session_id):
     """Stop a running game session"""
     try:
@@ -438,6 +360,7 @@ def stop_game_endpoint(session_id):
 
 @app.route('/api/game-input/<session_id>', methods=['POST'])
 @limiter.limit("100 per minute")
+@verify_token
 def send_game_input(session_id):
     """Send input to a running game session"""
     try:
@@ -468,6 +391,7 @@ def send_game_input(session_id):
         }), 500
 
 @app.route('/api/sessions', methods=['GET'])
+@verify_token
 def list_active_sessions():
     """List all active game sessions"""
     try:
@@ -509,5 +433,12 @@ def generate_python_code(components, game_type):
     return GameCompiler.compile(components, game_type)
 
 if __name__ == '__main__':
-    # Run the Flask app with SocketIO
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True, allow_unsafe_werkzeug=True)
+    # Run the Flask app on port 5001
+    port = SERVICE_CONFIG['FLASK_PORT']
+    print(f"Starting Pygame Execution Backend on port {port}")
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=os.environ.get('FLASK_ENV') != 'production',
+        use_reloader=False  # Disable reloader for game execution
+    )
