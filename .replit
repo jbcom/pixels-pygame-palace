@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16", "python-3.11", "typescript-language-server", "pyright-extended", "angular-node-20", "python3"]
+modules = ["nodejs-20", "web", "postgresql-16", "python-3.11", "typescript-language-server", "pyright-extended", "angular-node-20", "python3", "docker"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "alsa-lib", "atk", "cairo", "chromium", "cups", "dbus", "fontconfig", "freetype", "git-lfs", "glib", "iana-etc", "lcms2", "libimagequant", "libjpeg", "libpng", "libtiff", "libwebp", "libxcrypt", "libxkbcommon", "nspr", "nss", "openjpeg", "pango", "pkg-config", "portmidi", "python311Packages.pygame-ce", "python311Packages.selenium", "python311Packages.selenium-wire", "selenium-manager", "selenium-server-standalone", "tcl", "tk", "unzip", "vim-full", "wget", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.xorgserver", "zlib"]
+packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "alsa-lib", "atk", "cairo", "chromium", "cups", "dbus", "fontconfig", "freetype", "git-lfs", "glib", "iana-etc", "lcms2", "libimagequant", "libjpeg", "libpng", "libtiff", "libwebp", "libxcrypt", "libxkbcommon", "nspr", "nss", "openjpeg", "pango", "pkg-config", "portmidi", "python311Packages.pygame-ce", "python311Packages.selenium", "python311Packages.selenium-wire", "selenium-manager", "selenium-server-standalone", "tcl", "tk", "unzip", "vim-full", "wget", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.xorgserver", "zlib", "docker-buildx"]
 
 [deployment]
 deploymentTarget = "autoscale"

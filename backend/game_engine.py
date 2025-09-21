@@ -13,16 +13,25 @@ import base64
 import uuid
 import shutil
 from io import BytesIO
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 from PIL import Image
 
+# Docker imports with proper type handling
 try:
     import docker
     from docker.errors import DockerException, ContainerError, ImageNotFound
     from docker.types import Mount
+    from docker.models.containers import Container
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
+    # Define stub classes for type checking when Docker is not available
+    docker = None  # type: ignore
+    DockerException = Exception
+    ContainerError = Exception 
+    ImageNotFound = Exception
+    Mount = None  # type: ignore
+    Container = None  # type: ignore
     print("WARNING: Docker library not available. Install with: pip install docker")
 
 from security_config import (
@@ -46,6 +55,8 @@ class DockerGameExecutor:
             
         if cls._docker_client is None:
             try:
+                if docker is None:
+                    raise RuntimeError("Docker library not available")
                 cls._docker_client = docker.from_env()
                 # Test connection
                 cls._docker_client.ping()
@@ -53,7 +64,7 @@ class DockerGameExecutor:
                 raise RuntimeError(f"Failed to connect to Docker daemon: {e}. Is Docker running?")
         return cls._docker_client
     
-    def __init__(self, session_id: str, timeout: int = None):
+    def __init__(self, session_id: str, timeout: Optional[int] = None):
         """
         Initialize the Docker game executor
         
@@ -62,15 +73,15 @@ class DockerGameExecutor:
             timeout: Maximum execution time in seconds (default from config)
         """
         self.session_id = session_id
-        self.container = None
+        self.container: Optional[Any] = None
         self.running = False
         self.frame_queue = queue.Queue(maxsize=10)
-        self.temp_dir = None
+        self.temp_dir: Optional[str] = None
         self.timeout = timeout or DOCKER_CONFIG['timeout']
-        self.start_time = None
+        self.start_time: Optional[float] = None
         self.cleanup_lock = threading.Lock()
-        self.monitor_thread = None
-        self.output_thread = None
+        self.monitor_thread: Optional[threading.Thread] = None
+        self.output_thread: Optional[threading.Thread] = None
         
         # Get Docker client
         try:
@@ -237,6 +248,8 @@ except Exception as e:
     def _ensure_image_built(self) -> None:
         """Ensure Docker image is built"""
         try:
+            if not DOCKER_AVAILABLE:
+                raise RuntimeError("Docker not available")
             self.client.images.get(DOCKER_CONFIG['image_name'])
         except ImageNotFound:
             print(f"Building Docker image {DOCKER_CONFIG['image_name']}...")
@@ -251,7 +264,7 @@ except Exception as e:
         
         try:
             # Build the image
-            image, build_logs = self.client.images.build(
+            result = self.client.images.build(
                 path=os.path.dirname(__file__),
                 dockerfile='Dockerfile.game-executor',
                 tag=DOCKER_CONFIG['image_name'],
@@ -259,9 +272,20 @@ except Exception as e:
                 forcerm=True
             )
             
-            for log in build_logs:
-                if 'stream' in log:
-                    print(log['stream'].strip())
+            # Handle result as tuple (image, build_logs) or just image
+            if isinstance(result, tuple):
+                image, build_logs = result
+            else:
+                image = result
+                build_logs = None
+            
+            if build_logs:
+                try:
+                    for log in build_logs:
+                        if isinstance(log, dict) and 'stream' in log:
+                            print(log['stream'].strip())
+                except Exception as e:
+                    print(f"Error processing build logs: {e}")
                     
             print(f"Successfully built Docker image: {DOCKER_CONFIG['image_name']}")
             
@@ -298,8 +322,8 @@ except Exception as e:
                         source=self.temp_dir,
                         type='bind',
                         read_only=False  # Allow writing to temp directory only
-                    )
-                ],
+                    ) if Mount is not None else None
+                ] if Mount is not None else [],
                 'environment': {
                     'PYTHONDONTWRITEBYTECODE': '1',
                     'PYTHONUNBUFFERED': '1',
@@ -319,7 +343,8 @@ except Exception as e:
             # Create and start the container
             self.container = self.client.containers.run(**container_config)
             
-            print(f"Started container {self.container.name} for session {self.session_id}")
+            container_name = getattr(self.container, 'name', self.session_id)
+            print(f"Started container {container_name} for session {self.session_id}")
             
         except ContainerError as e:
             raise RuntimeError(f"Container failed to start: {e}")
@@ -394,11 +419,12 @@ except Exception as e:
                     break
                 
                 # Check timeout
-                elapsed = time.time() - self.start_time
-                if elapsed > self.timeout:
-                    print(f"Container {self.session_id} exceeded timeout of {self.timeout}s")
-                    self.stop()
-                    break
+                if self.start_time is not None:
+                    elapsed = time.time() - self.start_time
+                    if elapsed > self.timeout:
+                        print(f"Container {self.session_id} exceeded timeout of {self.timeout}s")
+                        self.stop()
+                        break
                 
                 time.sleep(1)
                 
@@ -483,6 +509,9 @@ class GameExecutor:
         self.cleanup_lock = threading.Lock()
         self.xvfb_cleanup_done = False
         
+        # Check if production mode requires Docker-only execution
+        force_docker = os.environ.get('FORCE_DOCKER_EXECUTION', 'false').lower() == 'true'
+        
         # Try to use Docker if available
         if DOCKER_AVAILABLE and os.environ.get('USE_DOCKER', 'true').lower() == 'true':
             try:
@@ -493,12 +522,37 @@ class GameExecutor:
                 return
             except Exception as e:
                 print(f"Failed to initialize Docker executor: {e}")
+                
+                # In production mode, fail fast instead of falling back to subprocess
+                if force_docker:
+                    raise RuntimeError(
+                        f"PRODUCTION MODE: Docker execution is required but unavailable. "
+                        f"Original error: {e}. "
+                        f"Please ensure Docker is running and accessible."
+                    )
+                
                 print("Falling back to subprocess executor (less secure)")
                 self._use_docker = False
         else:
+            # If Docker is disabled or not available, check production requirements
+            if force_docker:
+                if not DOCKER_AVAILABLE:
+                    raise RuntimeError(
+                        "PRODUCTION MODE: Docker execution is required but Docker library is not installed. "
+                        "Install with: pip install docker"
+                    )
+                else:
+                    raise RuntimeError(
+                        "PRODUCTION MODE: Docker execution is required but USE_DOCKER is disabled. "
+                        "Set USE_DOCKER=true environment variable."
+                    )
+            
             self._use_docker = False
             
         if not self._use_docker:
+            if force_docker:
+                # This should never be reached due to checks above, but extra safety
+                raise RuntimeError("PRODUCTION MODE: Subprocess execution is not allowed in production")
             print(f"WARNING: Using subprocess executor for session {session_id} - less secure than Docker")
     
     def execute(self, code):
@@ -641,11 +695,12 @@ class GameExecutor:
             if self.process.poll() is not None:
                 break
             
-            elapsed = time.time() - self.start_time
-            if elapsed > self.timeout:
-                print(f"Game {self.session_id} exceeded timeout of {self.timeout}s")
-                self.stop()
-                break
+            if self.start_time is not None:
+                elapsed = time.time() - self.start_time
+                if elapsed > self.timeout:
+                    print(f"Game {self.session_id} exceeded timeout of {self.timeout}s")
+                    self.stop()
+                    break
             
             time.sleep(1)
     
@@ -658,6 +713,9 @@ class GameExecutor:
     
     def _read_stdout(self):
         """Read stdout from the game process"""
+        if not self.process or not self.process.stdout:
+            return
+        
         try:
             for line in iter(self.process.stdout.readline, b''):
                 if not self.running:
@@ -683,6 +741,9 @@ class GameExecutor:
     
     def _read_stderr(self):
         """Read stderr from the game process"""
+        if not self.process or not self.process.stderr:
+            return
+        
         try:
             for line in iter(self.process.stderr.readline, b''):
                 if not self.running:
@@ -699,7 +760,7 @@ class GameExecutor:
         if hasattr(self, '_use_docker') and self._use_docker:
             return self._docker_executor.send_input(input_data)
         
-        if self.process and self.process.poll() is None:
+        if self.process and self.process.poll() is None and self.process.stdin:
             try:
                 input_json = json.dumps(input_data) + '\n'
                 self.process.stdin.write(input_json.encode())
