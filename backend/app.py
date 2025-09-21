@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import secrets
+from typing import Any, Optional
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
@@ -20,6 +21,20 @@ import signal
 from datetime import timedelta, datetime
 import jwt
 from functools import wraps
+
+# Type extension for Flask Request with custom attributes
+from flask import Request
+
+# Monkey patch the Request class to add custom attributes
+def extend_request():
+    """Add custom attributes to Flask Request class"""
+    # Add as class attributes with proper typing
+    setattr(Request, 'user', None)
+    setattr(Request, 'session_id', None)
+    setattr(Request, 'sid', None)
+
+# Apply extensions
+extend_request()
 
 # Initialize Flask app with secure configuration
 app = Flask(__name__)
@@ -123,8 +138,8 @@ def verify_token(f):
                     return jsonify({'error': 'Token has expired'}), 401
             
             # Add user info to request context
-            request.user = payload.get('user')
-            request.session_id = payload.get('session_id')
+            setattr(request, 'user', payload.get('user'))
+            setattr(request, 'session_id', payload.get('session_id'))
             
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token has expired'}), 401
@@ -136,13 +151,112 @@ def verify_token(f):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy', 
+    """Comprehensive health check endpoint with diagnostics"""
+    import psutil
+    import time
+    from datetime import datetime
+    
+    health_data = {
+        'status': 'healthy',
         'service': 'pygame-execution-backend',
         'port': SERVICE_CONFIG['FLASK_PORT'],
-        'version': '2.0.0'
-    }), 200
+        'version': '2.0.0',
+        'timestamp': datetime.utcnow().isoformat() + 'Z',
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'uptime': time.time() - psutil.boot_time(),
+        'system': {
+            'cpu_count': psutil.cpu_count(),
+            'memory_total': psutil.virtual_memory().total,
+            'memory_available': psutil.virtual_memory().available,
+            'disk_usage': psutil.disk_usage('/').percent
+        },
+        'process': {
+            'memory_rss': psutil.Process().memory_info().rss,
+            'memory_vms': psutil.Process().memory_info().vms,
+            'cpu_percent': psutil.Process().cpu_percent(interval=0.1)
+        },
+        'game_sessions': {
+            'active_count': len(game_sessions),
+            'max_allowed': MAX_CONCURRENT_SESSIONS,
+            'sessions': list(game_sessions.keys())
+        },
+        'checks': {
+            'docker_available': False,
+            'docker_daemon': False,
+            'game_executor_image': False,
+            'force_docker_mode': False
+        }
+    }
+    
+    try:
+        # Check Docker availability
+        force_docker = os.environ.get('FORCE_DOCKER_EXECUTION', 'false').lower() == 'true'
+        health_data['checks']['force_docker_mode'] = force_docker
+        
+        try:
+            import docker
+            health_data['checks']['docker_available'] = True
+            
+            # Test Docker daemon connection
+            try:
+                client = docker.from_env()
+                client.ping()
+                health_data['checks']['docker_daemon'] = True
+                
+                # Check if game executor image exists
+                # Import docker.errors conditionally to avoid import issues  
+                try:
+                    import docker.errors
+                    ImageNotFoundError = docker.errors.ImageNotFound
+                except (ImportError, AttributeError):
+                    ImageNotFoundError = Exception
+                    
+                try:
+                    from security_config import DOCKER_CONFIG
+                    client.images.get(DOCKER_CONFIG['image_name'])
+                    health_data['checks']['game_executor_image'] = True
+                except ImageNotFoundError:
+                    health_data['checks']['game_executor_image'] = False
+                    if force_docker:
+                        health_data['status'] = 'unhealthy'
+                        health_data['error'] = 'Game executor Docker image not found'
+                except Exception as e:
+                    health_data['checks']['game_executor_image'] = False
+                    if force_docker:
+                        health_data['status'] = 'unhealthy'
+                        health_data['error'] = f'Error checking Docker image: {e}'
+                        
+            except Exception as e:
+                health_data['checks']['docker_daemon'] = False
+                if force_docker:
+                    health_data['status'] = 'unhealthy'
+                    health_data['error'] = f'Docker daemon unavailable: {str(e)}'
+                    
+        except ImportError:
+            health_data['checks']['docker_available'] = False
+            if force_docker:
+                health_data['status'] = 'unhealthy'
+                health_data['error'] = 'Docker library not installed but required in production'
+        
+        # Check resource limits
+        if health_data['system']['memory_available'] < 100 * 1024 * 1024:  # Less than 100MB
+            health_data['status'] = 'unhealthy'
+            health_data['warning'] = 'Low memory available'
+            
+        if health_data['system']['disk_usage'] > 90:  # More than 90% disk usage
+            health_data['status'] = 'unhealthy'
+            health_data['warning'] = 'High disk usage'
+            
+        # Check session limits
+        if len(game_sessions) >= MAX_CONCURRENT_SESSIONS:
+            health_data['warning'] = 'Maximum concurrent sessions reached'
+            
+    except Exception as e:
+        health_data['status'] = 'unhealthy'
+        health_data['error'] = f'Health check failed: {str(e)}'
+    
+    status_code = 200 if health_data['status'] == 'healthy' else 503
+    return jsonify(health_data), status_code
 
 @app.route('/api/compile', methods=['POST'])
 @limiter.limit(f"{SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['MAX']} per {SERVICE_CONFIG['RATE_LIMITS']['GAME_EXECUTION']['WINDOW_MS']//1000} seconds")
@@ -293,13 +407,15 @@ def game_stream(session_id):
 @socketio.on('connect')
 def handle_connect():
     """Handle client connection"""
-    print(f"Client connected: {request.sid}")
+    client_sid = getattr(request, 'sid', 'unknown')
+    print(f"Client connected: {client_sid}")
     emit('connected', {'message': 'Connected to game server'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle client disconnection"""
-    print(f"Client disconnected: {request.sid}")
+    client_sid = getattr(request, 'sid', 'unknown')
+    print(f"Client disconnected: {client_sid}")
 
 @socketio.on('game_input')
 def handle_game_input(data):
