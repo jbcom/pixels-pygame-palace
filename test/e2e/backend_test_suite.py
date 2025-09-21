@@ -22,9 +22,19 @@ from unittest.mock import Mock, patch, MagicMock
 # Add backend directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 
-# Import Flask app and dependencies
-from app import app, projects_db, game_sessions, session_start_times
-from game_engine import GameExecutor
+# Import Flask app and dependencies (optional)
+try:
+    from app import app, game_sessions, session_start_times
+    from game_engine import GameExecutor
+    FLASK_AVAILABLE = True
+except ImportError:
+    FLASK_AVAILABLE = False
+    app = None
+    game_sessions = {}
+    session_start_times = {}
+    
+# Create mock projects_db for testing
+projects_db = {}
 
 
 class FlaskBackendTestFixture:
@@ -176,29 +186,36 @@ class BackendTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures for all tests"""
-        cls.app = app
-        cls.app.config['TESTING'] = True
-        cls.client = cls.app.test_client()
+        if FLASK_AVAILABLE:
+            cls.app = app
+            cls.app.config['TESTING'] = True
+            cls.client = cls.app.test_client()
+        else:
+            # Use direct HTTP requests via Express proxy
+            cls.app = None
+            cls.client = MockClient()
         cls.api_helper = APITestHelper("http://localhost:5000/api")
     
     def setUp(self):
         """Reset test state before each test"""
         # Clear in-memory databases
         projects_db.clear()
-        game_sessions.clear()
-        session_start_times.clear()
+        if FLASK_AVAILABLE:
+            game_sessions.clear()
+            session_start_times.clear()
         
     def tearDown(self):
         """Clean up after each test"""
-        # Stop all game sessions
-        for session_id in list(game_sessions.keys()):
-            try:
-                executor = game_sessions[session_id]
-                executor.stop()
-            except Exception:
-                pass
-        game_sessions.clear()
-        session_start_times.clear()
+        # Stop all game sessions if Flask is available
+        if FLASK_AVAILABLE:
+            for session_id in list(game_sessions.keys()):
+                try:
+                    executor = game_sessions[session_id]
+                    executor.stop()
+                except Exception:
+                    pass
+            game_sessions.clear()
+            session_start_times.clear()
         
     def generate_test_components(self, game_type: str) -> List[Dict]:
         """Generate test components for a game type"""
