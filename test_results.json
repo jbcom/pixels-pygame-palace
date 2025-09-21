@@ -1,0 +1,142 @@
+{
+  "platformer": {
+    "game_type": "platformer",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 1124 characters of code",
+      "code_length": 1124
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "partial",
+      "issues": [
+        "Platformer missing gravity implementation"
+      ]
+    },
+    "timestamp": "2025-09-21T07:43:28.663375",
+    "code": "import pygame\nimport sys\nimport random\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Platformer Game\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Main game loop\nrunning = True\nwhile running:\n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n    \n    # Update\n    keys = pygame.key.get_pressed()\n    \n    # Draw\n    screen.fill(BLACK)\n    \n    # Draw game title\n    font = pygame.font.Font(None, 48)\n    title = font.render(\"PLATFORMER GAME\", True, WHITE)\n    screen.blit(title, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 24))\n    \n    # Update display\n    pygame.display.flip()\n    clock.tick(FPS)\n\n# Quit\npygame.quit()\nsys.exit()"
+  },
+  "rpg": {
+    "game_type": "rpg",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 1110 characters of code",
+      "code_length": 1110
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "partial",
+      "issues": [
+        "RPG missing inventory system"
+      ]
+    },
+    "timestamp": "2025-09-21T07:43:29.178283",
+    "code": "import pygame\nimport sys\nimport random\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Rpg Game\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Main game loop\nrunning = True\nwhile running:\n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n    \n    # Update\n    keys = pygame.key.get_pressed()\n    \n    # Draw\n    screen.fill(BLACK)\n    \n    # Draw game title\n    font = pygame.font.Font(None, 48)\n    title = font.render(\"RPG GAME\", True, WHITE)\n    screen.blit(title, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 24))\n    \n    # Update display\n    pygame.display.flip()\n    clock.tick(FPS)\n\n# Quit\npygame.quit()\nsys.exit()"
+  },
+  "puzzle": {
+    "game_type": "puzzle",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 1116 characters of code",
+      "code_length": 1116
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "partial",
+      "issues": [
+        "Puzzle missing grid system"
+      ]
+    },
+    "timestamp": "2025-09-21T07:43:29.690863",
+    "code": "import pygame\nimport sys\nimport random\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Puzzle Game\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Main game loop\nrunning = True\nwhile running:\n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n    \n    # Update\n    keys = pygame.key.get_pressed()\n    \n    # Draw\n    screen.fill(BLACK)\n    \n    # Draw game title\n    font = pygame.font.Font(None, 48)\n    title = font.render(\"PUZZLE GAME\", True, WHITE)\n    screen.blit(title, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 24))\n    \n    # Update display\n    pygame.display.flip()\n    clock.tick(FPS)\n\n# Quit\npygame.quit()\nsys.exit()"
+  },
+  "racing": {
+    "game_type": "racing",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 8573 characters of code",
+      "code_length": 8573
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "success",
+      "issues": []
+    },
+    "timestamp": "2025-09-21T07:43:30.205761",
+    "code": "import pygame\nimport sys\nimport random\nimport math\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\nYELLOW = (255, 255, 0)\nGRAY = (128, 128, 128)\nDARK_GRAY = (64, 64, 64)\nORANGE = (255, 165, 0)\nCYAN = (0, 255, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Racing Game - Championship Mode\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Fonts\nfont_small = pygame.font.Font(None, 24)\nfont_medium = pygame.font.Font(None, 36)\nfont_large = pygame.font.Font(None, 48)\n\n# Simple Vehicle Class for Racing Game\nclass Vehicle:\n    def __init__(self, x=400, y=500):\n        self.x = x\n        self.y = y\n        self.angle = 0\n        self.speed = 0\n        self.max_speed = 12\n        self.acceleration = 0.5\n        self.braking = 0.8\n        self.handling = 7\n        self.width = 30\n        self.height = 50\n        self.color = RED\n        self.nitro = 100\n        self.max_nitro = 100\n        self.nitro_active = False\n        self.lap = 1\n        self.checkpoint = 0\n        \n    def update(self, keys):\n        # Handle input\n        if keys[pygame.K_UP] or keys[pygame.K_w]:\n            self.speed = min(self.speed + self.acceleration, self.max_speed)\n        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:\n            self.speed = max(self.speed - self.braking, -self.max_speed / 2)\n        else:\n            if self.speed > 0:\n                self.speed = max(0, self.speed - 0.2)\n            elif self.speed < 0:\n                self.speed = min(0, self.speed + 0.2)\n        \n        if keys[pygame.K_LEFT] or keys[pygame.K_a]:\n            if abs(self.speed) > 0.5:\n                self.angle -= self.handling\n        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:\n            if abs(self.speed) > 0.5:\n                self.angle += self.handling\n        \n        # Nitro boost\n        if keys[pygame.K_SPACE] and self.nitro > 0:\n            self.nitro_active = True\n            self.nitro -= 2\n            self.speed = min(self.speed * 1.5, self.max_speed * 1.5)\n        else:\n            self.nitro_active = False\n            self.nitro = min(self.nitro + 0.1, self.max_nitro)\n        \n        # Update position\n        rad = math.radians(self.angle)\n        self.x += math.sin(rad) * self.speed\n        self.y += -math.cos(rad) * self.speed\n        \n        # Keep on screen\n        self.x = max(50, min(self.x, SCREEN_WIDTH - 50))\n        self.y = max(50, min(self.y, SCREEN_HEIGHT - 50))\n    \n    def draw(self, screen):\n        # Draw car as a rotated rectangle\n        cos_a = math.cos(math.radians(self.angle))\n        sin_a = math.sin(math.radians(self.angle))\n        \n        # Calculate corners of the vehicle\n        corners = []\n        for dx, dy in [(-self.width/2, -self.height/2), \n                       (self.width/2, -self.height/2),\n                       (self.width/2, self.height/2),\n                       (-self.width/2, self.height/2)]:\n            rx = dx * cos_a - dy * sin_a\n            ry = dx * sin_a + dy * cos_a\n            corners.append((self.x + rx, self.y + ry))\n        \n        pygame.draw.polygon(screen, self.color, corners)\n        \n        # Draw nitro effect\n        if self.nitro_active:\n            flame_base = ((corners[2][0] + corners[3][0])/2, \n                         (corners[2][1] + corners[3][1])/2)\n            flame_tip = (flame_base[0] - sin_a * 30, \n                        flame_base[1] + cos_a * 30)\n            pygame.draw.line(screen, YELLOW, flame_base, flame_tip, 5)\n\n# Simple AI Opponent\nclass AIOpponent(Vehicle):\n    def __init__(self, x, y):\n        super().__init__(x, y)\n        self.color = BLUE\n        self.target_y = 100\n        \n    def update_ai(self):\n        # Simple AI movement\n        if self.y > self.target_y:\n            self.speed = self.max_speed * 0.8\n        else:\n            self.speed = 0\n            \n        # Slight wandering\n        self.angle = math.sin(pygame.time.get_ticks() * 0.001) * 10\n        \n        # Update position\n        rad = math.radians(self.angle)\n        self.x += math.sin(rad) * self.speed\n        self.y += -math.cos(rad) * self.speed\n        \n        # Keep on screen\n        self.x = max(50, min(self.x, SCREEN_WIDTH - 50))\n        self.y = max(50, min(self.y, SCREEN_HEIGHT - 50))\n        \n        # Reset position when reaching top\n        if self.y <= self.target_y:\n            self.y = SCREEN_HEIGHT - 50\n            self.x = random.randint(200, 600)\n\n# Track Drawing\ndef draw_track(screen):\n    # Draw track boundaries\n    pygame.draw.rect(screen, GRAY, (100, 50, 600, 500), 40)\n    # Draw track surface\n    pygame.draw.rect(screen, DARK_GRAY, (140, 90, 520, 420))\n    # Draw center line\n    for y in range(50, 550, 40):\n        pygame.draw.rect(screen, WHITE, (SCREEN_WIDTH // 2 - 2, y, 4, 20))\n    # Draw start/finish line\n    checker_size = 10\n    for i in range(10):\n        for j in range(2):\n            if (i + j) % 2 == 0:\n                color = WHITE\n            else:\n                color = BLACK\n            pygame.draw.rect(screen, color,\n                           (SCREEN_WIDTH // 2 - 50 + i * checker_size,\n                            SCREEN_HEIGHT - 100 + j * checker_size,\n                            checker_size, checker_size))\n\n# HUD Drawing\ndef draw_hud(screen, vehicle):\n    # Speed meter\n    speed_text = font_medium.render(f\"{int(abs(vehicle.speed) * 20)} km/h\", True, WHITE)\n    screen.blit(speed_text, (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 80))\n    \n    # Nitro gauge\n    nitro_percent = vehicle.nitro / vehicle.max_nitro\n    pygame.draw.rect(screen, DARK_GRAY, (20, SCREEN_HEIGHT - 50, 100, 15))\n    pygame.draw.rect(screen, CYAN, (20, SCREEN_HEIGHT - 50, int(100 * nitro_percent), 15))\n    nitro_text = font_small.render(\"NITRO\", True, WHITE)\n    screen.blit(nitro_text, (20, SCREEN_HEIGHT - 70))\n    \n    # Lap counter\n    lap_text = font_medium.render(f\"Lap {vehicle.lap}/3\", True, WHITE)\n    screen.blit(lap_text, (20, 20))\n    \n    # Instructions\n    inst_text = font_small.render(\"Arrow Keys/WASD: Drive | Space: Nitro | ESC: Quit\", True, WHITE)\n    screen.blit(inst_text, (SCREEN_WIDTH // 2 - 200, 10))\n\n# Initialize game objects\nplayer = Vehicle()\nai_opponents = [\n    AIOpponent(300, 400),\n    AIOpponent(400, 350),\n    AIOpponent(500, 400)\n]\n\n# Game state\ngame_running = True\nrace_started = False\ncountdown = 3\ncountdown_timer = 0\n\n# Main game loop\nrunning = True\nwhile running:\n    dt = clock.tick(FPS) / 1000.0  # Delta time in seconds\n    \n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n            elif event.key == pygame.K_RETURN and not race_started:\n                race_started = True\n                countdown_timer = pygame.time.get_ticks()\n    \n    # Update game logic\n    keys = pygame.key.get_pressed()\n    \n    if race_started:\n        # Update countdown\n        if countdown > 0:\n            elapsed = (pygame.time.get_ticks() - countdown_timer) / 1000\n            if elapsed > 1:\n                countdown -= 1\n                countdown_timer = pygame.time.get_ticks()\n        else:\n            # Race is on!\n            player.update(keys)\n            \n            # Update AI\n            for ai in ai_opponents:\n                ai.update_ai()\n    \n    # Draw everything\n    screen.fill(BLACK)\n    \n    # Draw track\n    draw_track(screen)\n    \n    # Draw vehicles\n    player.draw(screen)\n    for ai in ai_opponents:\n        ai.draw(screen)\n    \n    # Draw HUD\n    draw_hud(screen, player)\n    \n    # Draw countdown or start prompt\n    if not race_started:\n        start_text = font_large.render(\"Press ENTER to Start\", True, YELLOW)\n        screen.blit(start_text, (SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2))\n    elif countdown > 0:\n        if countdown == 3:\n            count_text = font_large.render(\"3\", True, RED)\n        elif countdown == 2:\n            count_text = font_large.render(\"2\", True, YELLOW)\n        elif countdown == 1:\n            count_text = font_large.render(\"1\", True, YELLOW)\n        else:\n            count_text = font_large.render(\"GO!\", True, GREEN)\n        screen.blit(count_text, (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2))\n    \n    # Update display\n    pygame.display.flip()\n\n# Quit\npygame.quit()\nsys.exit()"
+  },
+  "space": {
+    "game_type": "space",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 1114 characters of code",
+      "code_length": 1114
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "partial",
+      "issues": [
+        "Space missing spaceship implementation"
+      ]
+    },
+    "timestamp": "2025-09-21T07:43:30.719871",
+    "code": "import pygame\nimport sys\nimport random\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Space Game\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Main game loop\nrunning = True\nwhile running:\n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n    \n    # Update\n    keys = pygame.key.get_pressed()\n    \n    # Draw\n    screen.fill(BLACK)\n    \n    # Draw game title\n    font = pygame.font.Font(None, 48)\n    title = font.render(\"SPACE GAME\", True, WHITE)\n    screen.blit(title, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 24))\n    \n    # Update display\n    pygame.display.flip()\n    clock.tick(FPS)\n\n# Quit\npygame.quit()\nsys.exit()"
+  },
+  "dungeon": {
+    "game_type": "dungeon",
+    "compilation": {
+      "status": "success",
+      "details": "Generated 1118 characters of code",
+      "code_length": 1118
+    },
+    "project_save": {
+      "status": "failed",
+      "details": "Invalid response"
+    },
+    "project_retrieve": {
+      "status": "pending",
+      "details": null
+    },
+    "validation": {
+      "status": "success",
+      "issues": []
+    },
+    "timestamp": "2025-09-21T07:43:31.230692",
+    "code": "import pygame\nimport sys\nimport random\n\n# Initialize Pygame\npygame.init()\n\n# Constants\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nFPS = 60\n\n# Colors\nWHITE = (255, 255, 255)\nBLACK = (0, 0, 0)\nRED = (255, 0, 0)\nGREEN = (0, 255, 0)\nBLUE = (0, 0, 255)\n\n# Set up the display\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Dungeon Game\")\n\n# Clock for controlling frame rate\nclock = pygame.time.Clock()\n\n# Main game loop\nrunning = True\nwhile running:\n    # Handle events\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            running = False\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_ESCAPE:\n                running = False\n    \n    # Update\n    keys = pygame.key.get_pressed()\n    \n    # Draw\n    screen.fill(BLACK)\n    \n    # Draw game title\n    font = pygame.font.Font(None, 48)\n    title = font.render(\"DUNGEON GAME\", True, WHITE)\n    screen.blit(title, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 24))\n    \n    # Update display\n    pygame.display.flip()\n    clock.tick(FPS)\n\n# Quit\npygame.quit()\nsys.exit()"
+  }
+}

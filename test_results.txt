@@ -1,0 +1,79 @@
+
+======================================================================
+COMPREHENSIVE GAME TYPE VALIDATION REPORT
+Generated: 2025-09-21 07:43:31
+======================================================================
+
+SUMMARY
+-------
+Total Tests: 18
+Passed: 6
+Failed: 12
+Success Rate: 33.3%
+
+DETAILED RESULTS BY GAME TYPE
+-----------------------------
+
+PLATFORMER
+──────────
+  Compilation: ✓ success
+    Details: Generated 1124 characters of code
+  Code Validation: ⚠ partial
+    Issues:
+      - Platformer missing gravity implementation
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+RPG
+───
+  Compilation: ✓ success
+    Details: Generated 1110 characters of code
+  Code Validation: ⚠ partial
+    Issues:
+      - RPG missing inventory system
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+PUZZLE
+──────
+  Compilation: ✓ success
+    Details: Generated 1116 characters of code
+  Code Validation: ⚠ partial
+    Issues:
+      - Puzzle missing grid system
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+RACING
+──────
+  Compilation: ✓ success
+    Details: Generated 8573 characters of code
+  Code Validation: ✓ success
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+SPACE
+─────
+  Compilation: ✓ success
+    Details: Generated 1114 characters of code
+  Code Validation: ⚠ partial
+    Issues:
+      - Space missing spaceship implementation
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+DUNGEON
+───────
+  Compilation: ✓ success
+    Details: Generated 1118 characters of code
+  Code Validation: ✓ success
+  Project Save: ✗ failed
+    Details: Invalid response
+  Project Retrieve: ✗ pending
+
+======================================================================
