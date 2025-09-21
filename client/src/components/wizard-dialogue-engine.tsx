@@ -57,14 +57,27 @@ export function useWizardDialogue({
     // If we have a selected game type, load that specific flow
     // Check both gameType and selectedGameType for compatibility
     const gameType = sessionActions.selectedGameType || sessionActions.gameType;
-    if (gameType) { // Load specialized flow for any game type
-      // Only load specialized flow if we're transitioning to it
+    
+    // Check if current node has transitionToSpecializedFlow action
+    const shouldTransition = dialogueState.currentNode?.action === 'transitionToSpecializedFlow';
+    
+    if (gameType && shouldTransition) {
+      // Load specialized flow when we have gameType AND the action to transition
       const specializedFlowPath = `/${gameType}-flow.json`;
-      // Check if the file exists by trying to load it
       flowPath = specializedFlowPath;
-    } else if (flowType === 'game-dev') {
+      console.log('Loading specialized flow:', specializedFlowPath);
+    } else if (gameType && !dialogueState.currentNode) {
+      // Also load specialized flow if we have gameType but no current node (initial load)
+      const specializedFlowPath = `/${gameType}-flow.json`;
+      flowPath = specializedFlowPath;
+    } else if (flowType === 'game-dev' && !gameType) {
       // Fallback to generic game flow if no specific type selected
       flowPath = '/game-wizard-flow.json';
+    }
+    
+    // Skip loading if we already have the right flow loaded
+    if (wizardData && flowPath === wizardFlowPath && !shouldTransition) {
+      return;
     }
     
     loadWizardFlow(flowPath)
@@ -111,7 +124,7 @@ export function useWizardDialogue({
           setIsLoading(false);
         }
       });
-  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType]);
+  }, [wizardFlowPath, initialNodeId, flowType, sessionActions.selectedGameType, sessionActions.gameType, dialogueState.currentNode]);
 
   // Update current node when ID changes
   useEffect(() => {
