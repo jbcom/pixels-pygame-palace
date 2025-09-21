@@ -1,0 +1,15 @@
+"""Game configuration settings."""
+
+# Generated configuration
+GAME_TITLE = "{{ template.name }}"
+SCREEN_WIDTH = {{ game_settings.screenWidth | default(800) }}
+SCREEN_HEIGHT = {{ game_settings.screenHeight | default(600) }}
+TARGET_FPS = {{ game_settings.targetFPS | default(60) }}
+GRAVITY = {{ game_settings.physics.gravity | default(980) }}
+AUDIO_ENABLED = {{ game_settings.audio.enabled | default(true) | lower }}
+AUDIO_VOLUME = {{ game_settings.audio.volume | default(0.7) }}
+
+# Custom configuration
+{% for key, value in custom_config.items() %}
+{{ key.upper() }} = {% if value is string %}"{{ value }}"{% else %}{{ value }}{% endif %}
+{% endfor %}
