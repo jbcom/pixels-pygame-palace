@@ -2,178 +2,480 @@
   "start": {
     "id": "start",
     "speaker": "Pixel",
-    "text": "Space shooter time! We'll build an epic galactic battle scene by scene.",
-    "followUp": "First up: your title screen that'll launch players into space!",
-    "next": "titleBackground"
-  },
-  "titleBackground": {
-    "id": "titleBackground",
-    "speaker": "Pixel",
-    "text": "Let's set the cosmic mood! Pick a space background with stars and nebulas.",
-    "action": "showAssets",
+    "text": "🚀 Space Shooter adventure begins! Let's build an epic galactic battle game with meaningful choices that shape your experience!",
+    "followUp": "First, let's set the visual style for your space game! This choice will bundle matching UI, fonts, and effects!",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["space", "stars", "galaxy", "cosmic"]
-    },
-    "next": "titleShipPreview"
-  },
-  "titleShipPreview": {
-    "id": "titleShipPreview",
-    "speaker": "Pixel",
-    "text": "Now let's pick your spaceship! It'll fly across the title screen.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "vehicles",
-      "curated": true,
-      "tags": ["spaceship", "fighter", "rocket"]
-    },
-    "next": "titleMusic"
-  },
-  "titleMusic": {
-    "id": "titleMusic",
-    "speaker": "Pixel",
-    "text": "Every space epic needs dramatic music! Pick something intense and cosmic.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["space", "epic", "electronic", "dramatic"]
-    },
-    "next": "gameplayMovement"
-  },
-  "gameplayMovement": {
-    "id": "gameplayMovement",
-    "speaker": "Pixel",
-    "text": "Time for gameplay! How should your spaceship move?",
-    "action": "selectComponent",
-    "actionParams": {
-      "category": "movement",
-      "context": "space-shooter"
+      "componentId": "titleDesign",
+      "category": "style"
     },
     "options": [
       {
-        "text": "Classic arcade - 8-way movement",
-        "next": "gameplayEnemies"
+        "text": "A: Retro Arcade - Pixel art, 8-bit fonts, CRT effects, neon colors",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "titleDesign", 
+          "variant": "A",
+          "bundle": ["pixel_ui", "8bit_fonts", "crt_effect", "neon_palette"]
+        },
+        "next": "gameTheme"
       },
       {
-        "text": "Modern twin-stick - move and aim separately",
-        "next": "gameplayEnemies"
+        "text": "B: Modern Sci-Fi - Sleek graphics, holographic UI, lens flares, metallic theme",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "titleDesign", 
+          "variant": "B",
+          "bundle": ["modern_ui", "futuristic_fonts", "lens_flare", "metal_palette"]
+        },
+        "next": "gameTheme"
       }
     ]
   },
-  "gameplayEnemies": {
-    "id": "gameplayEnemies",
+
+  "gameTheme": {
+    "id": "gameTheme",
     "speaker": "Pixel",
-    "text": "What kind of alien enemies will challenge your pilot?",
-    "action": "showAssets",
+    "text": "What's the core theme of your space adventure?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "sprite",
-      "category": "enemies",
-      "curated": true,
-      "tags": ["alien", "enemy", "spaceship", "ufo"]
+      "componentId": "coreTheme",
+      "category": "gameplay"
     },
-    "next": "gameplayShooting"
-  },
-  "gameplayShooting": {
-    "id": "gameplayShooting",
-    "speaker": "Pixel",
-    "text": "Pew pew! Time to set up your weapon systems!",
-    "action": "selectComponent",
-    "actionParams": {
-      "componentId": "shooting",
-      "context": "space-combat"
-    },
-    "next": "gameplayPowerups"
-  },
-  "gameplayPowerups": {
-    "id": "gameplayPowerups",
-    "speaker": "Pixel",
-    "text": "Power-ups make space battles more exciting! Pick some boost items.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "collectibles",
-      "curated": true,
-      "tags": ["powerup", "boost", "weapon", "shield"]
-    },
-    "next": "gameplayEffects"
-  },
-  "gameplayEffects": {
-    "id": "gameplayEffects",
-    "speaker": "Pixel",
-    "text": "Explosions in space! Let's add some particle effects!",
     "options": [
       {
-        "text": "Colorful arcade explosions",
-        "next": "gameplayScore"
+        "text": "A: Classic Asteroids - Navigate asteroid fields, mine resources, survive debris",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "coreTheme", 
+          "variant": "A",
+          "bundle": ["asteroids", "mining_powerups", "debris_physics"]
+        },
+        "next": "shipSelection"
       },
       {
-        "text": "Realistic space debris",
-        "next": "gameplayScore"
+        "text": "B: Alien Invasion - Defend Earth from waves of extraterrestrial attackers",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "coreTheme", 
+          "variant": "B",
+          "bundle": ["alien_enemies", "defense_powerups", "invasion_waves"]
+        },
+        "next": "shipSelection"
       }
     ]
   },
-  "gameplayScore": {
-    "id": "gameplayScore",
+
+  "shipSelection": {
+    "id": "shipSelection",
     "speaker": "Pixel",
-    "text": "How should we track the pilot's progress?",
-    "action": "selectComponent",
+    "text": "Choose your spacecraft! Each has unique stats and abilities!",
+    "action": "showComponentChoice",
     "actionParams": {
-      "componentId": "score",
-      "context": "space-shooter"
+      "componentId": "playerShip",
+      "category": "player"
     },
-    "next": "bossSetup"
+    "options": [
+      {
+        "text": "A: Small Fighter - Fast, agile, rapid fire, lower health",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "playerShip", 
+          "variant": "A",
+          "bundle": ["fighter_sprite", "high_speed", "rapid_fire", "low_health"]
+        },
+        "next": "movementStyle"
+      },
+      {
+        "text": "B: Heavy Cruiser - Slow, tanky, powerful shots, high health",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "playerShip", 
+          "variant": "B",
+          "bundle": ["cruiser_sprite", "low_speed", "heavy_cannon", "high_health"]
+        },
+        "next": "movementStyle"
+      }
+    ]
   },
-  "bossSetup": {
-    "id": "bossSetup",
+
+  "movementStyle": {
+    "id": "movementStyle",
     "speaker": "Pixel",
-    "text": "Every space shooter needs an epic boss battle! Pick your big bad.",
-    "action": "showAssets",
+    "text": "How should your ship handle in space?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "sprite",
-      "category": "bosses",
-      "curated": true,
-      "tags": ["boss", "mothership", "large", "alien"]
+      "componentId": "moveControls",
+      "category": "controls"
     },
-    "next": "victoryScreen"
+    "options": [
+      {
+        "text": "A: Smooth Glide - Momentum-based physics with drift and inertia",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "moveControls", "variant": "A" },
+        "next": "weaponSystem"
+      },
+      {
+        "text": "B: Arcade Snap - Instant direction changes, precise positioning",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "moveControls", "variant": "B" },
+        "next": "weaponSystem"
+      }
+    ]
   },
+
+  "weaponSystem": {
+    "id": "weaponSystem",
+    "speaker": "Pixel",
+    "text": "STAGE 2: Combat Systems! Choose your primary weapon type!",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "weaponType",
+      "category": "combat"
+    },
+    "options": [
+      {
+        "text": "A: Laser Beams - Continuous streams, heat management, piercing damage",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "weaponType", 
+          "variant": "A",
+          "bundle": ["laser_effect", "heat_gauge", "pierce_mechanic"]
+        },
+        "next": "powerUpTypes"
+      },
+      {
+        "text": "B: Projectile Bullets - Rapid fire, limited ammo, spread patterns",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "weaponType", 
+          "variant": "B",
+          "bundle": ["bullet_sprites", "ammo_counter", "spread_shot"]
+        },
+        "next": "powerUpTypes"
+      }
+    ]
+  },
+
+  "powerUpTypes": {
+    "id": "powerUpTypes",
+    "speaker": "Pixel",
+    "text": "What power-ups will help pilots survive the cosmic battlefield?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "powerUpFocus",
+      "category": "items"
+    },
+    "options": [
+      {
+        "text": "A: Shield Focus - Energy shields, damage reduction, temporary invincibility",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "powerUpFocus", 
+          "variant": "A",
+          "bundle": ["shield_bubble", "damage_resist", "invuln_star"]
+        },
+        "next": "enemyWaves"
+      },
+      {
+        "text": "B: Weapon Upgrades - Triple shot, homing missiles, damage boost",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "powerUpFocus", 
+          "variant": "B",
+          "bundle": ["triple_shot", "homing_missile", "damage_amp"]
+        },
+        "next": "enemyWaves"
+      }
+    ]
+  },
+
+  "enemyWaves": {
+    "id": "enemyWaves",
+    "speaker": "Pixel",
+    "text": "STAGE 3: Enemy Design! How should enemy formations attack?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "enemyFormation",
+      "category": "enemies"
+    },
+    "options": [
+      {
+        "text": "A: Predictable Patterns - Classic formations, learnable movements",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemyFormation", 
+          "variant": "A",
+          "bundle": ["pattern_formations", "wave_timer", "classic_ai"]
+        },
+        "next": "bossBattle"
+      },
+      {
+        "text": "B: Random Chaos - Unpredictable spawns, adaptive AI behavior",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemyFormation", 
+          "variant": "B",
+          "bundle": ["random_spawn", "smart_ai", "chaos_mode"]
+        },
+        "next": "bossBattle"
+      }
+    ]
+  },
+
+  "bossBattle": {
+    "id": "bossBattle",
+    "speaker": "Pixel",
+    "text": "Boss encounter incoming! What type of epic showdown awaits?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "bossType",
+      "category": "boss"
+    },
+    "options": [
+      {
+        "text": "A: Single Mothership - One massive enemy with multiple weak points",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "bossType", 
+          "variant": "A",
+          "bundle": ["mothership_sprite", "weakpoint_system", "boss_health_bar"]
+        },
+        "next": "scrollDirection"
+      },
+      {
+        "text": "B: Multi-Phase Boss - Transforming enemy with escalating difficulty",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "bossType", 
+          "variant": "B",
+          "bundle": ["phase_boss", "transformation", "escalating_attacks"]
+        },
+        "next": "scrollDirection"
+      }
+    ]
+  },
+
+  "scrollDirection": {
+    "id": "scrollDirection",
+    "speaker": "Pixel",
+    "text": "STAGE 4: World Movement! How should the space battlefield scroll?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "scrollType",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Vertical Scrolling - Classic top-down space shooter style",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "scrollType", 
+          "variant": "A",
+          "bundle": ["vertical_bg", "top_spawn", "bottom_exit"]
+        },
+        "next": "scoreSystem"
+      },
+      {
+        "text": "B: Horizontal Scrolling - Side-scrolling space adventure",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "scrollType", 
+          "variant": "B",
+          "bundle": ["horizontal_bg", "side_spawn", "right_exit"]
+        },
+        "next": "scoreSystem"
+      }
+    ]
+  },
+
+  "scoreSystem": {
+    "id": "scoreSystem",
+    "speaker": "Pixel",
+    "text": "How should we track the pilot's success?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "scoringMethod",
+      "category": "ui"
+    },
+    "options": [
+      {
+        "text": "A: Points System - Earn points for enemies, combos, and accuracy",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "scoringMethod", 
+          "variant": "A",
+          "bundle": ["point_counter", "combo_multiplier", "accuracy_bonus"]
+        },
+        "next": "livesSystem"
+      },
+      {
+        "text": "B: Survival Time - Track how long you can survive the onslaught",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "scoringMethod", 
+          "variant": "B",
+          "bundle": ["timer_display", "wave_counter", "endurance_mode"]
+        },
+        "next": "livesSystem"
+      }
+    ]
+  },
+
+  "livesSystem": {
+    "id": "livesSystem",
+    "speaker": "Pixel",
+    "text": "How forgiving should the damage system be?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "healthSystem",
+      "category": "gameplay"
+    },
+    "options": [
+      {
+        "text": "A: Limited Lives - Classic 3 lives with instant death",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "healthSystem", 
+          "variant": "A",
+          "bundle": ["life_icons", "instant_death", "extra_life_powerup"]
+        },
+        "next": "specialAbilities"
+      },
+      {
+        "text": "B: Shield & Health - Regenerating shields with health underneath",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "healthSystem", 
+          "variant": "B",
+          "bundle": ["shield_bar", "health_bar", "regen_mechanic"]
+        },
+        "next": "specialAbilities"
+      }
+    ]
+  },
+
+  "specialAbilities": {
+    "id": "specialAbilities",
+    "speaker": "Pixel",
+    "text": "STAGE 5: Special Powers! Choose your emergency ability!",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "specialPower",
+      "category": "abilities"
+    },
+    "options": [
+      {
+        "text": "A: Screen Bomb - Clear all enemies with a massive explosion",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "specialPower", 
+          "variant": "A",
+          "bundle": ["bomb_effect", "screen_clear", "bomb_counter"]
+        },
+        "next": "endConditions"
+      },
+      {
+        "text": "B: Time Slow - Slow down time for precision dodging",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "specialPower", 
+          "variant": "B",
+          "bundle": ["slowmo_effect", "time_gauge", "bullet_time"]
+        },
+        "next": "endConditions"
+      }
+    ]
+  },
+
+  "endConditions": {
+    "id": "endConditions",
+    "speaker": "Pixel",
+    "text": "When does the space mission conclude?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "gameEnd",
+      "category": "structure"
+    },
+    "options": [
+      {
+        "text": "A: Wave Completion - Beat set waves to achieve victory",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "gameEnd", 
+          "variant": "A",
+          "bundle": ["wave_structure", "level_progression", "final_wave"]
+        },
+        "next": "victoryScreen"
+      },
+      {
+        "text": "B: Endless Mode - Survive as long as possible",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "gameEnd", 
+          "variant": "B",
+          "bundle": ["endless_waves", "difficulty_scaling", "highscore_chase"]
+        },
+        "next": "victoryScreen"
+      }
+    ]
+  },
+
   "victoryScreen": {
     "id": "victoryScreen",
     "speaker": "Pixel",
-    "text": "Victory! How should we celebrate defeating the alien invasion?",
-    "options": [
-      {
-        "text": "Fireworks in space!",
-        "next": "compile"
-      },
-      {
-        "text": "Epic medal ceremony",
-        "next": "compile"
-      }
-    ]
-  },
-  "compile": {
-    "id": "compile",
-    "speaker": "Pixel",
-    "text": "Your space shooter is ready to launch! All systems are go!",
-    "followUp": "Ready to see your galactic adventure in action?",
-    "action": "compileGame",
+    "text": "Final touch! How should we celebrate the pilot's achievement?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "gameType": "space"
+      "componentId": "victory",
+      "category": "ui"
     },
     "options": [
       {
-        "text": "Launch the game! 🚀",
-        "next": "playGame"
+        "text": "A: High Score Board - Classic arcade leaderboard with initials",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "victory", 
+          "variant": "A",
+          "bundle": ["leaderboard_ui", "initial_entry", "score_ranking"]
+        },
+        "next": "complete"
+      },
+      {
+        "text": "B: Achievement Gallery - Unlock medals and view statistics",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "victory", 
+          "variant": "B",
+          "bundle": ["medal_display", "stat_tracker", "achievement_list"]
+        },
+        "next": "complete"
       }
     ]
   },
-  "playGame": {
-    "id": "playGame",
+
+  "complete": {
+    "id": "complete",
     "speaker": "Pixel",
-    "text": "Mission accomplished, pilot! Your space shooter is live!",
-    "action": "runGame"
+    "text": "🎮 MISSION COMPLETE! Your space shooter is fully configured with all systems operational!",
+    "followUp": "Title Design ✓ Theme ✓ Ship ✓ Combat ✓ Enemies ✓ Bosses ✓ Scrolling ✓ Score ✓ Lives ✓ Abilities ✓ Victory ✓ Every choice has shaped your unique galactic adventure!",
+    "action": "compileFullGame",
+    "actionParams": {
+      "gameType": "space-shooter"
+    },
+    "options": [
+      {
+        "text": "Play my space shooter!",
+        "action": "launchPyodideGame"
+      },
+      {
+        "text": "Export as Python file",
+        "action": "exportPyodideGame"
+      },
+      {
+        "text": "Open in Pro Editor",
+        "action": "openWYSIWYGEditor"
+      }
+    ]
   }
 }
