@@ -1,21 +1,473 @@
+"""
+Secure game execution engine using Docker containerization
+"""
+
 import os
 import sys
-import subprocess
 import tempfile
 import threading
 import queue
 import time
 import json
 import base64
+import uuid
+import shutil
+from io import BytesIO
+from typing import Optional, Dict, Any
+from PIL import Image
+
+try:
+    import docker
+    from docker.errors import DockerException, ContainerError, ImageNotFound
+    from docker.types import Mount
+    DOCKER_AVAILABLE = True
+except ImportError:
+    DOCKER_AVAILABLE = False
+    print("WARNING: Docker library not available. Install with: pip install docker")
+
+from security_config import (
+    DOCKER_CONFIG, 
+    SANDBOX_LIMITS,
+    CodeValidator
+)
+
+
+class DockerGameExecutor:
+    """Executes pygame code in a secure Docker container"""
+    
+    # Class-level Docker client
+    _docker_client = None
+    
+    @classmethod
+    def get_docker_client(cls):
+        """Get or create Docker client"""
+        if not DOCKER_AVAILABLE:
+            raise RuntimeError("Docker library not installed")
+            
+        if cls._docker_client is None:
+            try:
+                cls._docker_client = docker.from_env()
+                # Test connection
+                cls._docker_client.ping()
+            except DockerException as e:
+                raise RuntimeError(f"Failed to connect to Docker daemon: {e}. Is Docker running?")
+        return cls._docker_client
+    
+    def __init__(self, session_id: str, timeout: int = None):
+        """
+        Initialize the Docker game executor
+        
+        Args:
+            session_id: Unique session identifier
+            timeout: Maximum execution time in seconds (default from config)
+        """
+        self.session_id = session_id
+        self.container = None
+        self.running = False
+        self.frame_queue = queue.Queue(maxsize=10)
+        self.temp_dir = None
+        self.timeout = timeout or DOCKER_CONFIG['timeout']
+        self.start_time = None
+        self.cleanup_lock = threading.Lock()
+        self.monitor_thread = None
+        self.output_thread = None
+        
+        # Get Docker client
+        try:
+            self.client = self.get_docker_client()
+        except RuntimeError as e:
+            print(f"Docker initialization failed: {e}")
+            raise
+    
+    def execute(self, code: str) -> None:
+        """
+        Execute pygame code in a secure Docker container
+        
+        Args:
+            code: Python code to execute
+            
+        Raises:
+            ValueError: If code validation fails
+            RuntimeError: If container execution fails
+        """
+        # Validate code for security
+        is_valid, error_msg = CodeValidator.validate_code(code)
+        if not is_valid:
+            raise ValueError(f"Code validation failed: {error_msg}")
+        
+        try:
+            self.running = True
+            self.start_time = time.time()
+            
+            # Create temporary directory for code
+            self.temp_dir = tempfile.mkdtemp(prefix=f"game_{self.session_id}_")
+            
+            # Write the game code to a file
+            game_file = os.path.join(self.temp_dir, "user_game.py")
+            with open(game_file, 'w') as f:
+                f.write(self._wrap_code_with_template(code))
+            
+            # Ensure Docker image is built
+            self._ensure_image_built()
+            
+            # Run container with security constraints
+            self._run_container()
+            
+            # Start monitoring threads
+            self._start_monitoring()
+            
+        except Exception as e:
+            print(f"Error executing game: {e}")
+            self.running = False
+            self._cleanup()
+            raise
+    
+    def _wrap_code_with_template(self, code: str) -> str:
+        """Wrap user code with security template"""
+        template = '''
+import sys
+import os
+import json
+import base64
+import signal
+import time
+import pygame
 from io import BytesIO
 from PIL import Image
+
+# Security: Set resource limits and timeout
+MAX_EXECUTION_TIME = {timeout}
+START_TIME = time.time()
+FRAME_COUNT = 0
+CAPTURE_INTERVAL = 2
+
+def timeout_handler(signum, frame):
+    """Handle timeout signal"""
+    print("GAME_TIMEOUT: Execution time limit reached", file=sys.stderr)
+    pygame.quit()
+    sys.exit(1)
+
+# Set up timeout handler (Unix/Linux only)
+if hasattr(signal, 'SIGALRM'):
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(MAX_EXECUTION_TIME)
+
+def capture_frame(screen):
+    """Capture and send frame data"""
+    global FRAME_COUNT
+    FRAME_COUNT += 1
+    
+    if FRAME_COUNT % CAPTURE_INTERVAL != 0:
+        return
+    
+    try:
+        # Convert pygame surface to PIL Image
+        width, height = screen.get_size()
+        pygame_str = pygame.image.tostring(screen, 'RGB')
+        img = Image.frombytes('RGB', (width, height), pygame_str)
+        
+        # Resize if too large
+        if width > 800 or height > 600:
+            img.thumbnail((800, 600), Image.Resampling.LANCZOS)
+        
+        # Save as JPEG
+        buffer = BytesIO()
+        img.save(buffer, format='JPEG', quality=75, optimize=True)
+        img_data = buffer.getvalue()
+        
+        # Send frame data
+        frame_data = {{
+            'type': 'frame',
+            'data': base64.b64encode(img_data).decode(),
+            'frame': FRAME_COUNT,
+            'timestamp': time.time() - START_TIME
+        }}
+        print(f"FRAME:{{json.dumps(frame_data)}}", flush=True)
+        
+    except Exception as e:
+        print(f"CAPTURE_ERROR:{{str(e)}}", file=sys.stderr, flush=True)
+
+# Initialize pygame
+pygame.init()
+
+# Monkey patch pygame display functions
+_original_flip = pygame.display.flip
+_original_update = pygame.display.update
+
+def wrapped_flip():
+    """Wrapped pygame.display.flip with frame capture"""
+    try:
+        # Try to find screen variable
+        frame = sys._getframe(1)
+        if 'screen' in frame.f_locals:
+            capture_frame(frame.f_locals['screen'])
+        elif 'screen' in frame.f_globals:
+            capture_frame(frame.f_globals['screen'])
+    except:
+        pass
+    _original_flip()
+
+def wrapped_update(*args, **kwargs):
+    """Wrapped pygame.display.update with frame capture"""
+    try:
+        # Try to find screen variable
+        frame = sys._getframe(1)
+        if 'screen' in frame.f_locals:
+            capture_frame(frame.f_locals['screen'])
+        elif 'screen' in frame.f_globals:
+            capture_frame(frame.f_globals['screen'])
+    except:
+        pass
+    _original_update(*args, **kwargs)
+
+pygame.display.flip = wrapped_flip
+pygame.display.update = wrapped_update
+
+# User code starts here
+try:
+    {code}
+except Exception as e:
+    print(f"GAME_ERROR: {{str(e)}}", file=sys.stderr)
+    import traceback
+    traceback.print_exc(file=sys.stderr)
+    sys.exit(1)
+'''
+        return template.format(timeout=self.timeout, code=code)
+    
+    def _ensure_image_built(self) -> None:
+        """Ensure Docker image is built"""
+        try:
+            self.client.images.get(DOCKER_CONFIG['image_name'])
+        except ImageNotFound:
+            print(f"Building Docker image {DOCKER_CONFIG['image_name']}...")
+            self._build_docker_image()
+    
+    def _build_docker_image(self) -> None:
+        """Build the Docker image if not present"""
+        dockerfile_path = os.path.join(os.path.dirname(__file__), 'Dockerfile.game-executor')
+        
+        if not os.path.exists(dockerfile_path):
+            raise FileNotFoundError(f"Dockerfile not found: {dockerfile_path}")
+        
+        try:
+            # Build the image
+            image, build_logs = self.client.images.build(
+                path=os.path.dirname(__file__),
+                dockerfile='Dockerfile.game-executor',
+                tag=DOCKER_CONFIG['image_name'],
+                rm=True,
+                forcerm=True
+            )
+            
+            for log in build_logs:
+                if 'stream' in log:
+                    print(log['stream'].strip())
+                    
+            print(f"Successfully built Docker image: {DOCKER_CONFIG['image_name']}")
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to build Docker image: {e}")
+    
+    def _run_container(self) -> None:
+        """Run the game in a Docker container with security constraints"""
+        try:
+            # Container configuration
+            container_config = {
+                'image': DOCKER_CONFIG['image_name'],
+                'command': [
+                    'xvfb-run',
+                    '-s', '-screen 0 800x600x24',
+                    '-f', '/tmp/.Xauthority',  # Use auth file (secure, no -ac flag)
+                    'python', '/tmp/game/user_game.py'
+                ],
+                'detach': True,
+                'name': f'game_{self.session_id}',
+                'network_mode': DOCKER_CONFIG['network_mode'],
+                'read_only': DOCKER_CONFIG['read_only'],
+                'mem_limit': DOCKER_CONFIG['memory_limit'],
+                'memswap_limit': DOCKER_CONFIG['memory_limit'],  # Prevent swap usage
+                'cpu_quota': int(DOCKER_CONFIG['cpu_quota'] * 100000),  # Convert to microseconds
+                'cpu_period': 100000,
+                'pids_limit': DOCKER_CONFIG['pids_limit'],
+                'security_opt': DOCKER_CONFIG['security_opts'],
+                'cap_drop': DOCKER_CONFIG['cap_drop'],
+                'tmpfs': DOCKER_CONFIG['tmpfs'],
+                'mounts': [
+                    Mount(
+                        target='/tmp/game',
+                        source=self.temp_dir,
+                        type='bind',
+                        read_only=False  # Allow writing to temp directory only
+                    )
+                ],
+                'environment': {
+                    'PYTHONDONTWRITEBYTECODE': '1',
+                    'PYTHONUNBUFFERED': '1',
+                    'DISPLAY': ':99',
+                    'SDL_VIDEODRIVER': 'x11',
+                    'SDL_AUDIODRIVER': 'dummy',
+                    'PYGAME_HIDE_SUPPORT_PROMPT': '1'
+                },
+                'user': 'gamerunner',  # Run as non-root user
+                'working_dir': '/tmp/game',
+                'auto_remove': False,  # Don't auto-remove, we'll clean up manually
+                'remove': False,
+                'stdin_open': False,
+                'tty': False
+            }
+            
+            # Create and start the container
+            self.container = self.client.containers.run(**container_config)
+            
+            print(f"Started container {self.container.name} for session {self.session_id}")
+            
+        except ContainerError as e:
+            raise RuntimeError(f"Container failed to start: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to run container: {e}")
+    
+    def _start_monitoring(self) -> None:
+        """Start threads to monitor container output and timeout"""
+        self.output_thread = threading.Thread(target=self._read_container_output)
+        self.monitor_thread = threading.Thread(target=self._monitor_timeout)
+        
+        self.output_thread.daemon = True
+        self.monitor_thread.daemon = True
+        
+        self.output_thread.start()
+        self.monitor_thread.start()
+    
+    def _read_container_output(self) -> None:
+        """Read output from the container"""
+        if not self.container:
+            return
+        
+        try:
+            # Stream logs from container
+            for log in self.container.logs(stream=True, follow=True):
+                if not self.running:
+                    break
+                
+                try:
+                    line = log.decode('utf-8').strip()
+                    
+                    # Check if it's a frame capture
+                    if line.startswith('FRAME:'):
+                        frame_data = json.loads(line[6:])
+                        img_data = base64.b64decode(frame_data['data'])
+                        img = Image.open(BytesIO(img_data))
+                        
+                        # Add to frame queue
+                        if not self.frame_queue.full():
+                            self.frame_queue.put(img)
+                    
+                    elif line.startswith('GAME_ERROR:'):
+                        print(f"Game error: {line[11:]}", file=sys.stderr)
+                    
+                    elif line.startswith('CAPTURE_ERROR:'):
+                        print(f"Capture error: {line[14:]}", file=sys.stderr)
+                    
+                    elif line.startswith('GAME_TIMEOUT:'):
+                        print(f"Game timeout: {line}", file=sys.stderr)
+                        self.stop()
+                    
+                    elif line:
+                        print(f"Game output: {line}")
+                        
+                except Exception as e:
+                    print(f"Error processing output: {e}")
+                    
+        except Exception as e:
+            print(f"Error reading container output: {e}")
+    
+    def _monitor_timeout(self) -> None:
+        """Monitor container execution time and kill if timeout exceeded"""
+        while self.running and self.container:
+            try:
+                # Reload container state
+                self.container.reload()
+                
+                # Check if container is still running
+                if self.container.status != 'running':
+                    print(f"Container {self.session_id} stopped with status: {self.container.status}")
+                    self.running = False
+                    break
+                
+                # Check timeout
+                elapsed = time.time() - self.start_time
+                if elapsed > self.timeout:
+                    print(f"Container {self.session_id} exceeded timeout of {self.timeout}s")
+                    self.stop()
+                    break
+                
+                time.sleep(1)
+                
+            except Exception as e:
+                print(f"Error monitoring container: {e}")
+                break
+    
+    def get_frame(self) -> Optional[Image.Image]:
+        """Get the next frame from the queue"""
+        try:
+            return self.frame_queue.get_nowait()
+        except queue.Empty:
+            return None
+    
+    def send_input(self, input_data: Dict[str, Any]) -> None:
+        """Send input to the game container (not implemented for Docker)"""
+        # Input handling would require a more complex setup with stdin piping
+        # For now, games will need to be self-contained
+        print(f"Input sending not supported in Docker mode: {input_data}")
+    
+    def stop(self) -> None:
+        """Stop the game execution and clean up"""
+        with self.cleanup_lock:
+            if not self.running:
+                return
+            
+            self.running = False
+            self._cleanup()
+    
+    def _cleanup(self) -> None:
+        """Clean up container and temporary files"""
+        print(f"Cleaning up session {self.session_id}...")
+        
+        # Stop and remove container
+        if self.container:
+            try:
+                self.container.stop(timeout=5)
+                self.container.remove(force=True)
+                print(f"Container {self.session_id} stopped and removed")
+            except Exception as e:
+                print(f"Error stopping container: {e}")
+                try:
+                    # Force remove if stop failed
+                    self.container.remove(force=True)
+                except:
+                    pass
+        
+        # Clean up temporary directory
+        if self.temp_dir and os.path.exists(self.temp_dir):
+            try:
+                shutil.rmtree(self.temp_dir)
+                print(f"Cleaned up temp directory: {self.temp_dir}")
+            except Exception as e:
+                print(f"Error cleaning temp directory: {e}")
+    
+    def is_running(self) -> bool:
+        """Check if the game is still running"""
+        return self.running
+
+
+# Fallback to original subprocess executor when Docker is not available
+import subprocess
 import signal
-import shutil
 import psutil
 import resource
 
+
 class GameExecutor:
-    """Executes pygame code in a subprocess with virtual display support"""
+    """Original subprocess-based executor - fallback when Docker not available"""
     
     def __init__(self, session_id, timeout=300):
         self.session_id = session_id
@@ -26,13 +478,41 @@ class GameExecutor:
         self.temp_dir = None
         self.xvfb_process = None
         self.display_num = None
-        self.timeout = timeout  # Maximum execution time in seconds
+        self.timeout = timeout
         self.start_time = None
         self.cleanup_lock = threading.Lock()
         self.xvfb_cleanup_done = False
         
+        # Try to use Docker if available
+        if DOCKER_AVAILABLE and os.environ.get('USE_DOCKER', 'true').lower() == 'true':
+            try:
+                # Try to create Docker executor
+                self._docker_executor = DockerGameExecutor(session_id, timeout)
+                self._use_docker = True
+                print(f"Using Docker executor for session {session_id}")
+                return
+            except Exception as e:
+                print(f"Failed to initialize Docker executor: {e}")
+                print("Falling back to subprocess executor (less secure)")
+                self._use_docker = False
+        else:
+            self._use_docker = False
+            
+        if not self._use_docker:
+            print(f"WARNING: Using subprocess executor for session {session_id} - less secure than Docker")
+    
     def execute(self, code):
-        """Execute pygame code in a subprocess with security constraints"""
+        """Execute pygame code"""
+        # If using Docker, delegate to Docker executor
+        if hasattr(self, '_use_docker') and self._use_docker:
+            return self._docker_executor.execute(code)
+        
+        # Otherwise, validate code and use subprocess (less secure)
+        is_valid, error_msg = CodeValidator.validate_code(code)
+        if not is_valid:
+            raise ValueError(f"Code validation failed: {error_msg}")
+        
+        # Original subprocess implementation (kept for compatibility)
         try:
             self.running = True
             self.start_time = time.time()
@@ -65,14 +545,17 @@ class GameExecutor:
             
             # Check if we can use a real display or need Xvfb
             if not os.environ.get('DISPLAY'):
-                # Start Xvfb (virtual display) if no display is available
+                # Start Xvfb (virtual display) with proper authentication
                 self.display_num = self._find_free_display()
                 try:
+                    # Create auth file for Xvfb (secure)
+                    auth_file = os.path.join(self.temp_dir, '.Xauthority')
+                    
                     self.xvfb_process = subprocess.Popen([
                         'Xvfb',
                         f':{self.display_num}',
                         '-screen', '0', '800x600x24',
-                        '-ac',  # Disable access control
+                        '-auth', auth_file,  # Use auth file instead of -ac
                         '+extension', 'GLX'  # Enable OpenGL extension
                     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     
@@ -91,6 +574,7 @@ class GameExecutor:
                 env = os.environ.copy()
                 env['DISPLAY'] = f':{self.display_num}'
                 env['SDL_VIDEODRIVER'] = 'x11'
+                env['XAUTHORITY'] = auth_file
             else:
                 # Use existing display
                 env = os.environ.copy()
@@ -100,11 +584,11 @@ class GameExecutor:
             env['SDL_AUDIODRIVER'] = 'dummy'
             
             # Set resource limits for security
-            env['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'  # Hide pygame welcome message
+            env['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
             
             # Run the game with resource limits
             self.process = subprocess.Popen(
-                [sys.executable, '-u', game_file],  # -u for unbuffered output
+                [sys.executable, '-u', game_file],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
@@ -141,12 +625,12 @@ class GameExecutor:
         # CPU time limit (soft, hard) in seconds
         resource.setrlimit(resource.RLIMIT_CPU, (self.timeout, self.timeout + 10))
         
-        # Memory limit (soft, hard) in bytes - 512MB
-        max_memory = 512 * 1024 * 1024
+        # Memory limit (soft, hard) in bytes - 256MB to match Docker
+        max_memory = 256 * 1024 * 1024
         resource.setrlimit(resource.RLIMIT_AS, (max_memory, max_memory))
         
-        # Limit number of processes
-        resource.setrlimit(resource.RLIMIT_NPROC, (10, 10))
+        # Limit number of processes to match Docker
+        resource.setrlimit(resource.RLIMIT_NPROC, (50, 50))
         
         # Limit number of open files
         resource.setrlimit(resource.RLIMIT_NOFILE, (50, 50))
@@ -155,7 +639,6 @@ class GameExecutor:
         """Monitor process execution time and kill if timeout exceeded"""
         while self.running and self.process:
             if self.process.poll() is not None:
-                # Process has ended
                 break
             
             elapsed = time.time() - self.start_time
@@ -166,73 +649,12 @@ class GameExecutor:
             
             time.sleep(1)
     
-    def _modify_code_for_headless(self, code):
-        """[DEPRECATED] This method is no longer used - template system is used instead"""
-        # This method is kept for backward compatibility but not used
-        capture_code = '''
-# Frame capture setup for streaming
-import os
-import sys
-import json
-import base64
-from io import BytesIO
-
-frame_count = 0
-CAPTURE_INTERVAL = 2  # Capture every 2 frames
-
-def capture_frame(screen):
-    global frame_count
-    frame_count += 1
-    if frame_count % CAPTURE_INTERVAL == 0:
-        try:
-            # Convert pygame surface to string buffer
-            pygame_str = pygame.image.tostring(screen, 'RGB')
-            width, height = screen.get_size()
-            
-            # Create PIL image from the buffer
-            from PIL import Image
-            img = Image.frombytes('RGB', (width, height), pygame_str)
-            
-            # Save to BytesIO buffer
-            buffer = BytesIO()
-            img.save(buffer, format='PNG', optimize=True, quality=85)
-            img_data = buffer.getvalue()
-            
-            # Send frame data to stdout as JSON
-            frame_data = {
-                'type': 'frame',
-                'data': base64.b64encode(img_data).decode(),
-                'frame': frame_count
-            }
-            print(f"FRAME:{json.dumps(frame_data)}", flush=True)
-        except Exception as e:
-            print(f"CAPTURE_ERROR:{str(e)}", file=sys.stderr, flush=True)
-
-'''
-        
-        # Find where pygame.display.flip() or pygame.display.update() is called
-        # and insert frame capture before it
-        lines = code.split('\n')
-        modified_lines = []
-        
-        # Add the capture code after pygame import
-        for i, line in enumerate(lines):
-            modified_lines.append(line)
-            if 'import pygame' in line and i == 0:
-                modified_lines.append(capture_code)
-            elif 'pygame.display.flip()' in line or 'pygame.display.update()' in line:
-                # Add frame capture before display update
-                indent = len(line) - len(line.lstrip())
-                modified_lines.insert(-1, ' ' * indent + 'capture_frame(screen)')
-        
-        return '\n'.join(modified_lines)
-    
     def _find_free_display(self):
         """Find a free X display number"""
         for display_num in range(99, 200):
             if not os.path.exists(f'/tmp/.X{display_num}-lock'):
                 return display_num
-        return 99  # Default to 99 if no free display found
+        return 99
     
     def _read_stdout(self):
         """Read stdout from the game process"""
@@ -247,11 +669,9 @@ def capture_frame(screen):
                 if line.startswith('FRAME:'):
                     try:
                         frame_data = json.loads(line[6:])
-                        # Decode the base64 image data
                         img_data = base64.b64decode(frame_data['data'])
                         img = Image.open(BytesIO(img_data))
                         
-                        # Add to frame queue
                         if not self.frame_queue.full():
                             self.frame_queue.put(img)
                     except Exception as e:
@@ -276,9 +696,11 @@ def capture_frame(screen):
     
     def send_input(self, input_data):
         """Send input to the game process"""
+        if hasattr(self, '_use_docker') and self._use_docker:
+            return self._docker_executor.send_input(input_data)
+        
         if self.process and self.process.poll() is None:
             try:
-                # Convert input data to JSON and send to stdin
                 input_json = json.dumps(input_data) + '\n'
                 self.process.stdin.write(input_json.encode())
                 self.process.stdin.flush()
@@ -287,6 +709,9 @@ def capture_frame(screen):
     
     def get_frame(self):
         """Get the latest frame from the queue"""
+        if hasattr(self, '_use_docker') and self._use_docker:
+            return self._docker_executor.get_frame()
+        
         try:
             return self.frame_queue.get_nowait()
         except queue.Empty:
@@ -294,25 +719,25 @@ def capture_frame(screen):
     
     def stop(self):
         """Stop the game execution with proper cleanup"""
+        if hasattr(self, '_use_docker') and self._use_docker:
+            return self._docker_executor.stop()
+        
         with self.cleanup_lock:
             if not self.running:
-                return  # Already stopped
+                return
             
             self.running = False
             
             # Stop the process
             if self.process:
                 try:
-                    # Try graceful termination first
                     self.process.terminate()
                     self.process.wait(timeout=2)
                 except subprocess.TimeoutExpired:
-                    # Force kill if it doesn't stop
                     try:
                         self.process.kill()
                         self.process.wait(timeout=1)
                     except:
-                        # If kill also fails, try using psutil
                         try:
                             p = psutil.Process(self.process.pid)
                             p.kill()
@@ -321,12 +746,10 @@ def capture_frame(screen):
                 except Exception as e:
                     print(f"Error stopping process: {e}")
             
-            # Clean up resources
             self._cleanup()
     
     def _cleanup(self):
         """Clean up resources with proper error handling"""
-        # Prevent double cleanup
         if self.xvfb_cleanup_done:
             return
         
@@ -376,2459 +799,623 @@ def capture_frame(screen):
     
     def is_running(self):
         """Check if the game is still running"""
+        if hasattr(self, '_use_docker') and self._use_docker:
+            return self._docker_executor.is_running()
+        
         if self.process:
             return self.process.poll() is None
         return False
 
 
+# Game compiler for generating code templates
 class GameCompiler:
-    """Compiles visual components into pygame code"""
+    """Compiles visual components into executable Python code"""
     
     @staticmethod
-    def compile(components, game_type='platformer'):
-        """Compile components into executable pygame code"""
-        
-        # Different templates for different game types
-        templates = {
-            'platformer': GameCompiler._platformer_template,
-            'puzzle': GameCompiler._puzzle_template,
-            'racing': GameCompiler._racing_template,
-            'rpg': GameCompiler._rpg_template,
-            'space': GameCompiler._space_template,
-            'dungeon': GameCompiler._dungeon_template
-        }
-        
-        template_func = templates.get(game_type, GameCompiler._default_template)
-        return template_func(components)
+    def compile(components: list, game_type: str) -> str:
+        """Generate Python pygame code from components"""
+        if game_type == 'platformer':
+            return GameCompiler._generate_platformer_template()
+        elif game_type == 'puzzle':
+            return GameCompiler._generate_puzzle_template()
+        elif game_type == 'racing':
+            return GameCompiler._generate_racing_template()
+        elif game_type == 'rpg':
+            return GameCompiler._generate_rpg_template()
+        elif game_type == 'space':
+            return GameCompiler._generate_space_template()
+        else:
+            return GameCompiler._generate_basic_template()
     
     @staticmethod
-    def _default_template(components):
-        """Default game template"""
-        code = '''import pygame
+    def _generate_basic_template() -> str:
+        """Generate basic pygame template"""
+        return '''
+import pygame
 import sys
-import random
-import math
 
 # Initialize Pygame
 pygame.init()
 
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("My Game")
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
 
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Visual Game")
-
-# Clock for controlling frame rate
+# Game clock
 clock = pygame.time.Clock()
 
-# Game objects
-sprites = []
-
-'''
-        
-        # Add sprite classes based on components
-        for component in components:
-            if component.get('type') == 'sprite':
-                code += GameCompiler._generate_sprite_code(component)
-        
-        # Add main game loop
-        code += '''
-# Main game loop
+# Game loop
 running = True
 while running:
-    # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-    
-    # Update
-    keys = pygame.key.get_pressed()
-    for sprite in sprites:
-        sprite.update(keys)
-    
-    # Draw
-    screen.fill(BLACK)
-    for sprite in sprites:
-        sprite.draw(screen)
-    
-    # Update display
-    pygame.display.flip()
-    clock.tick(FPS)
-
-# Quit
-pygame.quit()
-sys.exit()
-'''
-        return code
-    
-    @staticmethod
-    def _generate_sprite_code(component):
-        """Generate code for a sprite component"""
-        props = component.get('props', {})
-        sprite_id = component.get('id', 'sprite_' + str(random.randint(1000, 9999)))
-        
-        code = f'''
-class {sprite_id}(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.rect = pygame.Rect({props.get('x', 100)}, {props.get('y', 100)}, {props.get('width', 50)}, {props.get('height', 50)})
-        self.color = {props.get('color', 'RED')}
-        self.speed = {props.get('speed', 5)}
-        self.vel_x = 0
-        self.vel_y = 0
-    
-    def update(self, keys):
-        # Basic movement
-        if keys[pygame.K_LEFT]:
-            self.rect.x -= self.speed
-        if keys[pygame.K_RIGHT]:
-            self.rect.x += self.speed
-        if keys[pygame.K_UP]:
-            self.rect.y -= self.speed
-        if keys[pygame.K_DOWN]:
-            self.rect.y += self.speed
-        
-        # Keep on screen
-        self.rect.x = max(0, min(self.rect.x, SCREEN_WIDTH - self.rect.width))
-        self.rect.y = max(0, min(self.rect.y, SCREEN_HEIGHT - self.rect.height))
-    
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-
-# Create sprite instance
-{sprite_id.lower()}_instance = {sprite_id}()
-sprites.append({sprite_id.lower()}_instance)
-
-'''
-        return code
-    
-    @staticmethod
-    def _platformer_template(components):
-        """Platformer game template"""
-        # TODO: Implement platformer-specific template
-        return GameCompiler._default_template(components)
-    
-    @staticmethod
-    def _puzzle_template(components):
-        """Puzzle game template with match-3 mechanics"""
-        code = '''import pygame
-import sys
-import random
-import math
-import time
-
-# Initialize Pygame
-pygame.init()
-
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
-GRID_ROWS = 8
-GRID_COLS = 8
-TILE_SIZE = 64
-GRID_OFFSET_X = (SCREEN_WIDTH - GRID_COLS * TILE_SIZE) // 2
-GRID_OFFSET_Y = (SCREEN_HEIGHT - GRID_ROWS * TILE_SIZE) // 2 + 50
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-PURPLE = (255, 0, 255)
-ORANGE = (255, 165, 0)
-CYAN = (0, 255, 255)
-GRAY = (128, 128, 128)
-DARK_GRAY = (64, 64, 64)
-
-# Puzzle piece colors
-PIECE_COLORS = [RED, GREEN, BLUE, YELLOW, PURPLE, ORANGE]
-PIECE_TYPES = ["gem", "star", "diamond", "circle", "square", "triangle"]
-
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Puzzle Game - Match 3")
-
-# Clock for controlling frame rate
-clock = pygame.time.Clock()
-
-# Fonts
-font_small = pygame.font.Font(None, 24)
-font_medium = pygame.font.Font(None, 36)
-font_large = pygame.font.Font(None, 48)
-
-# Game State
-class GameState:
-    def __init__(self):
-        self.score = 0
-        self.moves = 0
-        self.level = 1
-        self.time_limit = 120  # seconds
-        self.start_time = time.time()
-        self.combo_multiplier = 1
-        self.selected_tile = None
-        self.animating = False
-        self.game_over = False
-        self.paused = False
-        self.hint_available = True
-        self.power_ups = {"bomb": 3, "shuffle": 2, "time_freeze": 1}
-        
-    def add_score(self, points):
-        self.score += points * self.combo_multiplier
-        if self.combo_multiplier > 1:
-            self.combo_multiplier = min(self.combo_multiplier + 0.5, 5.0)
-    
-    def reset_combo(self):
-        self.combo_multiplier = 1
-    
-    def get_time_remaining(self):
-        if self.paused:
-            return self.time_limit
-        elapsed = time.time() - self.start_time
-        return max(0, self.time_limit - int(elapsed))
-
-# Puzzle Piece
-class PuzzlePiece:
-    def __init__(self, row, col, piece_type):
-        self.row = row
-        self.col = col
-        self.piece_type = piece_type
-        self.color = PIECE_COLORS[piece_type]
-        self.x = GRID_OFFSET_X + col * TILE_SIZE
-        self.y = GRID_OFFSET_Y + row * TILE_SIZE
-        self.target_x = self.x
-        self.target_y = self.y
-        self.selected = False
-        self.matched = False
-        self.falling = False
-        self.special = None  # "bomb", "line_clear", "color_change"
-        
-    def update(self):
-        # Smooth movement animation
-        if self.x != self.target_x:
-            diff = self.target_x - self.x
-            self.x += diff * 0.2
-            if abs(diff) < 1:
-                self.x = self.target_x
-        
-        if self.y != self.target_y:
-            diff = self.target_y - self.y
-            self.y += diff * 0.2
-            if abs(diff) < 1:
-                self.y = self.target_y
-    
-    def draw(self, screen):
-        # Draw piece
-        if self.matched:
-            pygame.draw.rect(screen, WHITE, (self.x + 5, self.y + 5, TILE_SIZE - 10, TILE_SIZE - 10))
-        else:
-            pygame.draw.rect(screen, self.color, (self.x + 5, self.y + 5, TILE_SIZE - 10, TILE_SIZE - 10))
-            pygame.draw.rect(screen, BLACK, (self.x + 5, self.y + 5, TILE_SIZE - 10, TILE_SIZE - 10), 2)
-        
-        # Draw selection highlight
-        if self.selected:
-            pygame.draw.rect(screen, WHITE, (self.x, self.y, TILE_SIZE, TILE_SIZE), 3)
-        
-        # Draw special power-up indicator
-        if self.special:
-            text = font_small.render(self.special[0].upper(), True, WHITE)
-            screen.blit(text, (self.x + TILE_SIZE//2 - 8, self.y + TILE_SIZE//2 - 8))
-    
-    def set_position(self, row, col):
-        self.row = row
-        self.col = col
-        self.target_x = GRID_OFFSET_X + col * TILE_SIZE
-        self.target_y = GRID_OFFSET_Y + row * TILE_SIZE
-
-# Puzzle Grid
-class PuzzleGrid:
-    def __init__(self, rows, cols):
-        self.rows = rows
-        self.cols = cols
-        self.grid = [[None for _ in range(cols)] for _ in range(rows)]
-        self.generate_initial_grid()
-        
-    def generate_initial_grid(self):
-        # Generate initial grid without matches
-        for row in range(self.rows):
-            for col in range(self.cols):
-                valid_types = list(range(len(PIECE_COLORS)))
-                
-                # Check horizontal matches
-                if col >= 2:
-                    if (self.grid[row][col-1] and self.grid[row][col-2] and
-                        self.grid[row][col-1].piece_type == self.grid[row][col-2].piece_type):
-                        if self.grid[row][col-1].piece_type in valid_types:
-                            valid_types.remove(self.grid[row][col-1].piece_type)
-                
-                # Check vertical matches
-                if row >= 2:
-                    if (self.grid[row-1][col] and self.grid[row-2][col] and
-                        self.grid[row-1][col].piece_type == self.grid[row-2][col].piece_type):
-                        if self.grid[row-1][col].piece_type in valid_types:
-                            valid_types.remove(self.grid[row-1][col].piece_type)
-                
-                piece_type = random.choice(valid_types) if valid_types else 0
-                self.grid[row][col] = PuzzlePiece(row, col, piece_type)
-    
-    def swap_pieces(self, piece1, piece2):
-        # Swap two pieces
-        row1, col1 = piece1.row, piece1.col
-        row2, col2 = piece2.row, piece2.col
-        
-        self.grid[row1][col1], self.grid[row2][col2] = self.grid[row2][col2], self.grid[row1][col1]
-        
-        piece1.set_position(row2, col2)
-        piece2.set_position(row1, col1)
-    
-    def find_matches(self):
-        matches = []
-        
-        # Check horizontal matches
-        for row in range(self.rows):
-            for col in range(self.cols - 2):
-                if self.grid[row][col] and self.grid[row][col+1] and self.grid[row][col+2]:
-                    if (self.grid[row][col].piece_type == self.grid[row][col+1].piece_type == 
-                        self.grid[row][col+2].piece_type):
-                        match = [(row, col), (row, col+1), (row, col+2)]
-                        # Extend match if possible
-                        k = col + 3
-                        while k < self.cols and self.grid[row][k] and \
-                              self.grid[row][k].piece_type == self.grid[row][col].piece_type:
-                            match.append((row, k))
-                            k += 1
-                        matches.append(match)
-        
-        # Check vertical matches
-        for col in range(self.cols):
-            for row in range(self.rows - 2):
-                if self.grid[row][col] and self.grid[row+1][col] and self.grid[row+2][col]:
-                    if (self.grid[row][col].piece_type == self.grid[row+1][col].piece_type == 
-                        self.grid[row+2][col].piece_type):
-                        match = [(row, col), (row+1, col), (row+2, col)]
-                        # Extend match if possible
-                        k = row + 3
-                        while k < self.rows and self.grid[k][col] and \
-                              self.grid[k][col].piece_type == self.grid[row][col].piece_type:
-                            match.append((k, col))
-                            k += 1
-                        matches.append(match)
-        
-        return matches
-    
-    def remove_matches(self, matches):
-        removed_pieces = set()
-        for match in matches:
-            for row, col in match:
-                if (row, col) not in removed_pieces:
-                    self.grid[row][col].matched = True
-                    removed_pieces.add((row, col))
-        
-        # Clear matched pieces after animation
-        for row, col in removed_pieces:
-            self.grid[row][col] = None
-        
-        return len(removed_pieces)
-    
-    def apply_gravity(self):
-        # Make pieces fall down
-        moved = False
-        for col in range(self.cols):
-            for row in range(self.rows - 1, -1, -1):
-                if self.grid[row][col] is None:
-                    # Find piece above to fall
-                    for above_row in range(row - 1, -1, -1):
-                        if self.grid[above_row][col] is not None:
-                            self.grid[row][col] = self.grid[above_row][col]
-                            self.grid[row][col].set_position(row, col)
-                            self.grid[above_row][col] = None
-                            moved = True
-                            break
-        
-        # Fill empty spaces at top
-        for col in range(self.cols):
-            for row in range(self.rows):
-                if self.grid[row][col] is None:
-                    piece_type = random.choice(range(len(PIECE_COLORS)))
-                    self.grid[row][col] = PuzzlePiece(row, col, piece_type)
-                    self.grid[row][col].y = GRID_OFFSET_Y - TILE_SIZE  # Start above grid
-                    moved = True
-        
-        return moved
-    
-    def has_valid_moves(self):
-        # Check if any valid moves exist
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col]:
-                    # Check swap with right
-                    if col < self.cols - 1 and self.grid[row][col + 1]:
-                        self.swap_pieces(self.grid[row][col], self.grid[row][col + 1])
-                        if self.find_matches():
-                            self.swap_pieces(self.grid[row][col + 1], self.grid[row][col])
-                            return True
-                        self.swap_pieces(self.grid[row][col + 1], self.grid[row][col])
-                    
-                    # Check swap with bottom
-                    if row < self.rows - 1 and self.grid[row + 1][col]:
-                        self.swap_pieces(self.grid[row][col], self.grid[row + 1][col])
-                        if self.find_matches():
-                            self.swap_pieces(self.grid[row + 1][col], self.grid[row][col])
-                            return True
-                        self.swap_pieces(self.grid[row + 1][col], self.grid[row][col])
-        
-        return False
-    
-    def shuffle(self):
-        # Shuffle all pieces
-        pieces = []
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col]:
-                    pieces.append(self.grid[row][col].piece_type)
-        
-        random.shuffle(pieces)
-        
-        idx = 0
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col]:
-                    self.grid[row][col].piece_type = pieces[idx]
-                    self.grid[row][col].color = PIECE_COLORS[pieces[idx]]
-                    idx += 1
-    
-    def update(self):
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col]:
-                    self.grid[row][col].update()
-    
-    def draw(self, screen):
-        # Draw grid background
-        for row in range(self.rows):
-            for col in range(self.cols):
-                x = GRID_OFFSET_X + col * TILE_SIZE
-                y = GRID_OFFSET_Y + row * TILE_SIZE
-                pygame.draw.rect(screen, DARK_GRAY, (x, y, TILE_SIZE, TILE_SIZE), 1)
-        
-        # Draw pieces
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col]:
-                    self.grid[row][col].draw(screen)
-
-# Create game objects
-game_state = GameState()
-grid = PuzzleGrid(GRID_ROWS, GRID_COLS)
-
-# Main game loop
-running = True
-while running:
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-            elif event.key == pygame.K_p:
-                game_state.paused = not game_state.paused
-            elif event.key == pygame.K_h and game_state.hint_available:
-                # Show hint (highlight a valid move)
-                game_state.hint_available = False
-            elif event.key == pygame.K_s and game_state.power_ups["shuffle"] > 0:
-                grid.shuffle()
-                game_state.power_ups["shuffle"] -= 1
-        
-        elif event.type == pygame.MOUSEBUTTONDOWN and not game_state.paused:
-            if not game_state.animating:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                
-                # Check if click is within grid
-                if (GRID_OFFSET_X <= mouse_x < GRID_OFFSET_X + GRID_COLS * TILE_SIZE and
-                    GRID_OFFSET_Y <= mouse_y < GRID_OFFSET_Y + GRID_ROWS * TILE_SIZE):
-                    
-                    col = (mouse_x - GRID_OFFSET_X) // TILE_SIZE
-                    row = (mouse_y - GRID_OFFSET_Y) // TILE_SIZE
-                    
-                    if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
-                        clicked_piece = grid.grid[row][col]
-                        
-                        if clicked_piece:
-                            if game_state.selected_tile is None:
-                                # Select first tile
-                                game_state.selected_tile = clicked_piece
-                                clicked_piece.selected = True
-                            elif game_state.selected_tile == clicked_piece:
-                                # Deselect if same tile
-                                clicked_piece.selected = False
-                                game_state.selected_tile = None
-                            else:
-                                # Try to swap tiles
-                                piece1 = game_state.selected_tile
-                                piece2 = clicked_piece
-                                
-                                # Check if adjacent
-                                if (abs(piece1.row - piece2.row) == 1 and piece1.col == piece2.col) or \
-                                   (abs(piece1.col - piece2.col) == 1 and piece1.row == piece2.row):
-                                    
-                                    # Swap and check for matches
-                                    grid.swap_pieces(piece1, piece2)
-                                    matches = grid.find_matches()
-                                    
-                                    if matches:
-                                        # Valid move
-                                        game_state.moves += 1
-                                        pieces_removed = grid.remove_matches(matches)
-                                        game_state.add_score(pieces_removed * 10)
-                                        game_state.animating = True
-                                    else:
-                                        # Invalid move, swap back
-                                        grid.swap_pieces(piece2, piece1)
-                                        game_state.reset_combo()
-                                    
-                                    piece1.selected = False
-                                    game_state.selected_tile = None
-                                else:
-                                    # Not adjacent, select new tile
-                                    piece1.selected = False
-                                    piece2.selected = True
-                                    game_state.selected_tile = piece2
-    
-    # Update
-    if not game_state.paused:
-        grid.update()
-        
-        # Check for gravity and new matches
-        if game_state.animating:
-            if grid.apply_gravity():
-                pass  # Still falling
-            else:
-                # Check for chain reactions
-                matches = grid.find_matches()
-                if matches:
-                    pieces_removed = grid.remove_matches(matches)
-                    game_state.add_score(pieces_removed * 15)  # Bonus for chains
-                else:
-                    game_state.animating = False
-                    game_state.reset_combo()
-                    
-                    # Check for game over conditions
-                    if not grid.has_valid_moves():
-                        grid.shuffle()
-        
-        # Check time limit
-        if game_state.get_time_remaining() <= 0:
-            game_state.game_over = True
-    
-    # Draw
-    screen.fill(BLACK)
-    
-    # Draw game info
-    score_text = font_medium.render(f"Score: {game_state.score}", True, WHITE)
-    screen.blit(score_text, (10, 10))
-    
-    moves_text = font_medium.render(f"Moves: {game_state.moves}", True, WHITE)
-    screen.blit(moves_text, (10, 50))
-    
-    time_text = font_medium.render(f"Time: {game_state.get_time_remaining()}s", True, WHITE)
-    screen.blit(time_text, (SCREEN_WIDTH - 150, 10))
-    
-    level_text = font_medium.render(f"Level: {game_state.level}", True, WHITE)
-    screen.blit(level_text, (SCREEN_WIDTH - 150, 50))
-    
-    if game_state.combo_multiplier > 1:
-        combo_text = font_small.render(f"Combo x{game_state.combo_multiplier:.1f}", True, YELLOW)
-        screen.blit(combo_text, (SCREEN_WIDTH // 2 - 50, 10))
-    
-    # Draw power-ups
-    power_up_y = 100
-    for power_up, count in game_state.power_ups.items():
-        text = font_small.render(f"{power_up}: {count}", True, WHITE)
-        screen.blit(text, (SCREEN_WIDTH - 150, power_up_y))
-        power_up_y += 25
-    
-    # Draw grid
-    grid.draw(screen)
-    
-    # Draw game over or pause screen
-    if game_state.game_over:
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-        overlay.set_alpha(128)
-        overlay.fill(BLACK)
-        screen.blit(overlay, (0, 0))
-        
-        game_over_text = font_large.render("GAME OVER", True, WHITE)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 - 50))
-        
-        final_score_text = font_medium.render(f"Final Score: {game_state.score}", True, WHITE)
-        screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 10))
-    
-    elif game_state.paused:
-        pause_text = font_large.render("PAUSED", True, WHITE)
-        screen.blit(pause_text, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
-    
-    # Update display
-    pygame.display.flip()
-    clock.tick(FPS)
-
-# Quit
-pygame.quit()
-sys.exit()
-'''
-        return code
-    
-    @staticmethod
-    def _racing_template(components):
-        """Racing game template with full racing mechanics"""
-        code = '''import pygame
-import sys
-import random
-import math
-import json
-
-# Initialize Pygame
-pygame.init()
-
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
-TRACK_WIDTH = 600
-TRACK_HEIGHT = 500
-TRACK_BORDER = 40
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-GRAY = (128, 128, 128)
-DARK_GRAY = (64, 64, 64)
-ORANGE = (255, 165, 0)
-CYAN = (0, 255, 255)
-
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Racing Game - Championship Mode")
-
-# Clock for controlling frame rate
-clock = pygame.time.Clock()
-
-# Fonts
-font_small = pygame.font.Font(None, 24)
-font_medium = pygame.font.Font(None, 36)
-font_large = pygame.font.Font(None, 48)
-
-# Vehicle Types
-class VehicleType:
-    SPORTS_CAR = "Sports Car"
-    FORMULA = "Formula"
-    RALLY_CAR = "Rally Car"
-    MOTORCYCLE = "Motorcycle"
-    GO_KART = "Go-Kart"
-    TRUCK = "Truck"
-
-# Track Environments
-class TrackEnvironment:
-    CITY = "City Circuit"
-    DESERT = "Desert Rally"
-    MOUNTAIN = "Mountain Pass"
-    BEACH = "Beach Sprint"
-    FOREST = "Forest Trail"
-    SNOW = "Snow Track"
-
-# Weather Effects
-class Weather:
-    CLEAR = "Clear"
-    RAIN = "Rain"
-    FOG = "Fog"
-    NIGHT = "Night"
-    STORM = "Storm"
-
-# Vehicle Class
-class Vehicle:
-    def __init__(self, vehicle_type=VehicleType.SPORTS_CAR, x=400, y=500):
-        self.vehicle_type = vehicle_type
-        self.x = x
-        self.y = y
-        self.angle = 0
-        self.speed = 0
-        self.vel_x = 0
-        self.vel_y = 0
-        self.width = 30
-        self.height = 50
-        
-        # Vehicle stats based on type
-        if vehicle_type == VehicleType.SPORTS_CAR:
-            self.max_speed = 12
-            self.acceleration = 0.5
-            self.handling = 7
-            self.braking = 0.8
-            self.drift_factor = 0.85
-            self.color = RED
-        elif vehicle_type == VehicleType.FORMULA:
-            self.max_speed = 15
-            self.acceleration = 0.7
-            self.handling = 9
-            self.braking = 1.0
-            self.drift_factor = 0.9
-            self.color = BLUE
-        elif vehicle_type == VehicleType.RALLY_CAR:
-            self.max_speed = 10
-            self.acceleration = 0.6
-            self.handling = 8
-            self.braking = 0.7
-            self.drift_factor = 0.75
-            self.color = GREEN
-        elif vehicle_type == VehicleType.MOTORCYCLE:
-            self.max_speed = 14
-            self.acceleration = 0.8
-            self.handling = 10
-            self.braking = 0.9
-            self.drift_factor = 0.95
-            self.width = 20
-            self.height = 40
-            self.color = ORANGE
-        elif vehicle_type == VehicleType.GO_KART:
-            self.max_speed = 8
-            self.acceleration = 0.4
-            self.handling = 10
-            self.braking = 0.6
-            self.drift_factor = 0.7
-            self.width = 25
-            self.height = 35
-            self.color = YELLOW
-        else:  # Truck
-            self.max_speed = 7
-            self.acceleration = 0.3
-            self.handling = 5
-            self.braking = 0.5
-            self.drift_factor = 0.8
-            self.width = 40
-            self.height = 60
-            self.color = DARK_GRAY
-        
-        # Nitro/Boost system
-        self.nitro = 100
-        self.max_nitro = 100
-        self.nitro_active = False
-        self.nitro_boost = 1.5
-        
-        # Damage system
-        self.damage = 0
-        self.max_damage = 100
-        
-        # Drifting
-        self.is_drifting = False
-        self.drift_angle = 0
-        self.drift_score = 0
-        
-        # Lap tracking
-        self.lap = 1
-        self.checkpoint = 0
-        self.lap_times = []
-        self.best_lap = float('inf')
-        self.race_time = 0
-        
-    def update(self, keys, dt=1):
-        # Handle input
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.accelerate()
-        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.brake()
-        else:
-            self.coast()
-        
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.turn_left()
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.turn_right()
-        
-        # Nitro boost
-        if keys[pygame.K_SPACE] and self.nitro > 0:
-            self.activate_nitro()
-        else:
-            self.nitro_active = False
-        
-        # Update physics
-        self.update_physics(dt)
-        
-        # Keep on track
-        self.x = max(50, min(self.x, SCREEN_WIDTH - 50))
-        self.y = max(50, min(self.y, SCREEN_HEIGHT - 50))
-    
-    def accelerate(self):
-        boost = self.nitro_boost if self.nitro_active else 1.0
-        self.speed = min(self.speed + self.acceleration * boost, self.max_speed * boost)
-    
-    def brake(self):
-        self.speed = max(self.speed - self.braking, -self.max_speed / 2)
-        if abs(self.speed) > 5 and abs(self.angle) > 15:
-            self.is_drifting = True
-    
-    def coast(self):
-        if self.speed > 0:
-            self.speed = max(0, self.speed - 0.2)
-        elif self.speed < 0:
-            self.speed = min(0, self.speed + 0.2)
-        self.is_drifting = False
-    
-    def turn_left(self):
-        if abs(self.speed) > 0.5:
-            turn_rate = self.handling * (1 - abs(self.speed) / (self.max_speed * 2))
-            self.angle -= turn_rate
-    
-    def turn_right(self):
-        if abs(self.speed) > 0.5:
-            turn_rate = self.handling * (1 - abs(self.speed) / (self.max_speed * 2))
-            self.angle += turn_rate
-    
-    def activate_nitro(self):
-        if self.nitro > 0:
-            self.nitro_active = True
-            self.nitro -= 2
-        else:
-            self.nitro_active = False
-    
-    def update_physics(self, dt):
-        # Convert angle to radians
-        rad = math.radians(self.angle)
-        
-        # Calculate velocity components
-        self.vel_x = math.sin(rad) * self.speed
-        self.vel_y = -math.cos(rad) * self.speed
-        
-        # Apply drift physics
-        if self.is_drifting:
-            drift_factor = self.drift_factor
-            self.drift_angle = self.angle + random.randint(-10, 10)
-            self.drift_score += abs(self.speed) * 0.1
-        else:
-            drift_factor = 1.0
-            self.drift_angle = self.angle
-        
-        # Update position
-        self.x += self.vel_x * drift_factor * dt
-        self.y += self.vel_y * drift_factor * dt
-        
-        # Regenerate nitro slowly
-        self.nitro = min(self.nitro + 0.1, self.max_nitro)
-    
-    def draw(self, screen):
-        # Draw car as a rotated rectangle
-        cos_a = math.cos(math.radians(self.angle))
-        sin_a = math.sin(math.radians(self.angle))
-        
-        # Calculate corners of the vehicle
-        corners = []
-        for dx, dy in [(-self.width/2, -self.height/2), 
-                       (self.width/2, -self.height/2),
-                       (self.width/2, self.height/2),
-                       (-self.width/2, self.height/2)]:
-            rx = dx * cos_a - dy * sin_a
-            ry = dx * sin_a + dy * cos_a
-            corners.append((self.x + rx, self.y + ry))
-        
-        # Draw vehicle
-        pygame.draw.polygon(screen, self.color, corners)
-        
-        # Draw windshield
-        windshield = [corners[0], corners[1], 
-                     ((corners[0][0] + corners[1][0])/2, 
-                      (corners[0][1] + corners[1][1])/2 + 10)]
-        pygame.draw.polygon(screen, BLACK, windshield)
-        
-        # Draw nitro effect
-        if self.nitro_active:
-            # Draw boost flames
-            flame_base = ((corners[2][0] + corners[3][0])/2, 
-                         (corners[2][1] + corners[3][1])/2)
-            flame_tip = (flame_base[0] - sin_a * 30, 
-                        flame_base[1] + cos_a * 30)
-            pygame.draw.line(screen, YELLOW, flame_base, flame_tip, 5)
-            pygame.draw.line(screen, ORANGE, flame_base, 
-                           (flame_base[0] - sin_a * 20, 
-                            flame_base[1] + cos_a * 20), 3)
-
-# AI Opponent
-class AIOpponent(Vehicle):
-    def __init__(self, vehicle_type, x, y, difficulty="medium"):
-        super().__init__(vehicle_type, x, y)
-        self.difficulty = difficulty
-        self.target_checkpoint = 0
-        self.waypoints = []
-        self.current_waypoint = 0
-        
-        # AI parameters based on difficulty
-        if difficulty == "easy":
-            self.skill_factor = 0.7
-            self.aggression = 0.3
-            self.reaction_time = 0.5
-            self.mistake_chance = 0.1
-        elif difficulty == "medium":
-            self.skill_factor = 0.85
-            self.aggression = 0.5
-            self.reaction_time = 0.3
-            self.mistake_chance = 0.05
-        else:  # hard
-            self.skill_factor = 0.95
-            self.aggression = 0.8
-            self.reaction_time = 0.1
-            self.mistake_chance = 0.02
-        
-        # Apply skill factor to stats
-        self.max_speed *= self.skill_factor
-        self.acceleration *= self.skill_factor
-        self.handling *= self.skill_factor
-    
-    def update_ai(self, player_vehicle, track):
-        # Simple AI: follow racing line and avoid collisions
-        
-        # Random mistake
-        if random.random() < self.mistake_chance:
-            self.angle += random.randint(-5, 5)
-        
-        # Basic pathfinding (simplified)
-        target_x = SCREEN_WIDTH // 2 + math.sin(self.y * 0.01) * 200
-        target_y = self.y - 10
-        
-        # Calculate angle to target
-        dx = target_x - self.x
-        dy = target_y - self.y
-        target_angle = math.degrees(math.atan2(dx, -dy))
-        
-        # Turn towards target
-        angle_diff = target_angle - self.angle
-        while angle_diff > 180:
-            angle_diff -= 360
-        while angle_diff < -180:
-            angle_diff += 360
-        
-        # Apply turning
-        if angle_diff > 5:
-            self.angle += self.handling * self.skill_factor
-        elif angle_diff < -5:
-            self.angle -= self.handling * self.skill_factor
-        
-        # Speed control
-        if abs(angle_diff) < 30:
-            self.accelerate()
-        else:
-            self.brake()
-        
-        # Aggression: try to overtake
-        if self.aggression > 0.5:
-            dist_to_player = math.sqrt((player_vehicle.x - self.x)**2 + 
-                                      (player_vehicle.y - self.y)**2)
-            if dist_to_player < 100:
-                # Attempt overtake
-                if player_vehicle.x > self.x:
-                    self.x -= 2
-                else:
-                    self.x += 2
-        
-        # Update physics
-        self.update_physics(1)
-
-# Track Class
-class Track:
-    def __init__(self, environment=TrackEnvironment.CITY):
-        self.environment = environment
-        self.width = TRACK_WIDTH
-        self.height = TRACK_HEIGHT
-        self.checkpoints = []
-        self.start_line = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100)
-        
-        # Track properties based on environment
-        if environment == TrackEnvironment.CITY:
-            self.surface_grip = 0.9
-            self.color = DARK_GRAY
-            self.border_color = YELLOW
-        elif environment == TrackEnvironment.DESERT:
-            self.surface_grip = 0.7
-            self.color = (194, 178, 128)
-            self.border_color = (139, 90, 43)
-        elif environment == TrackEnvironment.MOUNTAIN:
-            self.surface_grip = 0.8
-            self.color = GRAY
-            self.border_color = (101, 67, 33)
-        elif environment == TrackEnvironment.BEACH:
-            self.surface_grip = 0.6
-            self.color = (238, 203, 173)
-            self.border_color = CYAN
-        elif environment == TrackEnvironment.FOREST:
-            self.surface_grip = 0.75
-            self.color = (34, 139, 34)
-            self.border_color = (0, 100, 0)
-        else:  # Snow
-            self.surface_grip = 0.5
-            self.color = WHITE
-            self.border_color = GRAY
-        
-        # Generate checkpoints
-        self.generate_checkpoints()
-    
-    def generate_checkpoints(self):
-        # Create checkpoints for lap counting
-        checkpoint_count = 4
-        for i in range(checkpoint_count):
-            y = SCREEN_HEIGHT - 100 - (i * (SCREEN_HEIGHT - 200) // checkpoint_count)
-            self.checkpoints.append({
-                'x': SCREEN_WIDTH // 2,
-                'y': y,
-                'width': TRACK_WIDTH,
-                'height': 20,
-                'index': i
-            })
-    
-    def draw(self, screen):
-        # Draw track boundaries
-        pygame.draw.rect(screen, self.border_color, 
-                        (100, 50, TRACK_WIDTH, TRACK_HEIGHT), TRACK_BORDER)
-        
-        # Draw track surface
-        pygame.draw.rect(screen, self.color,
-                        (100 + TRACK_BORDER, 50 + TRACK_BORDER, 
-                         TRACK_WIDTH - 2*TRACK_BORDER, TRACK_HEIGHT - 2*TRACK_BORDER))
-        
-        # Draw center line
-        for y in range(50, SCREEN_HEIGHT - 50, 40):
-            pygame.draw.rect(screen, WHITE, 
-                           (SCREEN_WIDTH // 2 - 2, y, 4, 20))
-        
-        # Draw start/finish line
-        checker_size = 10
-        for i in range(10):
-            for j in range(2):
-                if (i + j) % 2 == 0:
-                    color = WHITE
-                else:
-                    color = BLACK
-                pygame.draw.rect(screen, color,
-                               (self.start_line[0] - 50 + i * checker_size,
-                                self.start_line[1] + j * checker_size,
-                                checker_size, checker_size))
-
-# Weather System
-class WeatherSystem:
-    def __init__(self, weather_type=Weather.CLEAR):
-        self.weather_type = weather_type
-        self.particles = []
-        self.visibility = 1.0
-        
-        if weather_type == Weather.RAIN:
-            self.visibility = 0.8
-            # Create rain particles
-            for _ in range(100):
-                self.particles.append({
-                    'x': random.randint(0, SCREEN_WIDTH),
-                    'y': random.randint(-SCREEN_HEIGHT, SCREEN_HEIGHT),
-                    'speed': random.randint(5, 10),
-                    'length': random.randint(10, 20)
-                })
-        elif weather_type == Weather.FOG:
-            self.visibility = 0.5
-        elif weather_type == Weather.NIGHT:
-            self.visibility = 0.6
-        elif weather_type == Weather.STORM:
-            self.visibility = 0.4
-            # Create heavy rain
-            for _ in range(200):
-                self.particles.append({
-                    'x': random.randint(0, SCREEN_WIDTH),
-                    'y': random.randint(-SCREEN_HEIGHT, SCREEN_HEIGHT),
-                    'speed': random.randint(8, 15),
-                    'length': random.randint(15, 30),
-                    'angle': random.randint(-20, 20)
-                })
-    
-    def update(self):
-        # Update weather particles
-        for particle in self.particles:
-            particle['y'] += particle['speed']
-            if 'angle' in particle:
-                particle['x'] += particle['angle'] * 0.1
-            
-            # Reset particle if it goes off screen
-            if particle['y'] > SCREEN_HEIGHT:
-                particle['y'] = random.randint(-100, -20)
-                particle['x'] = random.randint(0, SCREEN_WIDTH)
-    
-    def draw(self, screen):
-        if self.weather_type == Weather.RAIN:
-            for particle in self.particles:
-                pygame.draw.line(screen, (100, 100, 255),
-                               (particle['x'], particle['y']),
-                               (particle['x'], particle['y'] + particle['length']), 1)
-        
-        elif self.weather_type == Weather.STORM:
-            for particle in self.particles:
-                pygame.draw.line(screen, (80, 80, 200),
-                               (particle['x'], particle['y']),
-                               (particle['x'] + particle.get('angle', 0),
-                                particle['y'] + particle['length']), 2)
-        
-        # Apply visibility overlay
-        if self.visibility < 1.0:
-            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-            overlay.set_alpha(int(255 * (1 - self.visibility)))
-            if self.weather_type == Weather.NIGHT:
-                overlay.fill((0, 0, 50))
-            elif self.weather_type == Weather.FOG:
-                overlay.fill((200, 200, 200))
-            else:
-                overlay.fill((50, 50, 50))
-            screen.blit(overlay, (0, 0))
-
-# HUD Class
-class HUD:
-    def __init__(self):
-        self.show_speedometer = True
-        self.show_lap_timer = True
-        self.show_position = True
-        self.show_minimap = False
-    
-    def draw(self, screen, vehicle, race_manager):
-        # Draw speedometer
-        if self.show_speedometer:
-            speed_percent = abs(vehicle.speed) / vehicle.max_speed
-            speed_text = font_medium.render(f"{int(abs(vehicle.speed) * 20)} km/h", True, WHITE)
-            screen.blit(speed_text, (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 80))
-            
-            # Speed bar
-            pygame.draw.rect(screen, DARK_GRAY, (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 50, 120, 20))
-            pygame.draw.rect(screen, GREEN if speed_percent < 0.7 else YELLOW if speed_percent < 0.9 else RED,
-                           (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 50, int(120 * speed_percent), 20))
-        
-        # Draw nitro gauge
-        nitro_percent = vehicle.nitro / vehicle.max_nitro
-        pygame.draw.rect(screen, DARK_GRAY, (20, SCREEN_HEIGHT - 50, 100, 15))
-        pygame.draw.rect(screen, CYAN, (20, SCREEN_HEIGHT - 50, int(100 * nitro_percent), 15))
-        nitro_text = font_small.render("NITRO", True, WHITE)
-        screen.blit(nitro_text, (20, SCREEN_HEIGHT - 70))
-        
-        # Draw lap counter
-        if self.show_lap_timer:
-            lap_text = font_medium.render(f"Lap {vehicle.lap}/{race_manager.total_laps}", True, WHITE)
-            screen.blit(lap_text, (20, 20))
-            
-            # Lap time
-            current_time = pygame.time.get_ticks() / 1000
-            time_text = font_small.render(f"Time: {current_time:.2f}s", True, WHITE)
-            screen.blit(time_text, (20, 60))
-            
-            if vehicle.best_lap < float('inf'):
-                best_text = font_small.render(f"Best: {vehicle.best_lap:.2f}s", True, GREEN)
-                screen.blit(best_text, (20, 85))
-        
-        # Draw position
-        if self.show_position:
-            pos_text = font_large.render(f"{race_manager.get_position(vehicle)}", True, YELLOW)
-            screen.blit(pos_text, (SCREEN_WIDTH - 50, 20))
-            
-            suffix = ["st", "nd", "rd", "th"][min(race_manager.get_position(vehicle) - 1, 3)]
-            suffix_text = font_small.render(suffix, True, YELLOW)
-            screen.blit(suffix_text, (SCREEN_WIDTH - 25, 30))
-        
-        # Draw drift score if drifting
-        if vehicle.is_drifting and vehicle.drift_score > 0:
-            drift_text = font_medium.render(f"DRIFT! {int(vehicle.drift_score)}", True, ORANGE)
-            screen.blit(drift_text, (SCREEN_WIDTH // 2 - 60, 100))
-
-# Race Manager
-class RaceManager:
-    def __init__(self, total_laps=3):
-        self.total_laps = total_laps
-        self.race_started = False
-        self.race_finished = False
-        self.countdown = 3
-        self.start_time = 0
-        self.vehicles = []
-        self.positions = []
-        
-    def add_vehicle(self, vehicle):
-        self.vehicles.append(vehicle)
-        self.positions.append(len(self.vehicles))
-    
-    def start_race(self):
-        self.race_started = True
-        self.start_time = pygame.time.get_ticks()
-    
-    def update(self):
-        if not self.race_started and self.countdown > 0:
-            self.countdown -= 1/60  # Decrease by frame time
-            if self.countdown <= 0:
-                self.start_race()
-        
-        # Update positions based on progress
-        if self.race_started:
-            vehicle_progress = []
-            for i, vehicle in enumerate(self.vehicles):
-                progress = vehicle.lap * 1000 + vehicle.checkpoint * 100 - vehicle.y
-                vehicle_progress.append((progress, i))
-            
-            vehicle_progress.sort(reverse=True)
-            for pos, (_, idx) in enumerate(vehicle_progress):
-                self.positions[idx] = pos + 1
-        
-        # Check for race finish
-        for vehicle in self.vehicles:
-            if vehicle.lap > self.total_laps:
-                self.race_finished = True
-    
-    def get_position(self, vehicle):
-        if vehicle in self.vehicles:
-            idx = self.vehicles.index(vehicle)
-            return self.positions[idx]
-        return 0
-    
-    def draw_countdown(self, screen):
-        if not self.race_started and self.countdown > 0:
-            countdown_num = int(self.countdown) + 1
-            if countdown_num > 0:
-                if countdown_num == 1:
-                    text = font_large.render("GO!", True, GREEN)
-                else:
-                    text = font_large.render(str(countdown_num - 1), True, YELLOW)
-                screen.blit(text, (SCREEN_WIDTH // 2 - 30, SCREEN_HEIGHT // 2 - 50))
-
-# Championship Mode
-class Championship:
-    def __init__(self):
-        self.races = []
-        self.current_race = 0
-        self.player_points = 0
-        self.ai_points = [0, 0, 0]  # 3 AI opponents
-        self.points_system = [10, 6, 3, 1]  # Points for positions
-        
-        # Create championship races
-        environments = [TrackEnvironment.CITY, TrackEnvironment.DESERT, 
-                       TrackEnvironment.MOUNTAIN, TrackEnvironment.BEACH]
-        weathers = [Weather.CLEAR, Weather.RAIN, Weather.NIGHT, Weather.FOG]
-        
-        for env, weather in zip(environments, weathers):
-            self.races.append({
-                'track': env,
-                'weather': weather,
-                'laps': 3
-            })
-    
-    def award_points(self, positions):
-        # Award points based on finishing position
-        points_awarded = []
-        for pos in positions:
-            if pos <= len(self.points_system):
-                points_awarded.append(self.points_system[pos - 1])
-            else:
-                points_awarded.append(0)
-        return points_awarded
-    
-    def next_race(self):
-        self.current_race += 1
-        return self.current_race < len(self.races)
-    
-    def get_standings(self):
-        standings = [
-            ("Player", self.player_points),
-            ("AI 1", self.ai_points[0]),
-            ("AI 2", self.ai_points[1]),
-            ("AI 3", self.ai_points[2])
-        ]
-        standings.sort(key=lambda x: x[1], reverse=True)
-        return standings
-
-# Power-ups
-class PowerUp:
-    def __init__(self, x, y, power_type):
-        self.x = x
-        self.y = y
-        self.type = power_type
-        self.collected = False
-        
-    def draw(self, screen):
-        if not self.collected:
-            if self.type == "nitro":
-                pygame.draw.circle(screen, CYAN, (int(self.x), int(self.y)), 15)
-                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
-            elif self.type == "repair":
-                pygame.draw.circle(screen, GREEN, (int(self.x), int(self.y)), 15)
-                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
-            elif self.type == "speed":
-                pygame.draw.circle(screen, YELLOW, (int(self.x), int(self.y)), 15)
-                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
-    
-    def check_collision(self, vehicle):
-        if not self.collected:
-            dist = math.sqrt((vehicle.x - self.x)**2 + (vehicle.y - self.y)**2)
-            if dist < 30:
-                self.collected = True
-                self.apply_effect(vehicle)
-                return True
-        return False
-    
-    def apply_effect(self, vehicle):
-        if self.type == "nitro":
-            vehicle.nitro = min(vehicle.nitro + 50, vehicle.max_nitro)
-        elif self.type == "repair":
-            vehicle.damage = max(0, vehicle.damage - 30)
-        elif self.type == "speed":
-            vehicle.max_speed *= 1.1  # Temporary speed boost
-
-# Initialize game objects
-player = Vehicle(VehicleType.SPORTS_CAR)
-track = Track(TrackEnvironment.CITY)
-weather = WeatherSystem(Weather.CLEAR)
-hud = HUD()
-race_manager = RaceManager(total_laps=3)
-championship = Championship()
-
-# Add player to race
-race_manager.add_vehicle(player)
-
-# Create AI opponents
-ai_opponents = [
-    AIOpponent(VehicleType.FORMULA, 350, 500, "hard"),
-    AIOpponent(VehicleType.RALLY_CAR, 450, 500, "medium"),
-    AIOpponent(VehicleType.GO_KART, 400, 520, "easy")
-]
-
-for ai in ai_opponents:
-    race_manager.add_vehicle(ai)
-
-# Create power-ups
-power_ups = [
-    PowerUp(300, 300, "nitro"),
-    PowerUp(500, 200, "speed"),
-    PowerUp(400, 400, "repair")
-]
-
-# Game state
-game_state = {
-    'menu': True,
-    'racing': False,
-    'paused': False,
-    'finished': False
-}
-
-# Main game loop
-running = True
-while running:
-    dt = clock.tick(FPS) / 1000.0  # Delta time in seconds
-    
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                game_state['paused'] = not game_state['paused']
-            elif event.key == pygame.K_RETURN and game_state['menu']:
-                game_state['menu'] = False
-                game_state['racing'] = True
-            elif event.key == pygame.K_r and game_state['finished']:
-                # Restart race
-                player = Vehicle(VehicleType.SPORTS_CAR)
-                race_manager = RaceManager(total_laps=3)
-                race_manager.add_vehicle(player)
-                for ai in ai_opponents:
-                    ai.__init__(ai.vehicle_type, 350 + ai_opponents.index(ai) * 50, 500, ai.difficulty)
-                    race_manager.add_vehicle(ai)
-                game_state['finished'] = False
-                game_state['racing'] = True
-    
-    # Game logic
-    if game_state['racing'] and not game_state['paused']:
-        # Update race manager
-        race_manager.update()
-        
-        if race_manager.race_started:
-            # Update player
-            keys = pygame.key.get_pressed()
-            player.update(keys, dt)
-            
-            # Update AI
-            for ai in ai_opponents:
-                ai.update_ai(player, track)
-            
-            # Check power-up collisions
-            for power_up in power_ups:
-                power_up.check_collision(player)
-            
-            # Update weather
-            weather.update()
-            
-            # Check if race finished
-            if race_manager.race_finished:
-                game_state['finished'] = True
-                game_state['racing'] = False
-    
-    # Draw everything
-    screen.fill(BLACK)
-    
-    if game_state['menu']:
-        # Draw main menu
-        title = font_large.render("RACING CHAMPIONSHIP", True, YELLOW)
-        screen.blit(title, (SCREEN_WIDTH // 2 - 200, 100))
-        
-        start_text = font_medium.render("Press ENTER to Start", True, WHITE)
-        screen.blit(start_text, (SCREEN_WIDTH // 2 - 120, 300))
-        
-        # Show vehicle selection hint
-        vehicle_text = font_small.render("Vehicle: " + player.vehicle_type, True, GREEN)
-        screen.blit(vehicle_text, (SCREEN_WIDTH // 2 - 80, 400))
-        
-    elif game_state['racing']:
-        # Draw track
-        track.draw(screen)
-        
-        # Draw power-ups
-        for power_up in power_ups:
-            power_up.draw(screen)
-        
-        # Draw vehicles
-        player.draw(screen)
-        for ai in ai_opponents:
-            ai.draw(screen)
-        
-        # Draw weather effects
-        weather.draw(screen)
-        
-        # Draw HUD
-        hud.draw(screen, player, race_manager)
-        
-        # Draw countdown
-        race_manager.draw_countdown(screen)
-        
-        # Draw pause overlay
-        if game_state['paused']:
-            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-            overlay.set_alpha(128)
-            overlay.fill(BLACK)
-            screen.blit(overlay, (0, 0))
-            
-            pause_text = font_large.render("PAUSED", True, WHITE)
-            screen.blit(pause_text, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 30))
-    
-    elif game_state['finished']:
-        # Draw race results
-        results_text = font_large.render("RACE FINISHED!", True, YELLOW)
-        screen.blit(results_text, (SCREEN_WIDTH // 2 - 150, 100))
-        
-        position = race_manager.get_position(player)
-        pos_text = font_medium.render(f"You finished {position}{['st','nd','rd','th'][min(position-1, 3)]}", True, WHITE)
-        screen.blit(pos_text, (SCREEN_WIDTH // 2 - 100, 200))
-        
-        # Show championship standings
-        standings_text = font_medium.render("Championship Standings:", True, CYAN)
-        screen.blit(standings_text, (SCREEN_WIDTH // 2 - 130, 300))
-        
-        y_offset = 350
-        for i, (name, points) in enumerate(championship.get_standings()):
-            standing_text = font_small.render(f"{i+1}. {name}: {points} pts", True, WHITE)
-            screen.blit(standing_text, (SCREEN_WIDTH // 2 - 80, y_offset))
-            y_offset += 30
-        
-        restart_text = font_small.render("Press R to Race Again", True, GREEN)
-        screen.blit(restart_text, (SCREEN_WIDTH // 2 - 100, 500))
-    
-    # Update display
-    pygame.display.flip()
-
-# Quit
-pygame.quit()
-sys.exit()
-'''
-        
-        # Extract component configuration
-        config = {}
-        for component in components:
-            comp_type = component.get('type', '')
-            if comp_type == 'vehicle':
-                config['vehicle_type'] = component.get('config', {}).get('type', 'SPORTS_CAR')
-            elif comp_type == 'track':
-                config['track_env'] = component.get('config', {}).get('environment', 'CITY')
-            elif comp_type == 'weather':
-                config['weather_type'] = component.get('config', {}).get('type', 'CLEAR')
-        
-        return code
-    
-    @staticmethod
-    def _rpg_template(components):
-        """RPG game template with full RPG mechanics"""
-        code = '''import pygame
-import sys
-import random
-import math
-import json
-
-# Initialize Pygame
-pygame.init()
-
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
-TILE_SIZE = 32
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-GRAY = (128, 128, 128)
-DARK_GRAY = (64, 64, 64)
-
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("RPG Adventure")
-
-# Clock for controlling frame rate
-clock = pygame.time.Clock()
-
-# Fonts
-font_small = pygame.font.Font(None, 24)
-font_medium = pygame.font.Font(None, 36)
-font_large = pygame.font.Font(None, 48)
-
-# Character Classes
-class CharacterClass:
-    WARRIOR = "Warrior"
-    MAGE = "Mage"
-    ROGUE = "Rogue"
-    HEALER = "Healer"
-
-# Character Stats
-class Character:
-    def __init__(self, name="Hero", char_class=CharacterClass.WARRIOR):
-        self.name = name
-        self.char_class = char_class
-        self.level = 1
-        self.experience = 0
-        self.exp_to_next_level = 100
-        
-        # Base stats based on class
-        if char_class == CharacterClass.WARRIOR:
-            self.max_hp = 150
-            self.max_mp = 30
-            self.strength = 15
-            self.defense = 12
-            self.magic = 5
-            self.agility = 8
-        elif char_class == CharacterClass.MAGE:
-            self.max_hp = 80
-            self.max_mp = 120
-            self.strength = 6
-            self.defense = 7
-            self.magic = 18
-            self.agility = 10
-        elif char_class == CharacterClass.ROGUE:
-            self.max_hp = 100
-            self.max_mp = 50
-            self.strength = 10
-            self.defense = 8
-            self.magic = 8
-            self.agility = 16
-        else:  # Healer
-            self.max_hp = 90
-            self.max_mp = 100
-            self.strength = 7
-            self.defense = 10
-            self.magic = 15
-            self.agility = 9
-        
-        self.hp = self.max_hp
-        self.mp = self.max_mp
-        self.gold = 50
-        
-        # Position
-        self.x = SCREEN_WIDTH // 2
-        self.y = SCREEN_HEIGHT // 2
-        self.speed = 4
-        
-        # Combat stats
-        self.in_combat = False
-        self.defending = False
-        
-    def level_up(self):
-        self.level += 1
-        self.max_hp += 10
-        self.max_mp += 5
-        self.strength += 2
-        self.defense += 2
-        self.magic += 2
-        self.agility += 1
-        self.hp = self.max_hp
-        self.mp = self.max_mp
-        self.exp_to_next_level = self.level * 100
-        
-    def add_experience(self, exp):
-        self.experience += exp
-        while self.experience >= self.exp_to_next_level:
-            self.experience -= self.exp_to_next_level
-            self.level_up()
-    
-    def draw(self, screen):
-        pygame.draw.rect(screen, GREEN, (self.x - 16, self.y - 16, 32, 32))
-        # Draw class indicator
-        text = font_small.render(self.char_class[0], True, WHITE)
-        screen.blit(text, (self.x - 8, self.y - 8))
-
-# Inventory System
-class Item:
-    def __init__(self, name, item_type, value=0, effect=None):
-        self.name = name
-        self.item_type = item_type  # "weapon", "armor", "consumable", "quest"
-        self.value = value
-        self.effect = effect
-        self.quantity = 1
-
-class Inventory:
-    def __init__(self, max_slots=20):
-        self.items = []
-        self.max_slots = max_slots
-        self.equipped_weapon = None
-        self.equipped_armor = None
-        
-    def add_item(self, item):
-        if len(self.items) < self.max_slots:
-            # Check if item already exists and stack
-            for inv_item in self.items:
-                if inv_item.name == item.name and inv_item.item_type == "consumable":
-                    inv_item.quantity += 1
-                    return True
-            self.items.append(item)
-            return True
-        return False
-    
-    def remove_item(self, item):
-        if item in self.items:
-            if item.quantity > 1:
-                item.quantity -= 1
-            else:
-                self.items.remove(item)
-            return True
-        return False
-    
-    def use_item(self, item, character):
-        if item.item_type == "consumable":
-            if item.effect == "heal":
-                character.hp = min(character.hp + item.value, character.max_hp)
-            elif item.effect == "mana":
-                character.mp = min(character.mp + item.value, character.max_mp)
-            self.remove_item(item)
-            return True
-        return False
-
-# Dialogue System
-class DialogueSystem:
-    def __init__(self):
-        self.active = False
-        self.current_dialogue = None
-        self.current_index = 0
-        self.npc_name = ""
-        self.choices = []
-        
-    def start_dialogue(self, npc_name, dialogue_tree):
-        self.active = True
-        self.npc_name = npc_name
-        self.current_dialogue = dialogue_tree
-        self.current_index = 0
-        
-    def advance_dialogue(self):
-        self.current_index += 1
-        if self.current_index >= len(self.current_dialogue):
-            self.end_dialogue()
-    
-    def end_dialogue(self):
-        self.active = False
-        self.current_dialogue = None
-        self.current_index = 0
-        
-    def draw(self, screen):
-        if self.active and self.current_dialogue:
-            # Draw dialogue box
-            pygame.draw.rect(screen, DARK_GRAY, (50, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 100, 120))
-            pygame.draw.rect(screen, WHITE, (50, SCREEN_HEIGHT - 150, SCREEN_WIDTH - 100, 120), 2)
-            
-            # Draw NPC name
-            name_text = font_medium.render(self.npc_name, True, YELLOW)
-            screen.blit(name_text, (60, SCREEN_HEIGHT - 140))
-            
-            # Draw dialogue text
-            if self.current_index < len(self.current_dialogue):
-                dialogue_text = self.current_dialogue[self.current_index]
-                text_lines = dialogue_text.split('\\n')
-                for i, line in enumerate(text_lines):
-                    text = font_small.render(line, True, WHITE)
-                    screen.blit(text, (60, SCREEN_HEIGHT - 100 + i * 25))
-
-# Combat System
-class Enemy:
-    def __init__(self, name, hp, damage, exp_reward):
-        self.name = name
-        self.hp = hp
-        self.max_hp = hp
-        self.damage = damage
-        self.exp_reward = exp_reward
-        self.x = random.randint(100, SCREEN_WIDTH - 100)
-        self.y = random.randint(100, SCREEN_HEIGHT - 200)
-        
-    def attack(self, character):
-        damage = max(1, self.damage - character.defense // 2)
-        if character.defending:
-            damage = damage // 2
-        character.hp -= damage
-        return damage
-    
-    def draw(self, screen):
-        pygame.draw.rect(screen, RED, (self.x - 16, self.y - 16, 32, 32))
-        # Draw HP bar
-        bar_width = 32
-        bar_height = 4
-        hp_percentage = self.hp / self.max_hp
-        pygame.draw.rect(screen, RED, (self.x - 16, self.y - 24, bar_width, bar_height))
-        pygame.draw.rect(screen, GREEN, (self.x - 16, self.y - 24, int(bar_width * hp_percentage), bar_height))
-
-class CombatSystem:
-    def __init__(self):
-        self.active = False
-        self.turn = "player"  # "player" or "enemy"
-        self.enemy = None
-        self.combat_log = []
-        self.action_selected = None
-        
-    def start_combat(self, enemy):
-        self.active = True
-        self.enemy = enemy
-        self.turn = "player"
-        self.combat_log = [f"Battle with {enemy.name} begins!"]
-        
-    def player_action(self, action, character):
-        if action == "attack":
-            damage = max(1, character.strength - self.enemy.hp // 10)
-            self.enemy.hp -= damage
-            self.combat_log.append(f"You deal {damage} damage!")
-            
-        elif action == "magic" and character.mp >= 10:
-            damage = character.magic * 2
-            self.enemy.hp -= damage
-            character.mp -= 10
-            self.combat_log.append(f"Magic attack deals {damage} damage!")
-            
-        elif action == "defend":
-            character.defending = True
-            self.combat_log.append("You defend!")
-            
-        elif action == "flee":
-            if random.random() < 0.5:
-                self.end_combat(fled=True)
-                return
-            self.combat_log.append("Couldn't escape!")
-        
-        # Check if enemy defeated
-        if self.enemy.hp <= 0:
-            self.end_combat(victory=True, character=character)
-        else:
-            self.turn = "enemy"
-            
-    def enemy_turn(self, character):
-        damage = self.enemy.attack(character)
-        self.combat_log.append(f"{self.enemy.name} deals {damage} damage!")
-        character.defending = False
-        
-        if character.hp <= 0:
-            self.end_combat(defeat=True)
-        else:
-            self.turn = "player"
-    
-    def end_combat(self, victory=False, defeat=False, fled=False, character=None):
-        if victory and character:
-            self.combat_log.append(f"Victory! Gained {self.enemy.exp_reward} EXP!")
-            character.add_experience(self.enemy.exp_reward)
-            character.gold += random.randint(10, 50)
-        elif defeat:
-            self.combat_log.append("You were defeated...")
-        elif fled:
-            self.combat_log.append("You fled from battle!")
-            
-        self.active = False
-        self.enemy = None
-        
-    def draw(self, screen):
-        if self.active and self.enemy:
-            # Draw combat UI
-            pygame.draw.rect(screen, DARK_GRAY, (50, 50, 300, 200))
-            pygame.draw.rect(screen, WHITE, (50, 50, 300, 200), 2)
-            
-            # Draw enemy name and HP
-            enemy_text = font_medium.render(self.enemy.name, True, RED)
-            screen.blit(enemy_text, (60, 60))
-            hp_text = font_small.render(f"HP: {self.enemy.hp}/{self.enemy.max_hp}", True, WHITE)
-            screen.blit(hp_text, (60, 95))
-            
-            # Draw action menu
-            if self.turn == "player":
-                actions = ["Attack", "Magic", "Defend", "Flee"]
-                for i, action in enumerate(actions):
-                    color = YELLOW if i == 0 else WHITE
-                    action_text = font_small.render(f"{i+1}. {action}", True, color)
-                    screen.blit(action_text, (60, 130 + i * 25))
-            
-            # Draw combat log (last 3 messages)
-            for i, message in enumerate(self.combat_log[-3:]):
-                log_text = font_small.render(message, True, WHITE)
-                screen.blit(log_text, (400, 60 + i * 25))
-
-# Quest System
-class Quest:
-    def __init__(self, name, description, objectives, reward_exp, reward_gold):
-        self.name = name
-        self.description = description
-        self.objectives = objectives  # List of objectives
-        self.completed_objectives = []
-        self.is_complete = False
-        self.reward_exp = reward_exp
-        self.reward_gold = reward_gold
-        
-    def check_objective(self, objective):
-        if objective in self.objectives and objective not in self.completed_objectives:
-            self.completed_objectives.append(objective)
-            if len(self.completed_objectives) == len(self.objectives):
-                self.is_complete = True
-            return True
-        return False
-
-class QuestLog:
-    def __init__(self):
-        self.active_quests = []
-        self.completed_quests = []
-        
-    def add_quest(self, quest):
-        self.active_quests.append(quest)
-        
-    def complete_quest(self, quest, character):
-        if quest in self.active_quests and quest.is_complete:
-            self.active_quests.remove(quest)
-            self.completed_quests.append(quest)
-            character.add_experience(quest.reward_exp)
-            character.gold += quest.reward_gold
-            return True
-        return False
-    
-    def draw(self, screen):
-        # Draw quest log UI
-        pygame.draw.rect(screen, DARK_GRAY, (SCREEN_WIDTH - 250, 50, 200, 300))
-        pygame.draw.rect(screen, WHITE, (SCREEN_WIDTH - 250, 50, 200, 300), 2)
-        
-        title_text = font_medium.render("Quest Log", True, YELLOW)
-        screen.blit(title_text, (SCREEN_WIDTH - 240, 60))
-        
-        y_offset = 100
-        for quest in self.active_quests:
-            quest_text = font_small.render(quest.name, True, WHITE)
-            screen.blit(quest_text, (SCREEN_WIDTH - 240, y_offset))
-            
-            # Show objectives
-            for obj in quest.objectives:
-                color = GREEN if obj in quest.completed_objectives else GRAY
-                obj_text = font_small.render(f"  • {obj}", True, color)
-                screen.blit(obj_text, (SCREEN_WIDTH - 240, y_offset + 20))
-                y_offset += 25
-            y_offset += 10
-
-# NPC System
-class NPC:
-    def __init__(self, name, x, y, dialogue, quest=None):
-        self.name = name
-        self.x = x
-        self.y = y
-        self.dialogue = dialogue
-        self.quest = quest
-        self.interacted = False
-        
-    def interact(self, dialogue_system, quest_log):
-        dialogue_system.start_dialogue(self.name, self.dialogue)
-        if self.quest and not self.interacted:
-            quest_log.add_quest(self.quest)
-            self.interacted = True
-    
-    def draw(self, screen):
-        pygame.draw.rect(screen, BLUE, (self.x - 16, self.y - 16, 32, 32))
-        # Draw name
-        name_text = font_small.render(self.name, True, WHITE)
-        screen.blit(name_text, (self.x - 20, self.y - 40))
-
-# Save/Load System
-class SaveSystem:
-    @staticmethod
-    def save_game(character, inventory, quest_log, filename="savegame.json"):
-        save_data = {
-            "character": {
-                "name": character.name,
-                "class": character.char_class,
-                "level": character.level,
-                "experience": character.experience,
-                "hp": character.hp,
-                "mp": character.mp,
-                "gold": character.gold,
-                "x": character.x,
-                "y": character.y
-            },
-            "inventory": {
-                "items": [{"name": item.name, "type": item.item_type, "quantity": item.quantity} 
-                         for item in inventory.items]
-            },
-            "quests": {
-                "active": [quest.name for quest in quest_log.active_quests],
-                "completed": [quest.name for quest in quest_log.completed_quests]
-            }
-        }
-        
-        try:
-            with open(filename, 'w') as f:
-                json.dump(save_data, f)
-            return True
-        except:
-            return False
-    
-    @staticmethod
-    def load_game(filename="savegame.json"):
-        try:
-            with open(filename, 'r') as f:
-                save_data = json.load(f)
-            return save_data
-        except:
-            return None
-
-# Initialize game objects
-character = Character("Hero", CharacterClass.WARRIOR)
-inventory = Inventory()
-dialogue_system = DialogueSystem()
-combat_system = CombatSystem()
-quest_log = QuestLog()
-
-# Add starting items
-inventory.add_item(Item("Health Potion", "consumable", 50, "heal"))
-inventory.add_item(Item("Mana Potion", "consumable", 30, "mana"))
-inventory.add_item(Item("Iron Sword", "weapon", 100))
-
-# Create sample NPCs
-npc1 = NPC("Village Elder", 200, 200, 
-           ["Welcome, brave adventurer!",
-            "Our village needs your help.",
-            "Please defeat the monsters threatening us!"],
-           Quest("Defeat Monsters", "Defeat 3 monsters", 
-                 ["Defeat first monster", "Defeat second monster", "Defeat third monster"],
-                 200, 100))
-
-npcs = [npc1]
-
-# Create sample enemies
-enemies = []
-
-# Game states
-show_inventory = False
-show_quest_log = False
-show_character_stats = False
-
-# Main game loop
-running = True
-while running:
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-            
-            # Combat controls
-            elif combat_system.active and combat_system.turn == "player":
-                if event.key == pygame.K_1:
-                    combat_system.player_action("attack", character)
-                elif event.key == pygame.K_2:
-                    combat_system.player_action("magic", character)
-                elif event.key == pygame.K_3:
-                    combat_system.player_action("defend", character)
-                elif event.key == pygame.K_4:
-                    combat_system.player_action("flee", character)
-            
-            # Dialogue controls
-            elif dialogue_system.active:
-                if event.key == pygame.K_SPACE:
-                    dialogue_system.advance_dialogue()
-            
-            # Game controls
-            else:
-                if event.key == pygame.K_i:
-                    show_inventory = not show_inventory
-                elif event.key == pygame.K_q:
-                    show_quest_log = not show_quest_log
-                elif event.key == pygame.K_c:
-                    show_character_stats = not show_character_stats
-                elif event.key == pygame.K_s:
-                    if SaveSystem.save_game(character, inventory, quest_log):
-                        print("Game saved!")
-                elif event.key == pygame.K_l:
-                    save_data = SaveSystem.load_game()
-                    if save_data:
-                        print("Game loaded!")
-                elif event.key == pygame.K_SPACE:
-                    # Interact with NPCs
-                    for npc in npcs:
-                        if abs(character.x - npc.x) < 50 and abs(character.y - npc.y) < 50:
-                            npc.interact(dialogue_system, quest_log)
-                elif event.key == pygame.K_b:
-                    # Spawn enemy for testing
-                    if not combat_system.active:
-                        enemy = Enemy("Goblin", 50, 10, 50)
-                        enemies.append(enemy)
-                        combat_system.start_combat(enemy)
-    
-    # Update
-    if not combat_system.active and not dialogue_system.active:
-        # Player movement
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            character.x -= character.speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            character.x += character.speed
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            character.y -= character.speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            character.y += character.speed
-        
-        # Keep character on screen
-        character.x = max(16, min(character.x, SCREEN_WIDTH - 16))
-        character.y = max(16, min(character.y, SCREEN_HEIGHT - 16))
-    
-    # Enemy AI turn
-    if combat_system.active and combat_system.turn == "enemy":
-        combat_system.enemy_turn(character)
     
     # Clear screen
     screen.fill(BLACK)
     
-    # Draw game world
-    character.draw(screen)
-    
-    # Draw NPCs
-    for npc in npcs:
-        npc.draw(screen)
-    
-    # Draw enemies
-    for enemy in enemies:
-        if enemy != combat_system.enemy:
-            enemy.draw(screen)
-    
-    # Draw UI elements
-    # HP/MP bars
-    pygame.draw.rect(screen, RED, (10, 10, 200, 20))
-    pygame.draw.rect(screen, GREEN, (10, 10, int(200 * character.hp / character.max_hp), 20))
-    hp_text = font_small.render(f"HP: {character.hp}/{character.max_hp}", True, WHITE)
-    screen.blit(hp_text, (15, 12))
-    
-    pygame.draw.rect(screen, DARK_GRAY, (10, 35, 200, 20))
-    pygame.draw.rect(screen, BLUE, (10, 35, int(200 * character.mp / character.max_mp), 20))
-    mp_text = font_small.render(f"MP: {character.mp}/{character.max_mp}", True, WHITE)
-    screen.blit(mp_text, (15, 37))
-    
-    # Level and gold
-    level_text = font_small.render(f"Level: {character.level}  Gold: {character.gold}", True, YELLOW)
-    screen.blit(level_text, (10, 60))
-    
-    # Draw dialogue
-    dialogue_system.draw(screen)
-    
-    # Draw combat UI
-    combat_system.draw(screen)
-    
-    # Draw inventory
-    if show_inventory:
-        pygame.draw.rect(screen, DARK_GRAY, (250, 100, 300, 400))
-        pygame.draw.rect(screen, WHITE, (250, 100, 300, 400), 2)
-        inv_title = font_medium.render("Inventory", True, YELLOW)
-        screen.blit(inv_title, (260, 110))
-        
-        y_offset = 150
-        for item in inventory.items:
-            item_text = font_small.render(f"{item.name} x{item.quantity}", True, WHITE)
-            screen.blit(item_text, (260, y_offset))
-            y_offset += 25
-    
-    # Draw quest log
-    if show_quest_log:
-        quest_log.draw(screen)
-    
-    # Draw character stats
-    if show_character_stats:
-        pygame.draw.rect(screen, DARK_GRAY, (250, 100, 300, 300))
-        pygame.draw.rect(screen, WHITE, (250, 100, 300, 300), 2)
-        stats_title = font_medium.render("Character Stats", True, YELLOW)
-        screen.blit(stats_title, (260, 110))
-        
-        stats = [
-            f"Class: {character.char_class}",
-            f"Level: {character.level}",
-            f"EXP: {character.experience}/{character.exp_to_next_level}",
-            f"STR: {character.strength}",
-            f"DEF: {character.defense}",
-            f"MAG: {character.magic}",
-            f"AGI: {character.agility}"
-        ]
-        
-        y_offset = 150
-        for stat in stats:
-            stat_text = font_small.render(stat, True, WHITE)
-            screen.blit(stat_text, (260, y_offset))
-            y_offset += 25
-    
-    # Draw controls hint
-    controls_text = font_small.render("I: Inventory  Q: Quest Log  C: Stats  B: Battle  Space: Interact", True, GRAY)
-    screen.blit(controls_text, (10, SCREEN_HEIGHT - 30))
+    # Draw something
+    pygame.draw.circle(screen, RED, (WIDTH // 2, HEIGHT // 2), 50)
     
     # Update display
     pygame.display.flip()
-    clock.tick(FPS)
+    
+    # Control frame rate
+    clock.tick(60)
 
 # Quit
 pygame.quit()
 sys.exit()
 '''
-        return code    @staticmethod
-    def _space_template(components):
-        """Space shooter game template"""
-        code = '''import pygame
+    
+    @staticmethod
+    def _generate_platformer_template() -> str:
+        """Generate platformer game template"""
+        return '''
+import pygame
 import sys
-import random
-import math
-import time
 
 # Initialize Pygame
 pygame.init()
 
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Platformer Game")
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
+BLUE = (0, 100, 255)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-CYAN = (0, 255, 255)
-PURPLE = (255, 0, 255)
-GRAY = (128, 128, 128)
 
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Space Adventure")
+# Player settings
+player_x = WIDTH // 2
+player_y = HEIGHT - 100
+player_width = 40
+player_height = 60
+player_vel_y = 0
+player_speed = 5
+gravity = 0.8
+jump_power = -15
 
-# Clock for controlling frame rate
+# Ground
+ground_y = HEIGHT - 40
+
+# Game clock
 clock = pygame.time.Clock()
 
-# Fonts
-font_small = pygame.font.Font(None, 24)
-font_medium = pygame.font.Font(None, 36)
-font_large = pygame.font.Font(None, 48)
-
-# Game State
-class GameState:
-    def __init__(self):
-        self.score = 0
-        self.level = 1
-        self.lives = 3
-        self.game_over = False
-        self.paused = False
-        self.wave = 1
-        self.enemies_spawned = 0
-        self.enemies_per_wave = 5
-        self.boss_active = False
-        self.power_ups = []
-        self.shield_active = False
-        self.shield_timer = 0
-        self.weapon_level = 1
-        self.high_score = 0
-
-# Player Ship
-class PlayerShip(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.Surface((40, 50))
-        self.image.fill(CYAN)
-        self.rect = self.image.get_rect()
-        self.rect.centerx = SCREEN_WIDTH // 2
-        self.rect.bottom = SCREEN_HEIGHT - 20
-        self.speed = 5
-        self.health = 100
-        self.max_health = 100
-        self.shield = 50
-        self.max_shield = 50
-        self.weapon_type = "laser"
-        self.fire_rate = 10
-        self.last_shot = 0
-        self.missiles = 20
-        self.special_ready = True
-        
-    def update(self):
-        # Get keyboard input
-        keys = pygame.key.get_pressed()
-        
-        # Movement
-        if keys[pygame.K_LEFT] and self.rect.left > 0:
-            self.rect.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.rect.right < SCREEN_WIDTH:
-            self.rect.x += self.speed
-        if keys[pygame.K_UP] and self.rect.top > 0:
-            self.rect.y -= self.speed
-        if keys[pygame.K_DOWN] and self.rect.bottom < SCREEN_HEIGHT:
-            self.rect.y += self.speed
-            
-        # Shield regeneration
-        if self.shield < self.max_shield:
-            self.shield += 0.1
-            
-    def shoot(self):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot > 1000 / self.fire_rate:
-            self.last_shot = current_time
-            if self.weapon_type == "laser":
-                return Projectile(self.rect.centerx, self.rect.top, "player_laser")
-            elif self.weapon_type == "missile" and self.missiles > 0:
-                self.missiles -= 1
-                return Projectile(self.rect.centerx, self.rect.top, "player_missile")
-        return None
-        
-    def take_damage(self, damage):
-        if self.shield > 0:
-            self.shield -= damage
-            if self.shield < 0:
-                self.health += self.shield
-                self.shield = 0
-        else:
-            self.health -= damage
-            
-    def draw_health(self, screen):
-        # Health bar
-        pygame.draw.rect(screen, RED, (10, 10, 200, 20))
-        pygame.draw.rect(screen, GREEN, (10, 10, 200 * (self.health / self.max_health), 20))
-        
-        # Shield bar
-        if self.shield > 0:
-            pygame.draw.rect(screen, GRAY, (10, 35, 200, 10))
-            pygame.draw.rect(screen, CYAN, (10, 35, 200 * (self.shield / self.max_shield), 10))
-
-# Projectile
-class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x, y, projectile_type):
-        super().__init__()
-        self.type = projectile_type
-        
-        if "laser" in projectile_type:
-            self.image = pygame.Surface((4, 15))
-            self.image.fill(GREEN if "player" in projectile_type else RED)
-            self.speed = 10 if "player" in projectile_type else 5
-            self.damage = 10
-        elif "missile" in projectile_type:
-            self.image = pygame.Surface((8, 20))
-            self.image.fill(YELLOW)
-            self.speed = 7
-            self.damage = 30
-        else:
-            self.image = pygame.Surface((6, 6))
-            self.image.fill(WHITE)
-            self.speed = 8
-            self.damage = 5
-            
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
-        self.direction = -1 if "player" in projectile_type else 1
-        
-    def update(self):
-        self.rect.y += self.speed * self.direction
-        
-        # Remove if off screen
-        if self.rect.bottom < 0 or self.rect.top > SCREEN_HEIGHT:
-            self.kill()
-
-# Enemy Ship
-class EnemyShip(pygame.sprite.Sprite):
-    def __init__(self, x, y, enemy_type="basic"):
-        super().__init__()
-        self.enemy_type = enemy_type
-        
-        if enemy_type == "basic":
-            self.image = pygame.Surface((30, 30))
-            self.image.fill(RED)
-            self.health = 20
-            self.speed = 2
-            self.points = 100
-            self.fire_rate = 1
-        elif enemy_type == "fighter":
-            self.image = pygame.Surface((35, 35))
-            self.image.fill(PURPLE)
-            self.health = 40
-            self.speed = 3
-            self.points = 200
-            self.fire_rate = 2
-        elif enemy_type == "bomber":
-            self.image = pygame.Surface((45, 40))
-            self.image.fill(YELLOW)
-            self.health = 60
-            self.speed = 1
-            self.points = 300
-            self.fire_rate = 0.5
-        elif enemy_type == "boss":
-            self.image = pygame.Surface((100, 80))
-            self.image.fill(RED)
-            self.health = 500
-            self.max_health = 500
-            self.speed = 1
-            self.points = 5000
-            self.fire_rate = 3
-            
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.direction = 1
-        self.last_shot = 0
-        self.pattern = random.choice(["straight", "zigzag", "sine"])
-        self.pattern_offset = random.random() * math.pi * 2
-        
-    def update(self):
-        # Movement patterns
-        if self.pattern == "straight":
-            self.rect.y += self.speed
-        elif self.pattern == "zigzag":
-            self.rect.x += self.direction * 2
-            if self.rect.left <= 0 or self.rect.right >= SCREEN_WIDTH:
-                self.direction *= -1
-            self.rect.y += self.speed
-        elif self.pattern == "sine":
-            self.pattern_offset += 0.1
-            self.rect.x += math.sin(self.pattern_offset) * 3
-            self.rect.y += self.speed
-            
-        # Remove if off screen
-        if self.rect.top > SCREEN_HEIGHT:
-            self.kill()
-            
-    def shoot(self):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot > 1000 / self.fire_rate:
-            self.last_shot = current_time
-            return Projectile(self.rect.centerx, self.rect.bottom, "enemy_laser")
-        return None
-        
-    def take_damage(self, damage):
-        self.health -= damage
-        if self.health <= 0:
-            self.kill()
-            return True
-        return False
-
-# Main game loop
+# Game loop
 running = True
-player = PlayerShip()
-all_sprites = pygame.sprite.Group(player)
-enemies = pygame.sprite.Group()
-player_projectiles = pygame.sprite.Group()
-enemy_projectiles = pygame.sprite.Group()
-game_state = GameState()
-
-# Spawn initial enemies
-for i in range(5):
-    enemy = EnemyShip(random.randint(50, SCREEN_WIDTH-50), random.randint(-200, -50), "basic")
-    enemies.add(enemy)
-    all_sprites.add(enemy)
+on_ground = False
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and on_ground:
+                player_vel_y = jump_power
     
-    if not game_state.game_over:
-        # Player shooting
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            projectile = player.shoot()
-            if projectile:
-                player_projectiles.add(projectile)
-                all_sprites.add(projectile)
-        
-        # Update all sprites
-        all_sprites.update()
-        
-        # Enemy shooting
-        for enemy in enemies:
-            projectile = enemy.shoot()
-            if projectile:
-                enemy_projectiles.add(projectile)
-                all_sprites.add(projectile)
-        
-        # Collision detection
-        for projectile in player_projectiles:
-            hits = pygame.sprite.spritecollide(projectile, enemies, False)
-            for enemy in hits:
-                if enemy.take_damage(projectile.damage):
-                    game_state.score += enemy.points
-                projectile.kill()
-        
-        hits = pygame.sprite.spritecollide(player, enemy_projectiles, True)
-        for hit in hits:
-            player.take_damage(10)
-            
-        if player.health <= 0:
-            game_state.game_over = True
+    # Get keys
+    keys = pygame.key.get_pressed()
     
-    # Draw everything
+    # Move player
+    if keys[pygame.K_LEFT]:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT]:
+        player_x += player_speed
+    
+    # Apply gravity
+    player_vel_y += gravity
+    player_y += player_vel_y
+    
+    # Ground collision
+    if player_y + player_height >= ground_y:
+        player_y = ground_y - player_height
+        player_vel_y = 0
+        on_ground = True
+    else:
+        on_ground = False
+    
+    # Keep player on screen
+    player_x = max(0, min(WIDTH - player_width, player_x))
+    
+    # Clear screen
     screen.fill(BLACK)
-    all_sprites.draw(screen)
-    player.draw_health(screen)
     
-    # Draw UI
-    score_text = font_small.render(f"Score: {game_state.score}", True, WHITE)
-    screen.blit(score_text, (SCREEN_WIDTH - 150, 10))
+    # Draw ground
+    pygame.draw.rect(screen, GREEN, (0, ground_y, WIDTH, HEIGHT - ground_y))
     
-    if game_state.game_over:
-        game_over_text = font_large.render("GAME OVER", True, RED)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2))
+    # Draw player
+    pygame.draw.rect(screen, BLUE, (player_x, player_y, player_width, player_height))
     
+    # Update display
     pygame.display.flip()
-    clock.tick(FPS)
+    
+    # Control frame rate
+    clock.tick(60)
 
+# Quit
 pygame.quit()
 sys.exit()
 '''
-        return code
     
     @staticmethod
-    def _dungeon_template(components):
-        """Dungeon crawler game template"""
-        # For now, use default template
-        return GameCompiler._default_template(components)
+    def _generate_puzzle_template() -> str:
+        """Generate puzzle game template"""
+        return '''
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Puzzle Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+
+# Grid settings
+GRID_SIZE = 10
+CELL_SIZE = 40
+grid_x = (WIDTH - GRID_SIZE * CELL_SIZE) // 2
+grid_y = (HEIGHT - GRID_SIZE * CELL_SIZE) // 2
+
+# Create grid
+grid = [[random.choice(COLORS) for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+
+# Game clock
+clock = pygame.time.Clock()
+
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Get grid position from mouse
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            col = (mouse_x - grid_x) // CELL_SIZE
+            row = (mouse_y - grid_y) // CELL_SIZE
+            
+            if 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE:
+                # Change color of clicked cell
+                grid[row][col] = random.choice(COLORS)
+    
+    # Clear screen
+    screen.fill(BLACK)
+    
+    # Draw grid
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+            x = grid_x + col * CELL_SIZE
+            y = grid_y + row * CELL_SIZE
+            pygame.draw.rect(screen, grid[row][col], (x, y, CELL_SIZE - 2, CELL_SIZE - 2))
+    
+    # Update display
+    pygame.display.flip()
+    
+    # Control frame rate
+    clock.tick(60)
+
+# Quit
+pygame.quit()
+sys.exit()
+'''
+    
+    @staticmethod
+    def _generate_racing_template() -> str:
+        """Generate racing game template"""
+        return '''
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Racing Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GRAY = (128, 128, 128)
+YELLOW = (255, 255, 0)
+
+# Player car
+car_x = WIDTH // 2
+car_y = HEIGHT - 100
+car_width = 40
+car_height = 60
+car_speed = 8
+
+# Road
+road_x = WIDTH // 4
+road_width = WIDTH // 2
+
+# Obstacles
+obstacles = []
+obstacle_speed = 5
+spawn_timer = 0
+
+# Game clock
+clock = pygame.time.Clock()
+
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Get keys
+    keys = pygame.key.get_pressed()
+    
+    # Move car
+    if keys[pygame.K_LEFT]:
+        car_x -= car_speed
+    if keys[pygame.K_RIGHT]:
+        car_x += car_speed
+    
+    # Keep car on road
+    car_x = max(road_x, min(road_x + road_width - car_width, car_x))
+    
+    # Spawn obstacles
+    spawn_timer += 1
+    if spawn_timer > 60:
+        spawn_timer = 0
+        obstacle_x = random.randint(road_x, road_x + road_width - 40)
+        obstacles.append([obstacle_x, -60])
+    
+    # Move obstacles
+    for obstacle in obstacles[:]:
+        obstacle[1] += obstacle_speed
+        if obstacle[1] > HEIGHT:
+            obstacles.remove(obstacle)
+    
+    # Check collisions
+    for obstacle in obstacles:
+        if (car_x < obstacle[0] + 40 and car_x + car_width > obstacle[0] and
+            car_y < obstacle[1] + 60 and car_y + car_height > obstacle[1]):
+            print("Game Over!")
+            running = False
+    
+    # Clear screen
+    screen.fill(BLACK)
+    
+    # Draw road
+    pygame.draw.rect(screen, GRAY, (road_x, 0, road_width, HEIGHT))
+    
+    # Draw center line
+    for y in range(0, HEIGHT, 40):
+        pygame.draw.rect(screen, YELLOW, (WIDTH // 2 - 5, y, 10, 20))
+    
+    # Draw car
+    pygame.draw.rect(screen, RED, (car_x, car_y, car_width, car_height))
+    
+    # Draw obstacles
+    for obstacle in obstacles:
+        pygame.draw.rect(screen, WHITE, (obstacle[0], obstacle[1], 40, 60))
+    
+    # Update display
+    pygame.display.flip()
+    
+    # Control frame rate
+    clock.tick(60)
+
+# Quit
+pygame.quit()
+sys.exit()
+'''
+    
+    @staticmethod
+    def _generate_rpg_template() -> str:
+        """Generate RPG game template"""
+        return '''
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("RPG Adventure")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+BROWN = (139, 69, 19)
+
+# Player
+player_x = WIDTH // 2
+player_y = HEIGHT // 2
+player_size = 30
+player_speed = 4
+player_health = 100
+
+# Enemies
+enemies = []
+for _ in range(5):
+    enemy_x = random.randint(50, WIDTH - 50)
+    enemy_y = random.randint(50, HEIGHT - 50)
+    enemies.append([enemy_x, enemy_y, 50])  # x, y, health
+
+# Items
+items = []
+for _ in range(3):
+    item_x = random.randint(50, WIDTH - 50)
+    item_y = random.randint(50, HEIGHT - 50)
+    items.append([item_x, item_y])
+
+# Game clock
+clock = pygame.time.Clock()
+
+# Font for text
+font = pygame.font.Font(None, 36)
+
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Get keys
+    keys = pygame.key.get_pressed()
+    
+    # Move player
+    if keys[pygame.K_LEFT]:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT]:
+        player_x += player_speed
+    if keys[pygame.K_UP]:
+        player_y -= player_speed
+    if keys[pygame.K_DOWN]:
+        player_y += player_speed
+    
+    # Keep player on screen
+    player_x = max(player_size, min(WIDTH - player_size, player_x))
+    player_y = max(player_size, min(HEIGHT - player_size, player_y))
+    
+    # Check item collection
+    for item in items[:]:
+        if abs(player_x - item[0]) < 30 and abs(player_y - item[1]) < 30:
+            items.remove(item)
+            player_health = min(100, player_health + 20)
+    
+    # Move enemies toward player
+    for enemy in enemies:
+        if enemy[0] < player_x:
+            enemy[0] += 1
+        elif enemy[0] > player_x:
+            enemy[0] -= 1
+        if enemy[1] < player_y:
+            enemy[1] += 1
+        elif enemy[1] > player_y:
+            enemy[1] -= 1
+    
+    # Check enemy collision
+    for enemy in enemies:
+        if abs(player_x - enemy[0]) < 30 and abs(player_y - enemy[1]) < 30:
+            player_health -= 1
+    
+    # Clear screen
+    screen.fill(BROWN)
+    
+    # Draw items
+    for item in items:
+        pygame.draw.circle(screen, GREEN, (item[0], item[1]), 15)
+    
+    # Draw enemies
+    for enemy in enemies:
+        if enemy[2] > 0:
+            pygame.draw.circle(screen, RED, (enemy[0], enemy[1]), 20)
+    
+    # Draw player
+    pygame.draw.circle(screen, BLUE, (player_x, player_y), player_size)
+    
+    # Draw health
+    health_text = font.render(f"Health: {player_health}", True, WHITE)
+    screen.blit(health_text, (10, 10))
+    
+    # Check game over
+    if player_health <= 0:
+        game_over_text = font.render("GAME OVER", True, WHITE)
+        screen.blit(game_over_text, (WIDTH // 2 - 100, HEIGHT // 2))
+    
+    # Update display
+    pygame.display.flip()
+    
+    # Control frame rate
+    clock.tick(60)
+
+# Quit
+pygame.quit()
+sys.exit()
+'''
+    
+    @staticmethod
+    def _generate_space_template() -> str:
+        """Generate space shooter game template"""
+        return '''
+import pygame
+import sys
+import random
+import math
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Space Shooter")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+YELLOW = (255, 255, 0)
+RED = (255, 0, 0)
+
+# Player ship
+ship_x = WIDTH // 2
+ship_y = HEIGHT - 50
+ship_size = 30
+ship_speed = 6
+
+# Bullets
+bullets = []
+bullet_speed = 10
+
+# Asteroids
+asteroids = []
+asteroid_speed = 3
+spawn_timer = 0
+
+# Score
+score = 0
+
+# Game clock
+clock = pygame.time.Clock()
+
+# Font
+font = pygame.font.Font(None, 36)
+
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bullets.append([ship_x, ship_y])
+    
+    # Get keys
+    keys = pygame.key.get_pressed()
+    
+    # Move ship
+    if keys[pygame.K_LEFT]:
+        ship_x -= ship_speed
+    if keys[pygame.K_RIGHT]:
+        ship_x += ship_speed
+    
+    # Keep ship on screen
+    ship_x = max(ship_size, min(WIDTH - ship_size, ship_x))
+    
+    # Move bullets
+    for bullet in bullets[:]:
+        bullet[1] -= bullet_speed
+        if bullet[1] < 0:
+            bullets.remove(bullet)
+    
+    # Spawn asteroids
+    spawn_timer += 1
+    if spawn_timer > 30:
+        spawn_timer = 0
+        asteroid_x = random.randint(20, WIDTH - 20)
+        asteroids.append([asteroid_x, -20])
+    
+    # Move asteroids
+    for asteroid in asteroids[:]:
+        asteroid[1] += asteroid_speed
+        if asteroid[1] > HEIGHT:
+            asteroids.remove(asteroid)
+    
+    # Check bullet-asteroid collisions
+    for bullet in bullets[:]:
+        for asteroid in asteroids[:]:
+            if abs(bullet[0] - asteroid[0]) < 20 and abs(bullet[1] - asteroid[1]) < 20:
+                if bullet in bullets:
+                    bullets.remove(bullet)
+                if asteroid in asteroids:
+                    asteroids.remove(asteroid)
+                    score += 10
+    
+    # Check ship-asteroid collisions
+    for asteroid in asteroids:
+        if abs(ship_x - asteroid[0]) < 30 and abs(ship_y - asteroid[1]) < 30:
+            print(f"Game Over! Score: {score}")
+            running = False
+    
+    # Clear screen
+    screen.fill(BLACK)
+    
+    # Draw stars
+    for _ in range(50):
+        star_x = random.randint(0, WIDTH)
+        star_y = random.randint(0, HEIGHT)
+        pygame.draw.circle(screen, WHITE, (star_x, star_y), 1)
+    
+    # Draw ship
+    points = [(ship_x, ship_y - ship_size),
+              (ship_x - ship_size, ship_y + ship_size),
+              (ship_x + ship_size, ship_y + ship_size)]
+    pygame.draw.polygon(screen, WHITE, points)
+    
+    # Draw bullets
+    for bullet in bullets:
+        pygame.draw.circle(screen, YELLOW, (bullet[0], bullet[1]), 3)
+    
+    # Draw asteroids
+    for asteroid in asteroids:
+        pygame.draw.circle(screen, RED, (asteroid[0], asteroid[1]), 15)
+    
+    # Draw score
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+    
+    # Update display
+    pygame.display.flip()
+    
+    # Control frame rate
+    clock.tick(60)
+
+# Quit
+pygame.quit()
+sys.exit()
+'''

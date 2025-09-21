@@ -1,0 +1,1258 @@
+{
+  "test_timestamp": "2025-09-21T08:02:40.438974",
+  "concurrent_tests": [
+    {
+      "num_users": 5,
+      "start_time": 1758441760.4392326,
+      "end_time": 1758441771.6703563,
+      "user_results": [
+        {
+          "user_id": 0,
+          "start_time": 1758441760.648368,
+          "end_time": 1758441770.7910998,
+          "compilation_time": 0.031032323837280273,
+          "execution_start_time": 0.0066759586334228516,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.031032323837280273
+            ],
+            [
+              "execute",
+              0.0066759586334228516
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.14273190498352
+        },
+        {
+          "user_id": 2,
+          "start_time": 1758441760.852299,
+          "end_time": 1758441771.0078018,
+          "compilation_time": 0.11150097846984863,
+          "execution_start_time": 0.023993968963623047,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.11150097846984863
+            ],
+            [
+              "execute",
+              0.023993968963623047
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.155502796173096
+        },
+        {
+          "user_id": 1,
+          "start_time": 1758441760.7504294,
+          "end_time": 1758441771.0153794,
+          "compilation_time": 0.21179866790771484,
+          "execution_start_time": 0.024213314056396484,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.21179866790771484
+            ],
+            [
+              "execute",
+              0.024213314056396484
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.264950037002563
+        },
+        {
+          "user_id": 3,
+          "start_time": 1758441760.954057,
+          "end_time": 1758441771.0642269,
+          "compilation_time": 0.011480569839477539,
+          "execution_start_time": 0.023468971252441406,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.011480569839477539
+            ],
+            [
+              "execute",
+              0.023468971252441406
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.110169887542725
+        },
+        {
+          "user_id": 4,
+          "start_time": 1758441761.055852,
+          "end_time": 1758441771.2921875,
+          "compilation_time": 0.06980752944946289,
+          "execution_start_time": 0.0744471549987793,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.06980752944946289
+            ],
+            [
+              "execute",
+              0.0744471549987793
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.236335515975952
+        }
+      ],
+      "statistics": {
+        "total_users": 5,
+        "successful_users": 0,
+        "failed_users": 5,
+        "compilation_times": [
+          0.031032323837280273,
+          0.11150097846984863,
+          0.21179866790771484,
+          0.011480569839477539,
+          0.06980752944946289
+        ],
+        "execution_times": [
+          0.0066759586334228516,
+          0.023993968963623047,
+          0.024213314056396484,
+          0.023468971252441406,
+          0.0744471549987793
+        ],
+        "frame_counts": [],
+        "total_frames": 0,
+        "avg_compilation_time": 0.08712401390075683,
+        "avg_execution_time": 0.030559873580932616,
+        "avg_frames_per_user": 0,
+        "p95_compilation_time": 0.2820070505142212,
+        "p95_execution_time": 0.10961084365844727,
+        "errors": []
+      },
+      "resource_usage_before": {
+        "timestamp": 1758441760.439731,
+        "cpu_percent": 23.1,
+        "memory_percent": 45.6,
+        "memory_mb": 47.21875,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_after": {
+        "timestamp": 1758441771.672326,
+        "cpu_percent": 42.9,
+        "memory_percent": 45.9,
+        "memory_mb": 48.09375,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_during": [
+        {
+          "timestamp": 1758441760.5442278,
+          "cpu_percent": 33.3,
+          "memory_percent": 45.6,
+          "memory_mb": 47.21875,
+          "num_threads": 3,
+          "open_files": 0,
+          "connections": 0
+        },
+        {
+          "timestamp": 1758441761.6541457,
+          "cpu_percent": 88.5,
+          "memory_percent": 45.7,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441762.769002,
+          "cpu_percent": 90.1,
+          "memory_percent": 45.8,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441763.8808665,
+          "cpu_percent": 75.9,
+          "memory_percent": 45.8,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441764.9945266,
+          "cpu_percent": 40.5,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441766.1111124,
+          "cpu_percent": 50.0,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441767.2214224,
+          "cpu_percent": 26.3,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441768.3339639,
+          "cpu_percent": 27.8,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441769.4428601,
+          "cpu_percent": 41.3,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        },
+        {
+          "timestamp": 1758441770.5579932,
+          "cpu_percent": 57.0,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 7,
+          "open_files": 0,
+          "connections": 5
+        }
+      ],
+      "total_time": 11.231123685836792
+    },
+    {
+      "num_users": 10,
+      "start_time": 1758441776.7771173,
+      "end_time": 1758441788.339237,
+      "user_results": [
+        {
+          "user_id": 0,
+          "start_time": 1758441776.9877698,
+          "end_time": 1758441787.022161,
+          "compilation_time": 0.004289150238037109,
+          "execution_start_time": 0.0043337345123291016,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.004289150238037109
+            ],
+            [
+              "execute",
+              0.0043337345123291016
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.034391164779663
+        },
+        {
+          "user_id": 1,
+          "start_time": 1758441777.0886836,
+          "end_time": 1758441787.1309736,
+          "compilation_time": 0.0043985843658447266,
+          "execution_start_time": 0.002634286880493164,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0043985843658447266
+            ],
+            [
+              "execute",
+              0.002634286880493164
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.042289972305298
+        },
+        {
+          "user_id": 2,
+          "start_time": 1758441777.1897376,
+          "end_time": 1758441787.3083863,
+          "compilation_time": 0.0036520957946777344,
+          "execution_start_time": 0.0021996498107910156,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0036520957946777344
+            ],
+            [
+              "execute",
+              0.0021996498107910156
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.118648767471313
+        },
+        {
+          "user_id": 3,
+          "start_time": 1758441777.2908797,
+          "end_time": 1758441787.3859096,
+          "compilation_time": 0.0068781375885009766,
+          "execution_start_time": 0.0032312870025634766,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0068781375885009766
+            ],
+            [
+              "execute",
+              0.0032312870025634766
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.095029830932617
+        },
+        {
+          "user_id": 4,
+          "start_time": 1758441777.3934968,
+          "end_time": 1758441787.4943943,
+          "compilation_time": 0.00502324104309082,
+          "execution_start_time": 0.003588438034057617,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.00502324104309082
+            ],
+            [
+              "execute",
+              0.003588438034057617
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.100897550582886
+        },
+        {
+          "user_id": 5,
+          "start_time": 1758441777.494708,
+          "end_time": 1758441787.5798252,
+          "compilation_time": 0.003683805465698242,
+          "execution_start_time": 0.0018756389617919922,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003683805465698242
+            ],
+            [
+              "execute",
+              0.0018756389617919922
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.085117101669312
+        },
+        {
+          "user_id": 6,
+          "start_time": 1758441777.5958872,
+          "end_time": 1758441787.6206405,
+          "compilation_time": 0.0034329891204833984,
+          "execution_start_time": 0.0017852783203125,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0034329891204833984
+            ],
+            [
+              "execute",
+              0.0017852783203125
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.024753332138062
+        },
+        {
+          "user_id": 7,
+          "start_time": 1758441777.6972165,
+          "end_time": 1758441787.717972,
+          "compilation_time": 0.0037076473236083984,
+          "execution_start_time": 0.002299070358276367,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0037076473236083984
+            ],
+            [
+              "execute",
+              0.002299070358276367
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.020755529403687
+        },
+        {
+          "user_id": 8,
+          "start_time": 1758441777.799144,
+          "end_time": 1758441787.884123,
+          "compilation_time": 0.0043523311614990234,
+          "execution_start_time": 0.0021359920501708984,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0043523311614990234
+            ],
+            [
+              "execute",
+              0.0021359920501708984
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.084979057312012
+        },
+        {
+          "user_id": 9,
+          "start_time": 1758441777.900445,
+          "end_time": 1758441787.9149117,
+          "compilation_time": 0.003484010696411133,
+          "execution_start_time": 0.0018079280853271484,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003484010696411133
+            ],
+            [
+              "execute",
+              0.0018079280853271484
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.014466762542725
+        }
+      ],
+      "statistics": {
+        "total_users": 10,
+        "successful_users": 0,
+        "failed_users": 10,
+        "compilation_times": [
+          0.004289150238037109,
+          0.0043985843658447266,
+          0.0036520957946777344,
+          0.0068781375885009766,
+          0.00502324104309082,
+          0.003683805465698242,
+          0.0034329891204833984,
+          0.0037076473236083984,
+          0.0043523311614990234,
+          0.003484010696411133
+        ],
+        "execution_times": [
+          0.0043337345123291016,
+          0.002634286880493164,
+          0.0021996498107910156,
+          0.0032312870025634766,
+          0.003588438034057617,
+          0.0018756389617919922,
+          0.0017852783203125,
+          0.002299070358276367,
+          0.0021359920501708984,
+          0.0018079280853271484
+        ],
+        "frame_counts": [],
+        "total_frames": 0,
+        "avg_compilation_time": 0.004290199279785157,
+        "avg_execution_time": 0.002589130401611328,
+        "avg_frames_per_user": 0,
+        "p95_compilation_time": 0.007712841033935547,
+        "p95_execution_time": 0.00466911792755127,
+        "errors": []
+      },
+      "resource_usage_before": {
+        "timestamp": 1758441776.7774816,
+        "cpu_percent": 32.9,
+        "memory_percent": 45.9,
+        "memory_mb": 48.09375,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_after": {
+        "timestamp": 1758441788.3398576,
+        "cpu_percent": 38.5,
+        "memory_percent": 45.8,
+        "memory_mb": 48.96875,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_during": [
+        {
+          "timestamp": 1758441776.8879418,
+          "cpu_percent": 55.7,
+          "memory_percent": 45.9,
+          "memory_mb": 48.09375,
+          "num_threads": 3,
+          "open_files": 0,
+          "connections": 1
+        },
+        {
+          "timestamp": 1758441778.0034528,
+          "cpu_percent": 91.4,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441779.1335227,
+          "cpu_percent": 51.2,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441780.262607,
+          "cpu_percent": 42.9,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441781.3759656,
+          "cpu_percent": 36.4,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441782.495936,
+          "cpu_percent": 72.4,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441783.6226788,
+          "cpu_percent": 74.7,
+          "memory_percent": 45.8,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441784.7373579,
+          "cpu_percent": 36.3,
+          "memory_percent": 45.8,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441785.8533354,
+          "cpu_percent": 42.9,
+          "memory_percent": 45.8,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 10
+        },
+        {
+          "timestamp": 1758441787.142681,
+          "cpu_percent": 43.8,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 12,
+          "open_files": 0,
+          "connections": 8
+        }
+      ],
+      "total_time": 11.562119722366333
+    },
+    {
+      "num_users": 20,
+      "start_time": 1758441793.4438357,
+      "end_time": 1758441806.1118114,
+      "user_results": [
+        {
+          "user_id": 1,
+          "start_time": 1758441793.7543595,
+          "end_time": 1758441803.8486457,
+          "compilation_time": 0.003922700881958008,
+          "execution_start_time": 0.0019426345825195312,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003922700881958008
+            ],
+            [
+              "execute",
+              0.0019426345825195312
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.0942862033844
+        },
+        {
+          "user_id": 0,
+          "start_time": 1758441793.6525621,
+          "end_time": 1758441803.814229,
+          "compilation_time": 0.0065348148345947266,
+          "execution_start_time": 0.004403591156005859,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0065348148345947266
+            ],
+            [
+              "execute",
+              0.004403591156005859
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.161666870117188
+        },
+        {
+          "user_id": 3,
+          "start_time": 1758441793.9602597,
+          "end_time": 1758441804.038106,
+          "compilation_time": 0.003607034683227539,
+          "execution_start_time": 0.0018303394317626953,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003607034683227539
+            ],
+            [
+              "execute",
+              0.0018303394317626953
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.07784628868103
+        },
+        {
+          "user_id": 2,
+          "start_time": 1758441793.85906,
+          "end_time": 1758441804.065385,
+          "compilation_time": 0.008279561996459961,
+          "execution_start_time": 0.0031468868255615234,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.008279561996459961
+            ],
+            [
+              "execute",
+              0.0031468868255615234
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.206325054168701
+        },
+        {
+          "user_id": 5,
+          "start_time": 1758441794.1641486,
+          "end_time": 1758441804.1842139,
+          "compilation_time": 0.003298521041870117,
+          "execution_start_time": 0.001966238021850586,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003298521041870117
+            ],
+            [
+              "execute",
+              0.001966238021850586
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.020065307617188
+        },
+        {
+          "user_id": 4,
+          "start_time": 1758441794.06287,
+          "end_time": 1758441804.2055516,
+          "compilation_time": 0.010666370391845703,
+          "execution_start_time": 0.002905130386352539,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.010666370391845703
+            ],
+            [
+              "execute",
+              0.002905130386352539
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.14268159866333
+        },
+        {
+          "user_id": 6,
+          "start_time": 1758441794.266521,
+          "end_time": 1758441804.3002632,
+          "compilation_time": 0.00530242919921875,
+          "execution_start_time": 0.0017311573028564453,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.00530242919921875
+            ],
+            [
+              "execute",
+              0.0017311573028564453
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.033742189407349
+        },
+        {
+          "user_id": 7,
+          "start_time": 1758441794.3728864,
+          "end_time": 1758441804.3987896,
+          "compilation_time": 0.003963470458984375,
+          "execution_start_time": 0.0019383430480957031,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003963470458984375
+            ],
+            [
+              "execute",
+              0.0019383430480957031
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.025903224945068
+        },
+        {
+          "user_id": 8,
+          "start_time": 1758441794.474144,
+          "end_time": 1758441804.5174437,
+          "compilation_time": 0.003415822982788086,
+          "execution_start_time": 0.0022361278533935547,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.003415822982788086
+            ],
+            [
+              "execute",
+              0.0022361278533935547
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.043299674987793
+        },
+        {
+          "user_id": 9,
+          "start_time": 1758441794.5799491,
+          "end_time": 1758441804.6333363,
+          "compilation_time": 0.006460666656494141,
+          "execution_start_time": 0.00408482551574707,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.006460666656494141
+            ],
+            [
+              "execute",
+              0.00408482551574707
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.05338716506958
+        },
+        {
+          "user_id": 10,
+          "start_time": 1758441794.6823816,
+          "end_time": 1758441804.7545276,
+          "compilation_time": 0.0047149658203125,
+          "execution_start_time": 0.0017936229705810547,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.0047149658203125
+            ],
+            [
+              "execute",
+              0.0017936229705810547
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.072145938873291
+        },
+        {
+          "user_id": 11,
+          "start_time": 1758441794.785106,
+          "end_time": 1758441804.8864434,
+          "compilation_time": 0.011240243911743164,
+          "execution_start_time": 0.005605936050415039,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.011240243911743164
+            ],
+            [
+              "execute",
+              0.005605936050415039
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.101337432861328
+        },
+        {
+          "user_id": 12,
+          "start_time": 1758441794.8959033,
+          "end_time": 1758441805.0045536,
+          "compilation_time": 0.03881382942199707,
+          "execution_start_time": 0.05158495903015137,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.03881382942199707
+            ],
+            [
+              "execute",
+              0.05158495903015137
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.108650207519531
+        },
+        {
+          "user_id": 13,
+          "start_time": 1758441795.004394,
+          "end_time": 1758441805.042786,
+          "compilation_time": 0.011536121368408203,
+          "execution_start_time": 0.007967948913574219,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.011536121368408203
+            ],
+            [
+              "execute",
+              0.007967948913574219
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.038391828536987
+        },
+        {
+          "user_id": 14,
+          "start_time": 1758441795.107202,
+          "end_time": 1758441805.1260133,
+          "compilation_time": 0.004062652587890625,
+          "execution_start_time": 0.012347936630249023,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.004062652587890625
+            ],
+            [
+              "execute",
+              0.012347936630249023
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.018811225891113
+        },
+        {
+          "user_id": 15,
+          "start_time": 1758441795.21057,
+          "end_time": 1758441805.3156757,
+          "compilation_time": 0.02081012725830078,
+          "execution_start_time": 0.0029115676879882812,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.02081012725830078
+            ],
+            [
+              "execute",
+              0.0029115676879882812
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.105105638504028
+        },
+        {
+          "user_id": 16,
+          "start_time": 1758441795.3286219,
+          "end_time": 1758441805.4756768,
+          "compilation_time": 0.04329180717468262,
+          "execution_start_time": 0.03387618064880371,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.04329180717468262
+            ],
+            [
+              "execute",
+              0.03387618064880371
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.14705491065979
+        },
+        {
+          "user_id": 17,
+          "start_time": 1758441795.4430504,
+          "end_time": 1758441805.494402,
+          "compilation_time": 0.005027294158935547,
+          "execution_start_time": 0.0049283504486083984,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.005027294158935547
+            ],
+            [
+              "execute",
+              0.0049283504486083984
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.051351547241211
+        },
+        {
+          "user_id": 18,
+          "start_time": 1758441795.5524392,
+          "end_time": 1758441805.6619003,
+          "compilation_time": 0.018587827682495117,
+          "execution_start_time": 0.007424831390380859,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.018587827682495117
+            ],
+            [
+              "execute",
+              0.007424831390380859
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.109461069107056
+        },
+        {
+          "user_id": 19,
+          "start_time": 1758441795.6675618,
+          "end_time": 1758441805.799717,
+          "compilation_time": 0.03803825378417969,
+          "execution_start_time": 0.012007474899291992,
+          "frames_received": 0,
+          "errors": [],
+          "response_times": [
+            [
+              "compile",
+              0.03803825378417969
+            ],
+            [
+              "execute",
+              0.012007474899291992
+            ]
+          ],
+          "session_id": null,
+          "success": false,
+          "total_time": 10.132155179977417
+        }
+      ],
+      "statistics": {
+        "total_users": 20,
+        "successful_users": 0,
+        "failed_users": 20,
+        "compilation_times": [
+          0.003922700881958008,
+          0.0065348148345947266,
+          0.003607034683227539,
+          0.008279561996459961,
+          0.003298521041870117,
+          0.010666370391845703,
+          0.00530242919921875,
+          0.003963470458984375,
+          0.003415822982788086,
+          0.006460666656494141,
+          0.0047149658203125,
+          0.011240243911743164,
+          0.03881382942199707,
+          0.011536121368408203,
+          0.004062652587890625,
+          0.02081012725830078,
+          0.04329180717468262,
+          0.005027294158935547,
+          0.018587827682495117,
+          0.03803825378417969
+        ],
+        "execution_times": [
+          0.0019426345825195312,
+          0.004403591156005859,
+          0.0018303394317626953,
+          0.0031468868255615234,
+          0.001966238021850586,
+          0.002905130386352539,
+          0.0017311573028564453,
+          0.0019383430480957031,
+          0.0022361278533935547,
+          0.00408482551574707,
+          0.0017936229705810547,
+          0.005605936050415039,
+          0.05158495903015137,
+          0.007967948913574219,
+          0.012347936630249023,
+          0.0029115676879882812,
+          0.03387618064880371,
+          0.0049283504486083984,
+          0.007424831390380859,
+          0.012007474899291992
+        ],
+        "frame_counts": [],
+        "total_frames": 0,
+        "avg_compilation_time": 0.012578725814819336,
+        "avg_execution_time": 0.008331704139709472,
+        "avg_frames_per_user": 0,
+        "p95_compilation_time": 0.04306790828704834,
+        "p95_execution_time": 0.05069952011108399,
+        "errors": []
+      },
+      "resource_usage_before": {
+        "timestamp": 1758441793.4443462,
+        "cpu_percent": 64.1,
+        "memory_percent": 45.9,
+        "memory_mb": 48.96875,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_after": {
+        "timestamp": 1758441806.1122336,
+        "cpu_percent": 26.6,
+        "memory_percent": 46.2,
+        "memory_mb": 50.44921875,
+        "num_threads": 1,
+        "open_files": 0,
+        "connections": 0
+      },
+      "resource_usage_during": [
+        {
+          "timestamp": 1758441793.5505702,
+          "cpu_percent": 27.8,
+          "memory_percent": 45.9,
+          "memory_mb": 48.96875,
+          "num_threads": 3,
+          "open_files": 0,
+          "connections": 1
+        },
+        {
+          "timestamp": 1758441794.6751785,
+          "cpu_percent": 56.4,
+          "memory_percent": 45.9,
+          "memory_mb": 49.09375,
+          "num_threads": 14,
+          "open_files": 0,
+          "connections": 12
+        },
+        {
+          "timestamp": 1758441795.835907,
+          "cpu_percent": 45.0,
+          "memory_percent": 45.9,
+          "memory_mb": 50.46875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441797.2023473,
+          "cpu_percent": 65.1,
+          "memory_percent": 45.9,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441798.455627,
+          "cpu_percent": 53.3,
+          "memory_percent": 46.0,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441799.677118,
+          "cpu_percent": 45.3,
+          "memory_percent": 46.0,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441800.8792427,
+          "cpu_percent": 47.8,
+          "memory_percent": 46.0,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441802.308208,
+          "cpu_percent": 76.7,
+          "memory_percent": 45.7,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 20
+        },
+        {
+          "timestamp": 1758441803.7011807,
+          "cpu_percent": 83.8,
+          "memory_percent": 46.1,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 18
+        },
+        {
+          "timestamp": 1758441804.9789627,
+          "cpu_percent": 48.8,
+          "memory_percent": 46.2,
+          "memory_mb": 50.71875,
+          "num_threads": 22,
+          "open_files": 0,
+          "connections": 6
+        }
+      ],
+      "total_time": 12.667975664138794
+    }
+  ],
+  "resource_usage": [],
+  "errors": [],
+  "cleanup_test": {
+    "start_sessions": [],
+    "end_sessions": [],
+    "leaked_sessions": [],
+    "cleanup_success": true
+  }
+}
