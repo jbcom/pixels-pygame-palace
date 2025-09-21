@@ -2,8 +2,15 @@
 """Main Flask application entry point for Pixel's PyGame Palace backend."""
 
 import os
-from src.app import create_app
-from src.websocket_handlers import register_websocket_handlers
+import sys
+from pathlib import Path
+
+# Add the root directory to Python path to find src.backend
+root_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(root_dir))
+
+from src.backend.app import create_app
+from src.backend.websocket_handlers import register_websocket_handlers
 
 # Create Flask application
 app, socketio = create_app()

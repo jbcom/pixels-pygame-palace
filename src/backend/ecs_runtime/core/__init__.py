@@ -1,0 +1,1 @@
+"""Core ECS architecture classes."""

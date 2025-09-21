@@ -68,7 +68,7 @@ def cleanup_expired_sessions(max_session_time: int):
 
 def create_game_session(code: str, max_session_time: int, socketio):
     """Create a new game execution session."""
-    from ..game_engine import GameExecutor
+    from .game_engine import GameExecutor
     
     session_id = str(uuid.uuid4())
     

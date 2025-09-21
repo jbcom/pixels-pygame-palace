@@ -1,0 +1,15 @@
+"""Custom game components."""
+
+from ecs_runtime import Component
+
+{% for component in custom_components %}
+class {{ component.id | component_name }}(Component):
+    """{{ component.description }}"""
+    
+    def __init__(self{% for param in component.params %}, {{ param.name }}={{ param.default }}{% endfor %}):
+        super().__init__()
+        {% for param in component.params %}
+        self.{{ param.name }} = {{ param.name }}
+        {% endfor %}
+
+{% endfor %}

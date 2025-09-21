@@ -1,0 +1,23 @@
+"""Custom game systems."""
+
+from typing import Set, Type
+from ecs_runtime import System, Entity, Component
+
+{% for system in custom_systems %}
+class {{ system.id | component_name }}(System):
+    """{{ system.description }}"""
+    
+    def __init__(self, priority: int = {{ system.priority | default(100) }}):
+        super().__init__(priority)
+    
+    @property
+    def required_components(self) -> Set[Type[Component]]:
+        return { {% for comp in system.required_components %}{{ comp | component_name }}{% if not loop.last %}, {% endif %}{% endfor %} }
+    
+    def update(self, entities, delta_time: float):
+        """Update system logic."""
+        for entity in entities:
+            # TODO: Implement system logic
+            pass
+
+{% endfor %}
