@@ -16,6 +16,7 @@ import {
   useLayoutEdgeSwipe 
 } from './wizard-layout-manager';
 import WizardCodeRunner from './wizard-code-runner';
+import PygameRunner from './pygame-runner';
 import PygameWysiwygEditor from './pygame-wysiwyg-editor';
 import AssetBrowserWizard from './asset-browser-wizard';
 import PixelMinimizeAnimation from './pixel-minimize-animation';
@@ -506,6 +507,15 @@ export default function UniversalWizard({
     } else if (option.action === 'tweakDifficulty') {
       // Adjust game difficulty settings  
       console.log('Adjusting difficulty');
+    } else if (option.action === 'launchPyodideGame') {
+      // Launch the game with Pyodide runner
+      console.log('Launching game with Pyodide...');
+      setUiState(prev => ({ 
+        ...prev, 
+        embeddedComponent: 'pygame-runner',
+        previewMode: 'full',
+        gameRunnerOpen: true
+      }));
     } else if (option.action === 'previewScene' || option.action === 'previewGameplay' || option.action === 'previewEnding' || option.action === 'previewFullGame') {
       // Handle various preview actions
       const previewType = option.action.replace('preview', '').toLowerCase();
@@ -842,9 +852,17 @@ export default function UniversalWizard({
           {...layoutProps}
           edgeSwipeHandlers={edgeSwipeHandlers.handlers}
         />
-        {uiState.embeddedComponent !== 'none' && (
+        {uiState.embeddedComponent === 'code-editor' && (
           <WizardCodeRunner
             type={uiState.embeddedComponent}
+            onClose={() => handleEmbeddedComponentChange('none')}
+          />
+        )}
+        {uiState.embeddedComponent === 'pygame-runner' && (
+          <PygameRunner
+            selectedComponents={sessionActions.selectedComponents}
+            selectedAssets={selectedAssets}
+            previewMode={uiState.previewMode}
             onClose={() => handleEmbeddedComponentChange('none')}
           />
         )}
@@ -870,9 +888,17 @@ export default function UniversalWizard({
           {...layoutProps}
           edgeSwipeHandlers={edgeSwipeHandlers.handlers}
         />
-        {uiState.embeddedComponent !== 'none' && (
+        {uiState.embeddedComponent === 'code-editor' && (
           <WizardCodeRunner
             type={uiState.embeddedComponent}
+            onClose={() => handleEmbeddedComponentChange('none')}
+          />
+        )}
+        {uiState.embeddedComponent === 'pygame-runner' && (
+          <PygameRunner
+            selectedComponents={sessionActions.selectedComponents}
+            selectedAssets={selectedAssets}
+            previewMode={uiState.previewMode}
             onClose={() => handleEmbeddedComponentChange('none')}
           />
         )}
@@ -882,12 +908,28 @@ export default function UniversalWizard({
 
   // Desktop and tablet layout
   return (
-    <DesktopLayout
-      {...layoutProps}
-      deviceState={deviceState}
-      uiState={uiState}
-      onPixelMenuAction={handlePixelMenuAction}
-      renderDialogue={renderDialogue}
-    />
+    <>
+      <DesktopLayout
+        {...layoutProps}
+        deviceState={deviceState}
+        uiState={uiState}
+        onPixelMenuAction={handlePixelMenuAction}
+        renderDialogue={renderDialogue}
+      />
+      {uiState.embeddedComponent === 'code-editor' && (
+        <WizardCodeRunner
+          type={uiState.embeddedComponent}
+          onClose={() => handleEmbeddedComponentChange('none')}
+        />
+      )}
+      {uiState.embeddedComponent === 'pygame-runner' && (
+        <PygameRunner
+          selectedComponents={sessionActions.selectedComponents}
+          selectedAssets={selectedAssets}
+          previewMode={uiState.previewMode}
+          onClose={() => handleEmbeddedComponentChange('none')}
+        />
+      )}
+    </>
   );
 }
