@@ -2,15 +2,8 @@
   "start": {
     "id": "start",
     "speaker": "Pixel",
-    "text": "Awesome! A platformer - the classic jump-and-run adventure! Let's build this scene by scene with meaningful choices that shape your game.",
-    "followUp": "First, let's define your world's theme and style!",
-    "next": "themeChoice"
-  },
-
-  "themeChoice": {
-    "id": "themeChoice",
-    "speaker": "Pixel",
-    "text": "What kind of world should your platformer take place in? This choice bundles matching backgrounds, platforms, and music!",
+    "text": "Awesome! A platformer - the classic jump-and-run adventure! Let's build this scene by scene with meaningful choices that shape your game. First, let's define your world's theme!",
+    "followUp": "What kind of world should your platformer take place in? This choice bundles matching backgrounds, platforms, and music!",
     "action": "showComponentChoice",
     "actionParams": {
       "componentId": "worldTheme",
@@ -79,24 +72,15 @@
         "text": "A: Hero Showcase - Character bounces and shows abilities",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "titleFocus", "variant": "A" },
-        "next": "stage1Preview"
+        "next": "jumpMechanics"
       },
       {
         "text": "B: World Preview - Scrolling preview of level elements",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "titleFocus", "variant": "B" },
-        "next": "stage1Preview"
+        "next": "jumpMechanics"
       }
     ]
-  },
-
-  "stage1Preview": {
-    "id": "stage1Preview",
-    "speaker": "Pixel",
-    "text": "Perfect! Your title screen is shaping up nicely! Let me compile what we have so far...",
-    "action": "compileScene",
-    "actionParams": { "scene": "title" },
-    "next": "jumpMechanics"
   },
 
   "jumpMechanics": {
@@ -188,24 +172,15 @@
         "text": "A: Generous Checkpoints - Save progress frequently",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "checkpoints", "variant": "A" },
-        "next": "stage2Preview"
+        "next": "platformTypes"
       },
       {
         "text": "B: Challenging Sparse - Checkpoints only at major milestones",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "checkpoints", "variant": "B" },
-        "next": "stage2Preview"
+        "next": "platformTypes"
       }
     ]
-  },
-
-  "stage2Preview": {
-    "id": "stage2Preview",
-    "speaker": "Pixel",
-    "text": "Excellent mechanics! Let's see how they feel in action...",
-    "action": "launchPyodidePreview",
-    "actionParams": { "scene": "gameplay_test" },
-    "next": "platformTypes"
   },
 
   "platformTypes": {
@@ -276,7 +251,7 @@
           "variant": "A",
           "bundle": ["mushroom", "fireflower", "coins", "1up"]
         },
-        "next": "stage3Preview"
+        "next": "bossPattern"
       },
       {
         "text": "B: Sonic Style - Rings for health, shields for protection, speed boosts",
@@ -286,18 +261,9 @@
           "variant": "B",
           "bundle": ["rings", "shields", "speedboost", "invincibility"]
         },
-        "next": "stage3Preview"
+        "next": "bossPattern"
       }
     ]
-  },
-
-  "stage3Preview": {
-    "id": "stage3Preview",
-    "speaker": "Pixel",
-    "text": "Your world is coming together! Time to preview the full level...",
-    "action": "compileScene",
-    "actionParams": { "scene": "world" },
-    "next": "bossPattern"
   },
 
   "bossPattern": {
@@ -364,24 +330,15 @@
         "text": "A: Epic Cutscene - Dramatic slow-motion with explosions",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "bossVictory", "variant": "A" },
-        "next": "stage4Preview"
+        "next": "levelComplete"
       },
       {
         "text": "B: Quick Celebration - Jump to victory immediately",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "bossVictory", "variant": "B" },
-        "next": "stage4Preview"
+        "next": "levelComplete"
       }
     ]
-  },
-
-  "stage4Preview": {
-    "id": "stage4Preview",
-    "speaker": "Pixel",
-    "text": "Epic boss battle configured! Let's see it in action...",
-    "action": "launchPyodidePreview",
-    "actionParams": { "scene": "boss_fight" },
-    "next": "levelComplete"
   },
 
   "levelComplete": {
