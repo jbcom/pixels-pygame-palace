@@ -1,9 +1,11 @@
-// PyGame Runner Component - Executes compiled Python games using Pyodide
+// PyGame Runner Component - Executes compiled Python games using backend API
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, RefreshCw, Download, Maximize, Minimize, X } from 'lucide-react';
+import { Play, Pause, RefreshCw, Download, Maximize, Minimize, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { compilePythonGame } from '@/lib/pygame-game-compiler';
+import { gameApi } from '@/lib/gameApi';
+import { useLocation } from 'wouter';
 
 interface PygameRunnerProps {
   selectedComponents?: Record<string, string>;
@@ -12,14 +14,7 @@ interface PygameRunnerProps {
   className?: string;
   onError?: (error: string) => void;
   onClose?: () => void;
-}
-
-// Declare Pyodide types
-declare global {
-  interface Window {
-    loadPyodide: any;
-    pyodide: any;
-  }
+  gameProject?: any;
 }
 
 export default function PygameRunner({
@@ -28,356 +23,159 @@ export default function PygameRunner({
   previewMode = 'full',
   className = '',
   onError,
-  onClose
+  onClose,
+  gameProject
 }: PygameRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pyodideRef = useRef<any>(null);
-  const animationFrameRef = useRef<number>();
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const [, setLocation] = useLocation();
+  
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
-  // Initialize Pyodide
-  const initPyodide = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Load Pyodide if not already loaded
-      if (!window.pyodide) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
-        script.async = true;
-        
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
-        
-        // Wait for Pyodide to be available
-        await new Promise(resolve => {
-          const checkInterval = setInterval(() => {
-            if (window.loadPyodide) {
-              clearInterval(checkInterval);
-              resolve(true);
-            }
-          }, 100);
-        });
-        
-        // Initialize Pyodide
-        window.pyodide = await window.loadPyodide({
-          indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'
-        });
-        
-        // Skip pygame installation - we'll use our mock implementation
-        // pygame-ce cannot be installed in browser due to binary dependencies
-      }
-      
-      pyodideRef.current = window.pyodide;
-      
-      // Setup canvas bridge for pygame
-      await setupCanvasBridge();
-      
-      setIsLoading(false);
-    } catch (err) {
-      const errorMsg = `Failed to initialize Pyodide: ${err}`;
-      setError(errorMsg);
-      setIsLoading(false);
-      if (onError) onError(errorMsg);
+  // Get game project from props or localStorage
+  const getGameData = useCallback(() => {
+    if (gameProject) {
+      return {
+        components: gameProject.components || selectedComponents,
+        assets: gameProject.assets || selectedAssets,
+        gameType: gameProject.gameType || 'platformer'
+      };
     }
-  }, [onError]);
-
-  // Setup bridge between Pyodide and canvas
-  const setupCanvasBridge = async () => {
-    if (!pyodideRef.current || !canvasRef.current) return;
     
+    // Try to get from localStorage if no prop provided
+    const savedProject = localStorage.getItem('currentGameProject');
+    if (savedProject) {
+      const parsed = JSON.parse(savedProject);
+      return {
+        components: parsed.components || selectedComponents,
+        assets: parsed.assets || selectedAssets,
+        gameType: parsed.gameType || 'platformer'
+      };
+    }
+    
+    // Fall back to passed props
+    return {
+      components: selectedComponents,
+      assets: selectedAssets,
+      gameType: 'platformer'
+    };
+  }, [gameProject, selectedComponents, selectedAssets]);
+
+  // Setup Server-Sent Events stream for game frames
+  const setupGameStream = useCallback((sessionId: string) => {
+    // Close existing stream if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+    
+    // Create new EventSource for streaming
+    const eventSource = gameApi.streamGameOutput(
+      sessionId,
+      (frameData) => {
+        // Display frame on canvas
+        displayFrame(frameData);
+      },
+      () => {
+        // Game ended
+        setIsRunning(false);
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+      }
+    );
+    
+    eventSourceRef.current = eventSource;
+  }, []);
+
+  // Display a base64 encoded frame on the canvas
+  const displayFrame = useCallback((base64Frame: string) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
-    // Inject canvas functions into Python environment
-    pyodideRef.current.runPython(`
-import sys
-import js
-from pyodide.ffi import to_js
-
-class BrowserCanvas:
-    def __init__(self):
-        self.canvas = js.document.getElementById('pygame-canvas')
-        self.ctx = self.canvas.getContext('2d')
-        self.width = 800
-        self.height = 600
-        
-    def clear(self, color=(0, 0, 0)):
-        self.ctx.fillStyle = f'rgb({color[0]}, {color[1]}, {color[2]})'
-        self.ctx.fillRect(0, 0, self.width, self.height)
-        
-    def draw_circle(self, color, pos, radius):
-        self.ctx.fillStyle = f'rgb({color[0]}, {color[1]}, {color[2]})'
-        self.ctx.beginPath()
-        self.ctx.arc(pos[0], pos[1], radius, 0, 2 * 3.14159)
-        self.ctx.fill()
-        
-    def draw_rect(self, color, rect):
-        self.ctx.fillStyle = f'rgb({color[0]}, {color[1]}, {color[2]})'
-        self.ctx.fillRect(rect[0], rect[1], rect[2], rect[3])
-        
-    def draw_line(self, color, start, end, width=1):
-        self.ctx.strokeStyle = f'rgb({color[0]}, {color[1]}, {color[2]})'
-        self.ctx.lineWidth = width
-        self.ctx.beginPath()
-        self.ctx.moveTo(start[0], start[1])
-        self.ctx.lineTo(end[0], end[1])
-        self.ctx.stroke()
-        
-    def draw_text(self, text, pos, color=(255, 255, 255), size=16):
-        self.ctx.fillStyle = f'rgb({color[0]}, {color[1]}, {color[2]})'
-        self.ctx.font = f'{size}px monospace'
-        self.ctx.fillText(text, pos[0], pos[1])
-    
-    def fill(self, color):
-        self.clear(color)
-    
-    def blit(self, surface, pos_or_rect):
-        # Simplified blit - just draw a placeholder rectangle
-        if hasattr(pos_or_rect, '__iter__'):
-            x, y = pos_or_rect[0], pos_or_rect[1]
-        else:
-            x, y = pos_or_rect.x, pos_or_rect.y
-        self.ctx.fillStyle = 'rgba(128, 128, 128, 0.5)'
-        self.ctx.fillRect(x, y, 32, 32)
-
-# Global canvas instance
-browser_canvas = BrowserCanvas()
-
-# Surface mock for pygame
-class Surface:
-    def __init__(self, size=(32, 32)):
-        self.width = size[0] if hasattr(size, '__iter__') else 32
-        self.height = size[1] if hasattr(size, '__iter__') else 32
-    
-    def fill(self, color):
-        pass  # No-op for mock
-    
-    def get_rect(self, **kwargs):
-        class Rect:
-            def __init__(self):
-                self.x = 0
-                self.y = 0
-                self.width = self.width
-                self.height = self.height
-                self.center = kwargs.get('center', (self.width//2, self.height//2))
-        return Rect()
-    
-    def blit(self, source, dest):
-        pass  # No-op for mock
-
-# Mock pygame module
-class MockPygame:
-    class display:
-        @staticmethod
-        def set_mode(size):
-            return browser_canvas
-            
-        @staticmethod
-        def flip():
-            pass
-            
-        @staticmethod
-        def set_caption(title):
-            pass
-    
-    class draw:
-        @staticmethod
-        def circle(surface, color, pos, radius):
-            browser_canvas.draw_circle(color, pos, radius)
-            
-        @staticmethod
-        def rect(surface, color, rect):
-            browser_canvas.draw_rect(color, rect)
-            
-        @staticmethod
-        def line(surface, color, start, end, width=1):
-            browser_canvas.draw_line(color, start, end, width)
-    
-    class font:
-        @staticmethod
-        def Font(name, size):
-            class TextRenderer:
-                def render(self, text, antialias, color):
-                    return Surface((len(text) * 8, 16))  # Return a Surface
-            return TextRenderer()
-    
-    class image:
-        @staticmethod
-        def load(path):
-            # Return a mock surface for any image
-            return Surface((32, 32))
-    
-    class transform:
-        @staticmethod
-        def scale(surface, size):
-            # Return a new surface with the target size
-            return Surface(size)
-    
-    class mixer:
-        class Sound:
-            def __init__(self, path=None):
-                self.path = path
-            def play(self, loops=0):
-                pass  # No-op for mock
-            def stop(self):
-                pass
-        
-        class music:
-            @staticmethod
-            def load(path):
-                pass  # No-op
-            @staticmethod
-            def play(loops=-1):
-                pass  # No-op
-            @staticmethod
-            def stop():
-                pass  # No-op
-        
-        @staticmethod
-        def init():
-            pass  # No-op
-        
-        @staticmethod
-        def Sound(path):
-            return MockPygame.mixer.Sound(path)
-    
-    class event:
-        @staticmethod
-        def get():
-            return []
-    
-    class key:
-        @staticmethod
-        def get_pressed():
-            # Return a dict-like object that returns False for any key
-            class Keys:
-                def __getitem__(self, key):
-                    # Return False for all keys by default
-                    return False
-            return Keys()
-    
-    class time:
-        class Clock:
-            def tick(self, fps):
-                return 16
-    
-    @staticmethod
-    def init():
-        pass
-    
-    @staticmethod
-    def quit():
-        pass
-    
-    # Export Surface class
-    Surface = Surface
-    
-    # Key constants
-    QUIT = 12
-    K_SPACE = 32
-    K_LEFT = 276
-    K_RIGHT = 275
-    K_UP = 273
-    K_DOWN = 274
-    K_a = 97
-    K_d = 100
-    K_w = 119
-    K_s = 115
-    K_r = 114
-    K_x = 120
-
-# Replace pygame with mock
-pygame = MockPygame()
-sys.modules['pygame'] = pygame
-
-# Expose Surface at module level
-pygame.Surface = Surface
-
-# Setup keyboard state tracking
-class KeyState:
-    def __init__(self):
-        self.keys = {}
-        # Initialize common keys to False
-        for key in [32, 273, 274, 275, 276, 97, 100, 114, 115, 119, 120]:
-            self.keys[key] = False
-    
-    def __getitem__(self, key):
-        return self.keys.get(key, False)
-    
-    def set_key(self, key, state):
-        self.keys[key] = state
-
-# Global key state instance
-global_key_state = KeyState()
-
-# Update MockPygame.key.get_pressed to use global state
-MockPygame.key.get_pressed = lambda: global_key_state
-    `);
-  };
+    const img = new Image();
+    img.onload = () => {
+      // Clear canvas and draw new frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = `data:image/png;base64,${base64Frame}`;
+  }, []);
 
   // Run the compiled game
   const runGame = useCallback(async () => {
-    if (!pyodideRef.current) {
-      await initPyodide();
-    }
-    
-    if (!pyodideRef.current) {
-      setError('Pyodide not initialized');
-      return;
-    }
-    
-    setIsRunning(true);
+    setIsLoading(true);
     setError(null);
+    setLoadingMessage('Compiling game...');
     
     try {
-      // Compile the game
-      const pythonCode = compilePythonGame(selectedComponents, selectedAssets);
+      // Get game data
+      const gameData = getGameData();
       
-      // Prepare the game code for browser execution
-      // We don't modify the code directly - let the mock pygame handle it
-      const browserCode = pythonCode
-        .replace(/if __name__ == "__main__":/g, 'if True:');  // Always run in browser
+      // Compile the game locally using existing compiler
+      const pythonCode = compilePythonGame(gameData.components, gameData.assets);
       
-      // Set up a simple auto-progression for demo (press SPACE after 3 seconds)
-      setTimeout(() => {
-        if (pyodideRef.current) {
-          pyodideRef.current.runPython(`
-# Simulate SPACE key press to progress from title screen
-if 'global_key_state' in globals():
-    global_key_state.set_key(32, True)  # Press SPACE
-    # Release after a moment
-    import threading
-    timer = threading.Timer(0.1, lambda: global_key_state.set_key(32, False))
-    timer.start() if hasattr(threading, 'Timer') else None
-          `);
-        }
-      }, 3000);
+      // Check backend health first
+      setLoadingMessage('Connecting to game server...');
+      const isHealthy = await gameApi.checkHealth();
+      if (!isHealthy) {
+        throw new Error('Game server is not available. Please ensure the backend is running on port 5001.');
+      }
       
-      // Run the game with our pygame mock
-      await pyodideRef.current.runPythonAsync(browserCode);
+      // Send compiled code to backend for execution
+      setLoadingMessage('Starting game engine...');
+      const executeResponse = await gameApi.executeGame(pythonCode);
+      
+      if (!executeResponse.success || !executeResponse.session_id) {
+        throw new Error(executeResponse.error || 'Failed to start game execution');
+      }
+      
+      // Store session ID for later use
+      sessionIdRef.current = executeResponse.session_id;
+      
+      // Setup SSE to receive game frames
+      setLoadingMessage('Establishing game stream...');
+      setupGameStream(executeResponse.session_id);
+      
+      setIsRunning(true);
+      setIsLoading(false);
+      setLoadingMessage('');
       
     } catch (err) {
-      const errorMsg = `Game execution error: ${err}`;
+      const errorMsg = err instanceof Error ? err.message : 'Failed to start game';
       setError(errorMsg);
+      setIsLoading(false);
+      setLoadingMessage('');
       if (onError) onError(errorMsg);
-    } finally {
-      setIsRunning(false);
     }
-  }, [selectedComponents, selectedAssets, onError, initPyodide]);
+  }, [getGameData, setupGameStream, onError]);
 
   // Stop the game
-  const stopGame = useCallback(() => {
+  const stopGame = useCallback(async () => {
     setIsRunning(false);
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
+    
+    // Close SSE stream
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    
+    // Stop game on backend if session exists
+    if (sessionIdRef.current) {
+      try {
+        await gameApi.stopGame(sessionIdRef.current);
+      } catch (err) {
+        console.error('Failed to stop game on backend:', err);
+      }
+      sessionIdRef.current = null;
     }
     
     // Clear canvas
@@ -387,6 +185,13 @@ if 'global_key_state' in globals():
       if (ctx) {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Show "Press Start" message
+        ctx.fillStyle = 'white';
+        ctx.font = '24px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Press "Start your engines!" to play', canvas.width / 2, canvas.height / 2);
       }
     }
   }, []);
@@ -400,7 +205,8 @@ if 'global_key_state' in globals():
 
   // Download game as Python file
   const downloadGame = useCallback(() => {
-    const pythonCode = compilePythonGame(selectedComponents, selectedAssets);
+    const gameData = getGameData();
+    const pythonCode = compilePythonGame(gameData.components, gameData.assets);
     const blob = new Blob([pythonCode], { type: 'text/x-python' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -410,20 +216,97 @@ if 'global_key_state' in globals():
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [selectedComponents, selectedAssets]);
+  }, [getGameData]);
 
   // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen);
   }, [isFullscreen]);
 
-  // Initialize on mount
+  // Navigate back to wizard
+  const navigateBack = useCallback(() => {
+    stopGame();
+    setLocation('/game-wizard');
+  }, [stopGame, setLocation]);
+
+  // Handle keyboard input
   useEffect(() => {
-    initPyodide();
+    if (!isRunning || !sessionIdRef.current) return;
+    
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Send key press to backend
+      if (sessionIdRef.current) {
+        await gameApi.sendGameInput(sessionIdRef.current, {
+          type: 'keydown',
+          key: e.key,
+          keyCode: e.keyCode
+        });
+      }
+    };
+    
+    const handleKeyUp = async (e: KeyboardEvent) => {
+      // Send key release to backend
+      if (sessionIdRef.current) {
+        await gameApi.sendGameInput(sessionIdRef.current, {
+          type: 'keyup',
+          key: e.key,
+          keyCode: e.keyCode
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isRunning]);
+
+  // Handle mouse input on canvas
+  const handleCanvasClick = useCallback(async (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isRunning || !sessionIdRef.current || !canvasRef.current) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Scale coordinates to game resolution
+    const scaleX = 800 / rect.width;
+    const scaleY = 600 / rect.height;
+    
+    await gameApi.sendGameInput(sessionIdRef.current, {
+      type: 'click',
+      x: Math.floor(x * scaleX),
+      y: Math.floor(y * scaleY)
+    });
+  }, [isRunning]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
       stopGame();
     };
   }, []);
+
+  // Initialize canvas with placeholder
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas && !isRunning && !isLoading) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = '24px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Press "Start your engines!" to play', canvas.width / 2, canvas.height / 2);
+      }
+    }
+  }, [isRunning, isLoading]);
 
   return (
     <Card className={`${className} ${isFullscreen ? 'fixed inset-0 z-50' : 'relative'}`}>
@@ -432,10 +315,21 @@ if 'global_key_state' in globals():
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
             <Button
+              onClick={navigateBack}
+              variant="outline"
+              size="sm"
+              data-testid="button-back-to-wizard"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Wizard
+            </Button>
+            
+            <Button
               onClick={isRunning ? stopGame : runGame}
               disabled={isLoading}
               variant={isRunning ? 'destructive' : 'default'}
               size="sm"
+              data-testid="button-run-game"
             >
               {isRunning ? (
                 <>
@@ -445,7 +339,7 @@ if 'global_key_state' in globals():
               ) : (
                 <>
                   <Play className="w-4 h-4 mr-2" />
-                  Run Game
+                  Start your engines!
                 </>
               )}
             </Button>
@@ -455,6 +349,7 @@ if 'global_key_state' in globals():
               disabled={isLoading || !isRunning}
               variant="outline"
               size="sm"
+              data-testid="button-reset"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Reset
@@ -466,6 +361,7 @@ if 'global_key_state' in globals():
               onClick={downloadGame}
               variant="outline"
               size="sm"
+              data-testid="button-export"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
@@ -475,6 +371,7 @@ if 'global_key_state' in globals():
               onClick={toggleFullscreen}
               variant="outline"
               size="sm"
+              data-testid="button-fullscreen"
             >
               {isFullscreen ? (
                 <Minimize className="w-4 h-4" />
@@ -488,6 +385,7 @@ if 'global_key_state' in globals():
                 onClick={onClose}
                 variant="ghost"
                 size="sm"
+                data-testid="button-close"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -498,14 +396,23 @@ if 'global_key_state' in globals():
         {/* Game Canvas */}
         <div className="flex-1 flex items-center justify-center bg-black p-4">
           {isLoading ? (
-            <div className="text-white">
+            <div className="text-white text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Loading Pyodide...</p>
+              <p className="text-lg mb-2">{loadingMessage || 'Loading game...'}</p>
+              <p className="text-sm text-gray-400">Please wait while we prepare your game</p>
             </div>
           ) : error ? (
             <div className="text-red-500 text-center max-w-md">
               <p className="font-bold mb-2">Error</p>
-              <p className="text-sm">{error}</p>
+              <p className="text-sm mb-4">{error}</p>
+              <Button
+                onClick={() => setError(null)}
+                variant="outline"
+                size="sm"
+                className="text-white border-white hover:bg-white/10"
+              >
+                Dismiss
+              </Button>
             </div>
           ) : (
             <canvas
@@ -513,14 +420,16 @@ if 'global_key_state' in globals():
               ref={canvasRef}
               width={800}
               height={600}
-              className="border border-gray-700 max-w-full h-auto"
+              className="border border-gray-700 max-w-full h-auto cursor-pointer"
               style={{ imageRendering: 'pixelated' }}
+              onClick={handleCanvasClick}
+              data-testid="canvas-game"
             />
           )}
         </div>
         
         {/* Status */}
-        {previewMode && (
+        {previewMode && previewMode !== 'full' && (
           <div className="p-2 bg-gray-100 dark:bg-gray-900 text-center text-sm">
             Preview Mode: {previewMode}
           </div>
