@@ -996,9 +996,880 @@ sys.exit()
     
     @staticmethod
     def _racing_template(components):
-        """Racing game template"""
-        # TODO: Implement racing-specific template
-        return GameCompiler._default_template(components)
+        """Racing game template with full racing mechanics"""
+        code = '''import pygame
+import sys
+import random
+import math
+import json
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+TRACK_WIDTH = 600
+TRACK_HEIGHT = 500
+TRACK_BORDER = 40
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GRAY = (128, 128, 128)
+DARK_GRAY = (64, 64, 64)
+ORANGE = (255, 165, 0)
+CYAN = (0, 255, 255)
+
+# Set up the display
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Racing Game - Championship Mode")
+
+# Clock for controlling frame rate
+clock = pygame.time.Clock()
+
+# Fonts
+font_small = pygame.font.Font(None, 24)
+font_medium = pygame.font.Font(None, 36)
+font_large = pygame.font.Font(None, 48)
+
+# Vehicle Types
+class VehicleType:
+    SPORTS_CAR = "Sports Car"
+    FORMULA = "Formula"
+    RALLY_CAR = "Rally Car"
+    MOTORCYCLE = "Motorcycle"
+    GO_KART = "Go-Kart"
+    TRUCK = "Truck"
+
+# Track Environments
+class TrackEnvironment:
+    CITY = "City Circuit"
+    DESERT = "Desert Rally"
+    MOUNTAIN = "Mountain Pass"
+    BEACH = "Beach Sprint"
+    FOREST = "Forest Trail"
+    SNOW = "Snow Track"
+
+# Weather Effects
+class Weather:
+    CLEAR = "Clear"
+    RAIN = "Rain"
+    FOG = "Fog"
+    NIGHT = "Night"
+    STORM = "Storm"
+
+# Vehicle Class
+class Vehicle:
+    def __init__(self, vehicle_type=VehicleType.SPORTS_CAR, x=400, y=500):
+        self.vehicle_type = vehicle_type
+        self.x = x
+        self.y = y
+        self.angle = 0
+        self.speed = 0
+        self.vel_x = 0
+        self.vel_y = 0
+        self.width = 30
+        self.height = 50
+        
+        # Vehicle stats based on type
+        if vehicle_type == VehicleType.SPORTS_CAR:
+            self.max_speed = 12
+            self.acceleration = 0.5
+            self.handling = 7
+            self.braking = 0.8
+            self.drift_factor = 0.85
+            self.color = RED
+        elif vehicle_type == VehicleType.FORMULA:
+            self.max_speed = 15
+            self.acceleration = 0.7
+            self.handling = 9
+            self.braking = 1.0
+            self.drift_factor = 0.9
+            self.color = BLUE
+        elif vehicle_type == VehicleType.RALLY_CAR:
+            self.max_speed = 10
+            self.acceleration = 0.6
+            self.handling = 8
+            self.braking = 0.7
+            self.drift_factor = 0.75
+            self.color = GREEN
+        elif vehicle_type == VehicleType.MOTORCYCLE:
+            self.max_speed = 14
+            self.acceleration = 0.8
+            self.handling = 10
+            self.braking = 0.9
+            self.drift_factor = 0.95
+            self.width = 20
+            self.height = 40
+            self.color = ORANGE
+        elif vehicle_type == VehicleType.GO_KART:
+            self.max_speed = 8
+            self.acceleration = 0.4
+            self.handling = 10
+            self.braking = 0.6
+            self.drift_factor = 0.7
+            self.width = 25
+            self.height = 35
+            self.color = YELLOW
+        else:  # Truck
+            self.max_speed = 7
+            self.acceleration = 0.3
+            self.handling = 5
+            self.braking = 0.5
+            self.drift_factor = 0.8
+            self.width = 40
+            self.height = 60
+            self.color = DARK_GRAY
+        
+        # Nitro/Boost system
+        self.nitro = 100
+        self.max_nitro = 100
+        self.nitro_active = False
+        self.nitro_boost = 1.5
+        
+        # Damage system
+        self.damage = 0
+        self.max_damage = 100
+        
+        # Drifting
+        self.is_drifting = False
+        self.drift_angle = 0
+        self.drift_score = 0
+        
+        # Lap tracking
+        self.lap = 1
+        self.checkpoint = 0
+        self.lap_times = []
+        self.best_lap = float('inf')
+        self.race_time = 0
+        
+    def update(self, keys, dt=1):
+        # Handle input
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.accelerate()
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.brake()
+        else:
+            self.coast()
+        
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.turn_left()
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.turn_right()
+        
+        # Nitro boost
+        if keys[pygame.K_SPACE] and self.nitro > 0:
+            self.activate_nitro()
+        else:
+            self.nitro_active = False
+        
+        # Update physics
+        self.update_physics(dt)
+        
+        # Keep on track
+        self.x = max(50, min(self.x, SCREEN_WIDTH - 50))
+        self.y = max(50, min(self.y, SCREEN_HEIGHT - 50))
+    
+    def accelerate(self):
+        boost = self.nitro_boost if self.nitro_active else 1.0
+        self.speed = min(self.speed + self.acceleration * boost, self.max_speed * boost)
+    
+    def brake(self):
+        self.speed = max(self.speed - self.braking, -self.max_speed / 2)
+        if abs(self.speed) > 5 and abs(self.angle) > 15:
+            self.is_drifting = True
+    
+    def coast(self):
+        if self.speed > 0:
+            self.speed = max(0, self.speed - 0.2)
+        elif self.speed < 0:
+            self.speed = min(0, self.speed + 0.2)
+        self.is_drifting = False
+    
+    def turn_left(self):
+        if abs(self.speed) > 0.5:
+            turn_rate = self.handling * (1 - abs(self.speed) / (self.max_speed * 2))
+            self.angle -= turn_rate
+    
+    def turn_right(self):
+        if abs(self.speed) > 0.5:
+            turn_rate = self.handling * (1 - abs(self.speed) / (self.max_speed * 2))
+            self.angle += turn_rate
+    
+    def activate_nitro(self):
+        if self.nitro > 0:
+            self.nitro_active = True
+            self.nitro -= 2
+        else:
+            self.nitro_active = False
+    
+    def update_physics(self, dt):
+        # Convert angle to radians
+        rad = math.radians(self.angle)
+        
+        # Calculate velocity components
+        self.vel_x = math.sin(rad) * self.speed
+        self.vel_y = -math.cos(rad) * self.speed
+        
+        # Apply drift physics
+        if self.is_drifting:
+            drift_factor = self.drift_factor
+            self.drift_angle = self.angle + random.randint(-10, 10)
+            self.drift_score += abs(self.speed) * 0.1
+        else:
+            drift_factor = 1.0
+            self.drift_angle = self.angle
+        
+        # Update position
+        self.x += self.vel_x * drift_factor * dt
+        self.y += self.vel_y * drift_factor * dt
+        
+        # Regenerate nitro slowly
+        self.nitro = min(self.nitro + 0.1, self.max_nitro)
+    
+    def draw(self, screen):
+        # Draw car as a rotated rectangle
+        cos_a = math.cos(math.radians(self.angle))
+        sin_a = math.sin(math.radians(self.angle))
+        
+        # Calculate corners of the vehicle
+        corners = []
+        for dx, dy in [(-self.width/2, -self.height/2), 
+                       (self.width/2, -self.height/2),
+                       (self.width/2, self.height/2),
+                       (-self.width/2, self.height/2)]:
+            rx = dx * cos_a - dy * sin_a
+            ry = dx * sin_a + dy * cos_a
+            corners.append((self.x + rx, self.y + ry))
+        
+        # Draw vehicle
+        pygame.draw.polygon(screen, self.color, corners)
+        
+        # Draw windshield
+        windshield = [corners[0], corners[1], 
+                     ((corners[0][0] + corners[1][0])/2, 
+                      (corners[0][1] + corners[1][1])/2 + 10)]
+        pygame.draw.polygon(screen, BLACK, windshield)
+        
+        # Draw nitro effect
+        if self.nitro_active:
+            # Draw boost flames
+            flame_base = ((corners[2][0] + corners[3][0])/2, 
+                         (corners[2][1] + corners[3][1])/2)
+            flame_tip = (flame_base[0] - sin_a * 30, 
+                        flame_base[1] + cos_a * 30)
+            pygame.draw.line(screen, YELLOW, flame_base, flame_tip, 5)
+            pygame.draw.line(screen, ORANGE, flame_base, 
+                           (flame_base[0] - sin_a * 20, 
+                            flame_base[1] + cos_a * 20), 3)
+
+# AI Opponent
+class AIOpponent(Vehicle):
+    def __init__(self, vehicle_type, x, y, difficulty="medium"):
+        super().__init__(vehicle_type, x, y)
+        self.difficulty = difficulty
+        self.target_checkpoint = 0
+        self.waypoints = []
+        self.current_waypoint = 0
+        
+        # AI parameters based on difficulty
+        if difficulty == "easy":
+            self.skill_factor = 0.7
+            self.aggression = 0.3
+            self.reaction_time = 0.5
+            self.mistake_chance = 0.1
+        elif difficulty == "medium":
+            self.skill_factor = 0.85
+            self.aggression = 0.5
+            self.reaction_time = 0.3
+            self.mistake_chance = 0.05
+        else:  # hard
+            self.skill_factor = 0.95
+            self.aggression = 0.8
+            self.reaction_time = 0.1
+            self.mistake_chance = 0.02
+        
+        # Apply skill factor to stats
+        self.max_speed *= self.skill_factor
+        self.acceleration *= self.skill_factor
+        self.handling *= self.skill_factor
+    
+    def update_ai(self, player_vehicle, track):
+        # Simple AI: follow racing line and avoid collisions
+        
+        # Random mistake
+        if random.random() < self.mistake_chance:
+            self.angle += random.randint(-5, 5)
+        
+        # Basic pathfinding (simplified)
+        target_x = SCREEN_WIDTH // 2 + math.sin(self.y * 0.01) * 200
+        target_y = self.y - 10
+        
+        # Calculate angle to target
+        dx = target_x - self.x
+        dy = target_y - self.y
+        target_angle = math.degrees(math.atan2(dx, -dy))
+        
+        # Turn towards target
+        angle_diff = target_angle - self.angle
+        while angle_diff > 180:
+            angle_diff -= 360
+        while angle_diff < -180:
+            angle_diff += 360
+        
+        # Apply turning
+        if angle_diff > 5:
+            self.angle += self.handling * self.skill_factor
+        elif angle_diff < -5:
+            self.angle -= self.handling * self.skill_factor
+        
+        # Speed control
+        if abs(angle_diff) < 30:
+            self.accelerate()
+        else:
+            self.brake()
+        
+        # Aggression: try to overtake
+        if self.aggression > 0.5:
+            dist_to_player = math.sqrt((player_vehicle.x - self.x)**2 + 
+                                      (player_vehicle.y - self.y)**2)
+            if dist_to_player < 100:
+                # Attempt overtake
+                if player_vehicle.x > self.x:
+                    self.x -= 2
+                else:
+                    self.x += 2
+        
+        # Update physics
+        self.update_physics(1)
+
+# Track Class
+class Track:
+    def __init__(self, environment=TrackEnvironment.CITY):
+        self.environment = environment
+        self.width = TRACK_WIDTH
+        self.height = TRACK_HEIGHT
+        self.checkpoints = []
+        self.start_line = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100)
+        
+        # Track properties based on environment
+        if environment == TrackEnvironment.CITY:
+            self.surface_grip = 0.9
+            self.color = DARK_GRAY
+            self.border_color = YELLOW
+        elif environment == TrackEnvironment.DESERT:
+            self.surface_grip = 0.7
+            self.color = (194, 178, 128)
+            self.border_color = (139, 90, 43)
+        elif environment == TrackEnvironment.MOUNTAIN:
+            self.surface_grip = 0.8
+            self.color = GRAY
+            self.border_color = (101, 67, 33)
+        elif environment == TrackEnvironment.BEACH:
+            self.surface_grip = 0.6
+            self.color = (238, 203, 173)
+            self.border_color = CYAN
+        elif environment == TrackEnvironment.FOREST:
+            self.surface_grip = 0.75
+            self.color = (34, 139, 34)
+            self.border_color = (0, 100, 0)
+        else:  # Snow
+            self.surface_grip = 0.5
+            self.color = WHITE
+            self.border_color = GRAY
+        
+        # Generate checkpoints
+        self.generate_checkpoints()
+    
+    def generate_checkpoints(self):
+        # Create checkpoints for lap counting
+        checkpoint_count = 4
+        for i in range(checkpoint_count):
+            y = SCREEN_HEIGHT - 100 - (i * (SCREEN_HEIGHT - 200) // checkpoint_count)
+            self.checkpoints.append({
+                'x': SCREEN_WIDTH // 2,
+                'y': y,
+                'width': TRACK_WIDTH,
+                'height': 20,
+                'index': i
+            })
+    
+    def draw(self, screen):
+        # Draw track boundaries
+        pygame.draw.rect(screen, self.border_color, 
+                        (100, 50, TRACK_WIDTH, TRACK_HEIGHT), TRACK_BORDER)
+        
+        # Draw track surface
+        pygame.draw.rect(screen, self.color,
+                        (100 + TRACK_BORDER, 50 + TRACK_BORDER, 
+                         TRACK_WIDTH - 2*TRACK_BORDER, TRACK_HEIGHT - 2*TRACK_BORDER))
+        
+        # Draw center line
+        for y in range(50, SCREEN_HEIGHT - 50, 40):
+            pygame.draw.rect(screen, WHITE, 
+                           (SCREEN_WIDTH // 2 - 2, y, 4, 20))
+        
+        # Draw start/finish line
+        checker_size = 10
+        for i in range(10):
+            for j in range(2):
+                if (i + j) % 2 == 0:
+                    color = WHITE
+                else:
+                    color = BLACK
+                pygame.draw.rect(screen, color,
+                               (self.start_line[0] - 50 + i * checker_size,
+                                self.start_line[1] + j * checker_size,
+                                checker_size, checker_size))
+
+# Weather System
+class WeatherSystem:
+    def __init__(self, weather_type=Weather.CLEAR):
+        self.weather_type = weather_type
+        self.particles = []
+        self.visibility = 1.0
+        
+        if weather_type == Weather.RAIN:
+            self.visibility = 0.8
+            # Create rain particles
+            for _ in range(100):
+                self.particles.append({
+                    'x': random.randint(0, SCREEN_WIDTH),
+                    'y': random.randint(-SCREEN_HEIGHT, SCREEN_HEIGHT),
+                    'speed': random.randint(5, 10),
+                    'length': random.randint(10, 20)
+                })
+        elif weather_type == Weather.FOG:
+            self.visibility = 0.5
+        elif weather_type == Weather.NIGHT:
+            self.visibility = 0.6
+        elif weather_type == Weather.STORM:
+            self.visibility = 0.4
+            # Create heavy rain
+            for _ in range(200):
+                self.particles.append({
+                    'x': random.randint(0, SCREEN_WIDTH),
+                    'y': random.randint(-SCREEN_HEIGHT, SCREEN_HEIGHT),
+                    'speed': random.randint(8, 15),
+                    'length': random.randint(15, 30),
+                    'angle': random.randint(-20, 20)
+                })
+    
+    def update(self):
+        # Update weather particles
+        for particle in self.particles:
+            particle['y'] += particle['speed']
+            if 'angle' in particle:
+                particle['x'] += particle['angle'] * 0.1
+            
+            # Reset particle if it goes off screen
+            if particle['y'] > SCREEN_HEIGHT:
+                particle['y'] = random.randint(-100, -20)
+                particle['x'] = random.randint(0, SCREEN_WIDTH)
+    
+    def draw(self, screen):
+        if self.weather_type == Weather.RAIN:
+            for particle in self.particles:
+                pygame.draw.line(screen, (100, 100, 255),
+                               (particle['x'], particle['y']),
+                               (particle['x'], particle['y'] + particle['length']), 1)
+        
+        elif self.weather_type == Weather.STORM:
+            for particle in self.particles:
+                pygame.draw.line(screen, (80, 80, 200),
+                               (particle['x'], particle['y']),
+                               (particle['x'] + particle.get('angle', 0),
+                                particle['y'] + particle['length']), 2)
+        
+        # Apply visibility overlay
+        if self.visibility < 1.0:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            overlay.set_alpha(int(255 * (1 - self.visibility)))
+            if self.weather_type == Weather.NIGHT:
+                overlay.fill((0, 0, 50))
+            elif self.weather_type == Weather.FOG:
+                overlay.fill((200, 200, 200))
+            else:
+                overlay.fill((50, 50, 50))
+            screen.blit(overlay, (0, 0))
+
+# HUD Class
+class HUD:
+    def __init__(self):
+        self.show_speedometer = True
+        self.show_lap_timer = True
+        self.show_position = True
+        self.show_minimap = False
+    
+    def draw(self, screen, vehicle, race_manager):
+        # Draw speedometer
+        if self.show_speedometer:
+            speed_percent = abs(vehicle.speed) / vehicle.max_speed
+            speed_text = font_medium.render(f"{int(abs(vehicle.speed) * 20)} km/h", True, WHITE)
+            screen.blit(speed_text, (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 80))
+            
+            # Speed bar
+            pygame.draw.rect(screen, DARK_GRAY, (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 50, 120, 20))
+            pygame.draw.rect(screen, GREEN if speed_percent < 0.7 else YELLOW if speed_percent < 0.9 else RED,
+                           (SCREEN_WIDTH - 150, SCREEN_HEIGHT - 50, int(120 * speed_percent), 20))
+        
+        # Draw nitro gauge
+        nitro_percent = vehicle.nitro / vehicle.max_nitro
+        pygame.draw.rect(screen, DARK_GRAY, (20, SCREEN_HEIGHT - 50, 100, 15))
+        pygame.draw.rect(screen, CYAN, (20, SCREEN_HEIGHT - 50, int(100 * nitro_percent), 15))
+        nitro_text = font_small.render("NITRO", True, WHITE)
+        screen.blit(nitro_text, (20, SCREEN_HEIGHT - 70))
+        
+        # Draw lap counter
+        if self.show_lap_timer:
+            lap_text = font_medium.render(f"Lap {vehicle.lap}/{race_manager.total_laps}", True, WHITE)
+            screen.blit(lap_text, (20, 20))
+            
+            # Lap time
+            current_time = pygame.time.get_ticks() / 1000
+            time_text = font_small.render(f"Time: {current_time:.2f}s", True, WHITE)
+            screen.blit(time_text, (20, 60))
+            
+            if vehicle.best_lap < float('inf'):
+                best_text = font_small.render(f"Best: {vehicle.best_lap:.2f}s", True, GREEN)
+                screen.blit(best_text, (20, 85))
+        
+        # Draw position
+        if self.show_position:
+            pos_text = font_large.render(f"{race_manager.get_position(vehicle)}", True, YELLOW)
+            screen.blit(pos_text, (SCREEN_WIDTH - 50, 20))
+            
+            suffix = ["st", "nd", "rd", "th"][min(race_manager.get_position(vehicle) - 1, 3)]
+            suffix_text = font_small.render(suffix, True, YELLOW)
+            screen.blit(suffix_text, (SCREEN_WIDTH - 25, 30))
+        
+        # Draw drift score if drifting
+        if vehicle.is_drifting and vehicle.drift_score > 0:
+            drift_text = font_medium.render(f"DRIFT! {int(vehicle.drift_score)}", True, ORANGE)
+            screen.blit(drift_text, (SCREEN_WIDTH // 2 - 60, 100))
+
+# Race Manager
+class RaceManager:
+    def __init__(self, total_laps=3):
+        self.total_laps = total_laps
+        self.race_started = False
+        self.race_finished = False
+        self.countdown = 3
+        self.start_time = 0
+        self.vehicles = []
+        self.positions = []
+        
+    def add_vehicle(self, vehicle):
+        self.vehicles.append(vehicle)
+        self.positions.append(len(self.vehicles))
+    
+    def start_race(self):
+        self.race_started = True
+        self.start_time = pygame.time.get_ticks()
+    
+    def update(self):
+        if not self.race_started and self.countdown > 0:
+            self.countdown -= 1/60  # Decrease by frame time
+            if self.countdown <= 0:
+                self.start_race()
+        
+        # Update positions based on progress
+        if self.race_started:
+            vehicle_progress = []
+            for i, vehicle in enumerate(self.vehicles):
+                progress = vehicle.lap * 1000 + vehicle.checkpoint * 100 - vehicle.y
+                vehicle_progress.append((progress, i))
+            
+            vehicle_progress.sort(reverse=True)
+            for pos, (_, idx) in enumerate(vehicle_progress):
+                self.positions[idx] = pos + 1
+        
+        # Check for race finish
+        for vehicle in self.vehicles:
+            if vehicle.lap > self.total_laps:
+                self.race_finished = True
+    
+    def get_position(self, vehicle):
+        if vehicle in self.vehicles:
+            idx = self.vehicles.index(vehicle)
+            return self.positions[idx]
+        return 0
+    
+    def draw_countdown(self, screen):
+        if not self.race_started and self.countdown > 0:
+            countdown_num = int(self.countdown) + 1
+            if countdown_num > 0:
+                if countdown_num == 1:
+                    text = font_large.render("GO!", True, GREEN)
+                else:
+                    text = font_large.render(str(countdown_num - 1), True, YELLOW)
+                screen.blit(text, (SCREEN_WIDTH // 2 - 30, SCREEN_HEIGHT // 2 - 50))
+
+# Championship Mode
+class Championship:
+    def __init__(self):
+        self.races = []
+        self.current_race = 0
+        self.player_points = 0
+        self.ai_points = [0, 0, 0]  # 3 AI opponents
+        self.points_system = [10, 6, 3, 1]  # Points for positions
+        
+        # Create championship races
+        environments = [TrackEnvironment.CITY, TrackEnvironment.DESERT, 
+                       TrackEnvironment.MOUNTAIN, TrackEnvironment.BEACH]
+        weathers = [Weather.CLEAR, Weather.RAIN, Weather.NIGHT, Weather.FOG]
+        
+        for env, weather in zip(environments, weathers):
+            self.races.append({
+                'track': env,
+                'weather': weather,
+                'laps': 3
+            })
+    
+    def award_points(self, positions):
+        # Award points based on finishing position
+        points_awarded = []
+        for pos in positions:
+            if pos <= len(self.points_system):
+                points_awarded.append(self.points_system[pos - 1])
+            else:
+                points_awarded.append(0)
+        return points_awarded
+    
+    def next_race(self):
+        self.current_race += 1
+        return self.current_race < len(self.races)
+    
+    def get_standings(self):
+        standings = [
+            ("Player", self.player_points),
+            ("AI 1", self.ai_points[0]),
+            ("AI 2", self.ai_points[1]),
+            ("AI 3", self.ai_points[2])
+        ]
+        standings.sort(key=lambda x: x[1], reverse=True)
+        return standings
+
+# Power-ups
+class PowerUp:
+    def __init__(self, x, y, power_type):
+        self.x = x
+        self.y = y
+        self.type = power_type
+        self.collected = False
+        
+    def draw(self, screen):
+        if not self.collected:
+            if self.type == "nitro":
+                pygame.draw.circle(screen, CYAN, (int(self.x), int(self.y)), 15)
+                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
+            elif self.type == "repair":
+                pygame.draw.circle(screen, GREEN, (int(self.x), int(self.y)), 15)
+                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
+            elif self.type == "speed":
+                pygame.draw.circle(screen, YELLOW, (int(self.x), int(self.y)), 15)
+                pygame.draw.circle(screen, WHITE, (int(self.x), int(self.y)), 15, 2)
+    
+    def check_collision(self, vehicle):
+        if not self.collected:
+            dist = math.sqrt((vehicle.x - self.x)**2 + (vehicle.y - self.y)**2)
+            if dist < 30:
+                self.collected = True
+                self.apply_effect(vehicle)
+                return True
+        return False
+    
+    def apply_effect(self, vehicle):
+        if self.type == "nitro":
+            vehicle.nitro = min(vehicle.nitro + 50, vehicle.max_nitro)
+        elif self.type == "repair":
+            vehicle.damage = max(0, vehicle.damage - 30)
+        elif self.type == "speed":
+            vehicle.max_speed *= 1.1  # Temporary speed boost
+
+# Initialize game objects
+player = Vehicle(VehicleType.SPORTS_CAR)
+track = Track(TrackEnvironment.CITY)
+weather = WeatherSystem(Weather.CLEAR)
+hud = HUD()
+race_manager = RaceManager(total_laps=3)
+championship = Championship()
+
+# Add player to race
+race_manager.add_vehicle(player)
+
+# Create AI opponents
+ai_opponents = [
+    AIOpponent(VehicleType.FORMULA, 350, 500, "hard"),
+    AIOpponent(VehicleType.RALLY_CAR, 450, 500, "medium"),
+    AIOpponent(VehicleType.GO_KART, 400, 520, "easy")
+]
+
+for ai in ai_opponents:
+    race_manager.add_vehicle(ai)
+
+# Create power-ups
+power_ups = [
+    PowerUp(300, 300, "nitro"),
+    PowerUp(500, 200, "speed"),
+    PowerUp(400, 400, "repair")
+]
+
+# Game state
+game_state = {
+    'menu': True,
+    'racing': False,
+    'paused': False,
+    'finished': False
+}
+
+# Main game loop
+running = True
+while running:
+    dt = clock.tick(FPS) / 1000.0  # Delta time in seconds
+    
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                game_state['paused'] = not game_state['paused']
+            elif event.key == pygame.K_RETURN and game_state['menu']:
+                game_state['menu'] = False
+                game_state['racing'] = True
+            elif event.key == pygame.K_r and game_state['finished']:
+                # Restart race
+                player = Vehicle(VehicleType.SPORTS_CAR)
+                race_manager = RaceManager(total_laps=3)
+                race_manager.add_vehicle(player)
+                for ai in ai_opponents:
+                    ai.__init__(ai.vehicle_type, 350 + ai_opponents.index(ai) * 50, 500, ai.difficulty)
+                    race_manager.add_vehicle(ai)
+                game_state['finished'] = False
+                game_state['racing'] = True
+    
+    # Game logic
+    if game_state['racing'] and not game_state['paused']:
+        # Update race manager
+        race_manager.update()
+        
+        if race_manager.race_started:
+            # Update player
+            keys = pygame.key.get_pressed()
+            player.update(keys, dt)
+            
+            # Update AI
+            for ai in ai_opponents:
+                ai.update_ai(player, track)
+            
+            # Check power-up collisions
+            for power_up in power_ups:
+                power_up.check_collision(player)
+            
+            # Update weather
+            weather.update()
+            
+            # Check if race finished
+            if race_manager.race_finished:
+                game_state['finished'] = True
+                game_state['racing'] = False
+    
+    # Draw everything
+    screen.fill(BLACK)
+    
+    if game_state['menu']:
+        # Draw main menu
+        title = font_large.render("RACING CHAMPIONSHIP", True, YELLOW)
+        screen.blit(title, (SCREEN_WIDTH // 2 - 200, 100))
+        
+        start_text = font_medium.render("Press ENTER to Start", True, WHITE)
+        screen.blit(start_text, (SCREEN_WIDTH // 2 - 120, 300))
+        
+        # Show vehicle selection hint
+        vehicle_text = font_small.render("Vehicle: " + player.vehicle_type, True, GREEN)
+        screen.blit(vehicle_text, (SCREEN_WIDTH // 2 - 80, 400))
+        
+    elif game_state['racing']:
+        # Draw track
+        track.draw(screen)
+        
+        # Draw power-ups
+        for power_up in power_ups:
+            power_up.draw(screen)
+        
+        # Draw vehicles
+        player.draw(screen)
+        for ai in ai_opponents:
+            ai.draw(screen)
+        
+        # Draw weather effects
+        weather.draw(screen)
+        
+        # Draw HUD
+        hud.draw(screen, player, race_manager)
+        
+        # Draw countdown
+        race_manager.draw_countdown(screen)
+        
+        # Draw pause overlay
+        if game_state['paused']:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            overlay.set_alpha(128)
+            overlay.fill(BLACK)
+            screen.blit(overlay, (0, 0))
+            
+            pause_text = font_large.render("PAUSED", True, WHITE)
+            screen.blit(pause_text, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 30))
+    
+    elif game_state['finished']:
+        # Draw race results
+        results_text = font_large.render("RACE FINISHED!", True, YELLOW)
+        screen.blit(results_text, (SCREEN_WIDTH // 2 - 150, 100))
+        
+        position = race_manager.get_position(player)
+        pos_text = font_medium.render(f"You finished {position}{['st','nd','rd','th'][min(position-1, 3)]}", True, WHITE)
+        screen.blit(pos_text, (SCREEN_WIDTH // 2 - 100, 200))
+        
+        # Show championship standings
+        standings_text = font_medium.render("Championship Standings:", True, CYAN)
+        screen.blit(standings_text, (SCREEN_WIDTH // 2 - 130, 300))
+        
+        y_offset = 350
+        for i, (name, points) in enumerate(championship.get_standings()):
+            standing_text = font_small.render(f"{i+1}. {name}: {points} pts", True, WHITE)
+            screen.blit(standing_text, (SCREEN_WIDTH // 2 - 80, y_offset))
+            y_offset += 30
+        
+        restart_text = font_small.render("Press R to Race Again", True, GREEN)
+        screen.blit(restart_text, (SCREEN_WIDTH // 2 - 100, 500))
+    
+    # Update display
+    pygame.display.flip()
+
+# Quit
+pygame.quit()
+sys.exit()
+'''
+        
+        # Extract component configuration
+        config = {}
+        for component in components:
+            comp_type = component.get('type', '')
+            if comp_type == 'vehicle':
+                config['vehicle_type'] = component.get('config', {}).get('type', 'SPORTS_CAR')
+            elif comp_type == 'track':
+                config['track_env'] = component.get('config', {}).get('environment', 'CITY')
+            elif comp_type == 'weather':
+                config['weather_type'] = component.get('config', {}).get('type', 'CLEAR')
+        
+        return code
     
     @staticmethod
     def _rpg_template(components):
