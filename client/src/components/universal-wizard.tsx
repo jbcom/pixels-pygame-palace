@@ -271,6 +271,7 @@ export default function UniversalWizard({
 
   // Wrap handleOptionSelect to handle actions
   const handleOptionSelectWithAction = useCallback((option: any) => {
+    console.log('handleOptionSelectWithAction called with option:', option);
     // For selectComponentVariant, handle the action first before dialogue navigation
     // This ensures the selection is saved properly without triggering flow changes
     if (option.action === 'selectComponentVariant') {
@@ -450,8 +451,30 @@ export default function UniversalWizard({
       }));
     } else if (option.action === 'exportPyodideGame') {
       // Export the complete game as Python file
-      const pythonCode = compilePythonGame(sessionActions.selectedComponents || {}, selectedAssets);
-      downloadPythonFile(pythonCode, `my_game_${Date.now()}.py`);
+      console.log('exportPyodideGame action triggered');
+      console.log('sessionActions.selectedComponents:', sessionActions.selectedComponents);
+      console.log('selectedAssets:', selectedAssets);
+      
+      try {
+        const pythonCode = compilePythonGame(sessionActions.selectedComponents || {}, selectedAssets);
+        console.log('Python code compiled, length:', pythonCode.length);
+        
+        const filename = `my_game_${Date.now()}.py`;
+        console.log('Downloading as:', filename);
+        
+        downloadPythonFile(pythonCode, filename);
+        console.log('Download triggered successfully');
+        
+        // Show a success message to the user
+        const toast = (window as any).toast || console.log;
+        toast('Game exported successfully!');
+      } catch (error) {
+        console.error('Error during export:', error);
+        
+        // Show an error message to the user
+        const toast = (window as any).toast || console.log;
+        toast('Failed to export game. Please try again.');
+      }
     } else if (option.action === 'compileGameplayScene') {
       // Compile gameplay scene from selected components
       setSessionActions(prev => ({ 
@@ -505,7 +528,7 @@ export default function UniversalWizard({
     
     // Note: handleOptionSelect(option) is called at the beginning of this function
     // to ensure dialogue flow transitions work properly before UI actions
-  }, [handleOptionSelect, dialogueState.currentNode, setSessionActions]);
+  }, [handleOptionSelect, dialogueState.currentNode, setSessionActions, sessionActions, selectedAssets]);
 
   // Render dialogue content for desktop/tablet
   const renderDialogue = useCallback(() => {
@@ -579,8 +602,31 @@ export default function UniversalWizard({
         navigateToNode('learnPath');
         break;
       case 'exportGame':
-        // TODO: Implement export functionality
-        console.log('Export game');
+        // Export the complete game as Python file
+        console.log('Exporting game from PixelMenu...');
+        console.log('sessionActions.selectedComponents:', sessionActions.selectedComponents);
+        console.log('selectedAssets:', selectedAssets);
+        
+        try {
+          const pythonCode = compilePythonGame(sessionActions.selectedComponents || {}, selectedAssets);
+          console.log('Python code compiled, length:', pythonCode.length);
+          
+          const filename = `my_game_${Date.now()}.py`;
+          console.log('Downloading as:', filename);
+          
+          downloadPythonFile(pythonCode, filename);
+          console.log('Download triggered successfully from PixelMenu');
+          
+          // Show success message if toast is available
+          const toast = (window as any).toast || console.log;
+          toast('Game exported successfully!');
+        } catch (error) {
+          console.error('Error during export from PixelMenu:', error);
+          
+          // Show error message if toast is available  
+          const toast = (window as any).toast || console.log;
+          toast('Failed to export game. Please try again.');
+        }
         break;
       case 'viewProgress':
         // TODO: Implement progress view
@@ -599,7 +645,7 @@ export default function UniversalWizard({
         // Just close the menu
         break;
     }
-  }, [navigateToNode, handleResetProgress, handleClearAllData, handleToggleTheme]);
+  }, [navigateToNode, handleResetProgress, handleClearAllData, handleToggleTheme, sessionActions, selectedAssets]);
 
   // Edge swipe handlers for mobile
   const edgeSwipeHandlers = useLayoutEdgeSwipe(() => {
