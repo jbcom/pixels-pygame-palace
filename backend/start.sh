@@ -1,28 +1,44 @@
 #!/bin/bash
-# Start script for Flask backend game execution service
+# Startup script for Flask backend using uv
 
-echo "Starting Flask Game Execution Backend on port 5001..."
+set -e
 
-# Set environment variables
-export FLASK_ENV=development
-export FLASK_APP=app.py
+echo "🚀 Starting Pixel's PyGame Palace Backend"
+
+# Check if uv is available
+if ! command -v uv &> /dev/null; then
+    echo "❌ uv not found. Please install uv first."
+    echo "💡 Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
+fi
 
 # Navigate to backend directory
 cd "$(dirname "$0")"
 
-# Check if virtual environment exists (optional)
-if [ -d "venv" ]; then
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-fi
+# Sync dependencies if needed
+echo "📦 Syncing Python dependencies..."
+uv sync
 
-# Install dependencies if needed
-if [ ! -f ".deps_installed" ]; then
-    echo "Installing Python dependencies..."
-    pip install -r requirements.txt
-    touch .deps_installed
-fi
+# Set default environment
+export FLASK_ENV=${FLASK_ENV:-development}
+export PORT=${PORT:-5001}
 
-# Start Flask application
-echo "Flask backend starting on http://localhost:5001"
-python app.py
+echo "🌍 Environment: $FLASK_ENV"
+echo "🔢 Port: $PORT"
+
+# Start the application
+if [ "$FLASK_ENV" = "production" ]; then
+    echo "🚀 Starting production server with Gunicorn..."
+    uv run gunicorn app:app \
+        -b 0.0.0.0:$PORT \
+        -w 2 \
+        --threads 4 \
+        --timeout 90 \
+        --keep-alive 2 \
+        --max-requests 1000 \
+        --max-requests-jitter 100 \
+        --log-level info
+else
+    echo "🔧 Starting development server..."
+    uv run python app.py
+fi
