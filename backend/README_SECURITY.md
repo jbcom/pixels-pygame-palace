@@ -44,7 +44,7 @@ This backend implements secure sandboxing for executing untrusted Python game co
 ### 1. Install Dependencies
 ```bash
 # Python dependencies (already installed)
-pip install docker flask flask-cors flask-socketio flask-limiter pygame pillow
+pip install docker flask flask-cors flask-socketio flask-limiter pygame-ce pillow
 
 # System dependencies
 apt-get update && apt-get install -y docker.io xvfb
