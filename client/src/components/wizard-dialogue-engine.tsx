@@ -46,6 +46,12 @@ export function useWizardDialogue({
   // Initialize state from localStorage if available
   const getInitialDialogueState = (): DialogueState => {
     const persistedState = loadWizardState();
+    console.log('🔧 Initializing dialogue state from localStorage:', {
+      hasPersistedState: !!persistedState,
+      currentNodeId: persistedState?.currentNodeId,
+      activeFlowPath: persistedState?.activeFlowPath
+    });
+    
     if (persistedState && persistedState.currentNodeId) {
       persistedStateRef.current = persistedState;
       return {
@@ -143,9 +149,30 @@ export function useWizardDialogue({
       console.log('Loading generic game flow');
     }
     
-    // Skip loading if we already have the right flow loaded or if we're currently loading
-    if (loadedFlowPath === flowPath) {
-      console.log('Flow already loaded, skipping:', flowPath);
+    // Check if flow is already loaded AND we have the actual data
+    // On page refresh, loadedFlowPath might be restored but wizardData is null
+    if (loadedFlowPath === flowPath && wizardData) {
+      console.log('Flow already loaded with data:', flowPath);
+      
+      // Even if flow is loaded, check if we need to restore persisted state
+      // This handles scenarios where state needs to be synchronized
+      const persistedState = loadWizardState();
+      if (persistedState && persistedState.currentNodeId && 
+          wizardData[persistedState.currentNodeId]) {
+        // Always sync with persisted state if the node exists
+        if (persistedState.currentNodeId !== dialogueState.currentNodeId) {
+          console.log('📍 Restoring persisted node in already-loaded flow:', persistedState.currentNodeId);
+          setDialogueState(prev => ({
+            ...prev,
+            currentNodeId: persistedState.currentNodeId,
+            currentNode: wizardData[persistedState.currentNodeId],
+            dialogueStep: 0,
+            carouselIndex: 0,
+            showAllChoices: false
+          }));
+        }
+      }
+      
       // Clear transition flag if it's set but we already have the right flow
       if (sessionActions.transitionToSpecializedFlow) {
         setSessionActions(prev => ({ ...prev, transitionToSpecializedFlow: false }));
@@ -168,22 +195,53 @@ export function useWizardDialogue({
         setWizardData(nodes);
         setLoadedFlowPath(flowPath);
         
-        // When loading a specialized flow, start from the beginning
-        // However, if we have persisted state for this flow, resume from that node
+        // Determine the start node, prioritizing saved state
         let startNodeId: string;
         const persistedState = loadWizardState();
-        if (persistedState && persistedState.activeFlowPath === flowPath && persistedState.currentNodeId && nodes[persistedState.currentNodeId]) {
-          // Resume from saved position
+        
+        // Log the restoration sequence for debugging
+        console.log('=== Flow Loading Restoration Sequence ===');
+        console.log('Loading flow:', flowPath);
+        console.log('Persisted state:', {
+          activeFlowPath: persistedState?.activeFlowPath,
+          currentNodeId: persistedState?.currentNodeId,
+          gameType: persistedState?.gameType,
+          selectedGameType: persistedState?.selectedGameType
+        });
+        console.log('Available nodes in loaded flow:', Object.keys(nodes));
+        
+        // Priority 1: If we have a persisted currentNodeId that exists in the loaded nodes, use it
+        // This ensures we resume from saved state after page refresh
+        // IMPORTANT: Check if we're loading the same flow as the persisted one
+        const isRestoringPersistedFlow = persistedState?.activeFlowPath === flowPath;
+        
+        if (isRestoringPersistedFlow && persistedState && persistedState.currentNodeId && nodes[persistedState.currentNodeId]) {
+          // We're loading the same flow that was saved, restore the exact position
           startNodeId = persistedState.currentNodeId;
-          console.log('Resuming from persisted node:', startNodeId);
-        } else if (gameType && flowPath.includes(gameType)) {
-          // Start from beginning for specialized flows
+          console.log('✅ Resuming from persisted node in same flow:', startNodeId);
+        } 
+        // Priority 2: If this is an explicit transition to a specialized flow, start from beginning
+        else if (sessionActions.transitionToSpecializedFlow && gameType && flowPath.includes(gameType)) {
           startNodeId = 'start';
-          console.log('Starting specialized flow from beginning');
-        } else {
-          startNodeId = initialNodeId;
-          console.log('Using initial node:', startNodeId);
+          console.log('🔄 Starting new specialized flow from beginning (explicit transition)');
         }
+        // Priority 3: If we're loading a different flow than what was persisted, start fresh
+        else if (!isRestoringPersistedFlow && gameType && flowPath.includes(gameType)) {
+          startNodeId = 'start';
+          console.log('🆕 Starting specialized flow from beginning (different flow)');
+        }
+        // Priority 4: Fall back to initial node ID or start
+        else {
+          // If we have persisted state but the node doesn't exist in this flow, use start
+          if (persistedState && persistedState.currentNodeId && !nodes[persistedState.currentNodeId]) {
+            startNodeId = 'start';
+            console.log('⚠️ Persisted node not found in flow, starting from beginning');
+          } else {
+            startNodeId = initialNodeId;
+            console.log('📍 Using initial node:', startNodeId);
+          }
+        }
+        console.log('=== End Restoration Sequence ===');
         
         if (nodes[startNodeId]) {
           setDialogueState(prev => ({
@@ -194,7 +252,7 @@ export function useWizardDialogue({
             carouselIndex: 0,
             showAllChoices: false
           }));
-          console.log('Dialogue state updated with node:', nodes[startNodeId]?.text?.substring(0, 50) + '...');
+          console.log('✨ Dialogue state successfully updated with node:', startNodeId, 'Text preview:', nodes[startNodeId]?.text?.substring(0, 50) + '...');
         } else {
           console.error('Start node not found in loaded flow:', startNodeId, 'Available nodes:', Object.keys(nodes));
         }
