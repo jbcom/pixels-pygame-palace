@@ -92,7 +92,7 @@
         },
         {
           "text": "Walk me through it - I learn best with guidance",
-          "next": "guidedStart"
+          "action": "transitionToSpecializedFlow"
         }
       ]
     },
