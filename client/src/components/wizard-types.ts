@@ -85,6 +85,7 @@ export interface SessionActions {
   selectedComponents?: Record<string, string>; // componentId -> variant (A or B)
   compiledScenes?: Record<string, boolean>; // scene -> compiled status
   selectedGameType?: string; // The specific game type (platformer, rpg, racing, dungeon, etc.)
+  transitionToSpecializedFlow?: boolean; // Flag to track when we need to transition to specialized flow
 }
 
 // Session action for PixelMenu

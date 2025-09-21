@@ -2,286 +2,477 @@
   "start": {
     "id": "start",
     "speaker": "Pixel",
-    "text": "Awesome! A platformer - the classic jump-and-run adventure! We'll build this scene by scene.",
-    "followUp": "First up: your title screen to draw players in!",
-    "next": "titleBackground"
+    "text": "Awesome! A platformer - the classic jump-and-run adventure! Let's build this scene by scene with meaningful choices that shape your game.",
+    "followUp": "First, let's define your world's theme and style!",
+    "next": "themeChoice"
   },
-  "titleBackground": {
-    "id": "titleBackground",
+
+  "themeChoice": {
+    "id": "themeChoice",
     "speaker": "Pixel",
-    "text": "Let's set the mood! Pick a background that shows off your platformer world.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["platformer", "outdoor", "sky"]
-    },
-    "next": "titleCharacterPreview"
-  },
-  "titleCharacterPreview": {
-    "id": "titleCharacterPreview",
-    "speaker": "Pixel",
-    "text": "Now let's pick your hero! They'll bounce on the title screen to show off.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "characters",
-      "curated": true,
-      "tags": ["platformer", "hero"]
-    },
-    "next": "titleMusic"
-  },
-  "titleMusic": {
-    "id": "titleMusic",
-    "speaker": "Pixel",
-    "text": "Every platformer needs catchy title music! Pick something upbeat.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["upbeat", "cheerful", "title"]
-    },
-    "next": "levelSelectScene"
-  },
-  "levelSelectScene": {
-    "id": "levelSelectScene",
-    "speaker": "Pixel",
-    "text": "Great title! Now for level selection - how should players pick their stage?",
-    "options": [
-      {
-        "text": "World map with connected paths",
-        "next": "worldMapStyle"
-      },
-      {
-        "text": "Simple level grid",
-        "next": "levelGridStyle"
-      }
-    ]
-  },
-  "worldMapStyle": {
-    "id": "worldMapStyle",
-    "speaker": "Pixel",
-    "text": "Love it! A world map like classic Mario games. Pick your map background.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["map", "overworld"]
-    },
-    "next": "gameplayMovement"
-  },
-  "levelGridStyle": {
-    "id": "levelGridStyle",
-    "speaker": "Pixel",
-    "text": "Clean and simple! A grid of level icons. Let's move to gameplay.",
-    "next": "gameplayMovement"
-  },
-  "gameplayMovement": {
-    "id": "gameplayMovement",
-    "speaker": "Pixel",
-    "text": "Time for the core gameplay! First - how should jumping feel?",
+    "text": "What kind of world should your platformer take place in? This choice bundles matching backgrounds, platforms, and music!",
     "action": "showComponentChoice",
     "actionParams": {
-      "componentId": "jump",
-      "category": "movement"
+      "componentId": "worldTheme",
+      "category": "environment"
     },
     "options": [
       {
-        "text": "A: Floaty Jump - Hold to jump higher",
+        "text": "A: Forest Adventure - Lush greenery, wooden platforms, nature sounds",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "jump", "variant": "A" },
-        "next": "gameplayPlatforms"
+        "actionParams": { 
+          "componentId": "worldTheme", 
+          "variant": "A",
+          "bundle": ["forest_bg", "wood_platforms", "nature_music"]
+        },
+        "next": "titlePresentation"
       },
       {
-        "text": "B: Realistic Jump - Fixed arc physics",
+        "text": "B: Desert Challenge - Sandy dunes, stone blocks, mystical ambience",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "jump", "variant": "B" },
-        "next": "gameplayPlatforms"
+        "actionParams": { 
+          "componentId": "worldTheme", 
+          "variant": "B",
+          "bundle": ["desert_bg", "stone_platforms", "mystic_music"]
+        },
+        "next": "titlePresentation"
       }
     ]
   },
-  "gameplayPlatforms": {
-    "id": "gameplayPlatforms",
+
+  "titlePresentation": {
+    "id": "titlePresentation",
     "speaker": "Pixel",
-    "text": "Platformers need... platforms! What kind should we add?",
-    "options": [
-      {
-        "text": "Moving platforms that patrol back and forth",
-        "next": "gameplayEnemies"
-      },
-      {
-        "text": "Crumbling platforms that fall when touched",
-        "next": "gameplayEnemies"
-      },
-      {
-        "text": "Bouncy mushroom platforms",
-        "next": "gameplayEnemies"
-      }
-    ]
-  },
-  "gameplayEnemies": {
-    "id": "gameplayEnemies",
-    "speaker": "Pixel",
-    "text": "Every platformer needs enemies to dodge or defeat! Pick your baddies.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "enemies",
-      "curated": true,
-      "multiple": true,
-      "tags": ["platformer", "enemy"]
-    },
-    "next": "gameplayPowerups"
-  },
-  "gameplayPowerups": {
-    "id": "gameplayPowerups",
-    "speaker": "Pixel",
-    "text": "Power-ups make platformers fun! Choose what to collect.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "items",
-      "curated": true,
-      "multiple": true,
-      "tags": ["powerup", "collectible"]
-    },
-    "next": "gameplayCoins"
-  },
-  "gameplayCoins": {
-    "id": "gameplayCoins",
-    "speaker": "Pixel",
-    "text": "Coins or gems to collect! Pick your shiny treasures.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "items",
-      "curated": true,
-      "tags": ["coin", "gem", "collectible"]
-    },
-    "next": "gameplaySounds"
-  },
-  "gameplaySounds": {
-    "id": "gameplaySounds",
-    "speaker": "Pixel",
-    "text": "Sound effects bring it to life! Jump sounds, coin dings, power-up jingles!",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sound",
-      "curated": true,
-      "multiple": true,
-      "tags": ["jump", "collect", "powerup"]
-    },
-    "next": "bossScene"
-  },
-  "bossScene": {
-    "id": "bossScene",
-    "speaker": "Pixel",
-    "text": "Every world needs a boss fight! How should the boss behave?",
-    "options": [
-      {
-        "text": "Pattern-based - Memorize attack sequences",
-        "next": "bossSprite"
-      },
-      {
-        "text": "Reactive - Boss adapts to player actions",
-        "next": "bossSprite"
-      }
-    ]
-  },
-  "bossSprite": {
-    "id": "bossSprite",
-    "speaker": "Pixel",
-    "text": "Pick an imposing boss sprite!",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "enemies",
-      "curated": true,
-      "tags": ["boss", "large"]
-    },
-    "next": "bossMusic"
-  },
-  "bossMusic": {
-    "id": "bossMusic",
-    "speaker": "Pixel",
-    "text": "Boss battles need epic music! Something intense!",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["intense", "boss", "battle"]
-    },
-    "next": "victoryScene"
-  },
-  "victoryScene": {
-    "id": "victoryScene",
-    "speaker": "Pixel",
-    "text": "Victory! How should we celebrate beating the level?",
+    "text": "How should your title screen present the game name?",
     "action": "showComponentChoice",
     "actionParams": {
-      "componentId": "score",
+      "componentId": "titleStyle",
       "category": "ui"
     },
     "options": [
       {
-        "text": "A: Score counts up with bonus multipliers",
+        "text": "A: Animated Title - Letters bounce in with particle effects",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "score", "variant": "A" },
-        "next": "victoryAnimation"
+        "actionParams": { "componentId": "titleStyle", "variant": "A" },
+        "next": "titleShowcase"
       },
       {
-        "text": "B: Instant score reveal with rankings",
+        "text": "B: Static Title with Effects - Glowing, pulsing logo with lens flares",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "score", "variant": "B" },
-        "next": "victoryAnimation"
+        "actionParams": { "componentId": "titleStyle", "variant": "B" },
+        "next": "titleShowcase"
       }
     ]
   },
-  "victoryAnimation": {
-    "id": "victoryAnimation",
+
+  "titleShowcase": {
+    "id": "titleShowcase",
     "speaker": "Pixel",
-    "text": "Your hero needs a victory dance! Pick the celebration style.",
+    "text": "What should be the main focus of your title screen?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "titleFocus",
+      "category": "ui"
+    },
     "options": [
       {
-        "text": "Jump and fist pump",
-        "next": "victoryMusic"
+        "text": "A: Hero Showcase - Character bounces and shows abilities",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "titleFocus", "variant": "A" },
+        "next": "stage1Preview"
       },
       {
-        "text": "Spin and peace sign",
-        "next": "victoryMusic"
-      },
-      {
-        "text": "Backflip celebration",
-        "next": "victoryMusic"
+        "text": "B: World Preview - Scrolling preview of level elements",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "titleFocus", "variant": "B" },
+        "next": "stage1Preview"
       }
     ]
   },
-  "victoryMusic": {
-    "id": "victoryMusic",
+
+  "stage1Preview": {
+    "id": "stage1Preview",
     "speaker": "Pixel",
-    "text": "Victory fanfare time! Pick triumphant music!",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["victory", "celebration", "fanfare"]
-    },
-    "next": "complete"
+    "text": "Perfect! Your title screen is shaping up nicely! Let me compile what we have so far...",
+    "action": "compileScene",
+    "actionParams": { "scene": "title" },
+    "next": "jumpMechanics"
   },
+
+  "jumpMechanics": {
+    "id": "jumpMechanics",
+    "speaker": "Pixel",
+    "text": "STAGE 2: Core Mechanics! First - how should jumping feel?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "jumpStyle",
+      "category": "movement"
+    },
+    "options": [
+      {
+        "text": "A: Floaty Jump - Variable height with air control",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "jumpStyle", "variant": "A" },
+        "next": "movementSpeed"
+      },
+      {
+        "text": "B: Realistic Jump - Fixed arc with momentum physics",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "jumpStyle", "variant": "B" },
+        "next": "movementSpeed"
+      }
+    ]
+  },
+
+  "movementSpeed": {
+    "id": "movementSpeed",
+    "speaker": "Pixel",
+    "text": "How fast should your character move?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "speedStyle",
+      "category": "movement"
+    },
+    "options": [
+      {
+        "text": "A: Speedy Runner - Fast-paced action gameplay",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "speedStyle", "variant": "A" },
+        "next": "deathStyle"
+      },
+      {
+        "text": "B: Careful Explorer - Precision platforming focus",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "speedStyle", "variant": "B" },
+        "next": "deathStyle"
+      }
+    ]
+  },
+
+  "deathStyle": {
+    "id": "deathStyle",
+    "speaker": "Pixel",
+    "text": "What happens when the player gets hit or falls?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "deathMechanic",
+      "category": "gameplay"
+    },
+    "options": [
+      {
+        "text": "A: Instant Respawn - Quick fade and back in action",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "deathMechanic", "variant": "A" },
+        "next": "checkpointSystem"
+      },
+      {
+        "text": "B: Dramatic Death Animation - Full sequence with sound effects",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "deathMechanic", "variant": "B" },
+        "next": "checkpointSystem"
+      }
+    ]
+  },
+
+  "checkpointSystem": {
+    "id": "checkpointSystem",
+    "speaker": "Pixel",
+    "text": "How forgiving should the checkpoint system be?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "checkpoints",
+      "category": "gameplay"
+    },
+    "options": [
+      {
+        "text": "A: Generous Checkpoints - Save progress frequently",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "checkpoints", "variant": "A" },
+        "next": "stage2Preview"
+      },
+      {
+        "text": "B: Challenging Sparse - Checkpoints only at major milestones",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "checkpoints", "variant": "B" },
+        "next": "stage2Preview"
+      }
+    ]
+  },
+
+  "stage2Preview": {
+    "id": "stage2Preview",
+    "speaker": "Pixel",
+    "text": "Excellent mechanics! Let's see how they feel in action...",
+    "action": "launchPyodidePreview",
+    "actionParams": { "scene": "gameplay_test" },
+    "next": "platformTypes"
+  },
+
+  "platformTypes": {
+    "id": "platformTypes",
+    "speaker": "Pixel",
+    "text": "STAGE 3: World Building! What kind of platforms will challenge players?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "platformBehavior",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Moving Platforms - Patrol paths and elevators",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "platformBehavior", "variant": "A" },
+        "next": "enemyBehavior"
+      },
+      {
+        "text": "B: Static Challenges - Crumbling and bouncy platforms",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "platformBehavior", "variant": "B" },
+        "next": "enemyBehavior"
+      }
+    ]
+  },
+
+  "enemyBehavior": {
+    "id": "enemyBehavior",
+    "speaker": "Pixel",
+    "text": "How should enemies behave when they spot the player?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "enemyAI",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Patrol Routes - Predictable patterns to learn",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "enemyAI", "variant": "A" },
+        "next": "powerUpStyle"
+      },
+      {
+        "text": "B: Chase Mode - Actively hunt the player",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "enemyAI", "variant": "B" },
+        "next": "powerUpStyle"
+      }
+    ]
+  },
+
+  "powerUpStyle": {
+    "id": "powerUpStyle",
+    "speaker": "Pixel",
+    "text": "What power-up system fits your game best? This includes collectibles too!",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "powerUpSystem",
+      "category": "items"
+    },
+    "options": [
+      {
+        "text": "A: Mario Style - Mushrooms for size, flowers for projectiles, coins for lives",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "powerUpSystem", 
+          "variant": "A",
+          "bundle": ["mushroom", "fireflower", "coins", "1up"]
+        },
+        "next": "stage3Preview"
+      },
+      {
+        "text": "B: Sonic Style - Rings for health, shields for protection, speed boosts",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "powerUpSystem", 
+          "variant": "B",
+          "bundle": ["rings", "shields", "speedboost", "invincibility"]
+        },
+        "next": "stage3Preview"
+      }
+    ]
+  },
+
+  "stage3Preview": {
+    "id": "stage3Preview",
+    "speaker": "Pixel",
+    "text": "Your world is coming together! Time to preview the full level...",
+    "action": "compileScene",
+    "actionParams": { "scene": "world" },
+    "next": "bossPattern"
+  },
+
+  "bossPattern": {
+    "id": "bossPattern",
+    "speaker": "Pixel",
+    "text": "STAGE 4: Boss Battle! How should the boss AI work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "bossAI",
+      "category": "boss"
+    },
+    "options": [
+      {
+        "text": "A: Predictable Patterns - Learn attack sequences to win",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossAI", "variant": "A" },
+        "next": "arenaDesign"
+      },
+      {
+        "text": "B: Adaptive AI - Boss learns and counters player strategy",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossAI", "variant": "B" },
+        "next": "arenaDesign"
+      }
+    ]
+  },
+
+  "arenaDesign": {
+    "id": "arenaDesign",
+    "speaker": "Pixel",
+    "text": "What kind of arena should the boss fight take place in?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "bossArena",
+      "category": "boss"
+    },
+    "options": [
+      {
+        "text": "A: Open Arena - Focus on dodging and timing",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossArena", "variant": "A" },
+        "next": "bossDefeat"
+      },
+      {
+        "text": "B: Platform Challenge - Use environment to your advantage",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossArena", "variant": "B" },
+        "next": "bossDefeat"
+      }
+    ]
+  },
+
+  "bossDefeat": {
+    "id": "bossDefeat",
+    "speaker": "Pixel",
+    "text": "How should the boss defeat be presented?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "bossVictory",
+      "category": "boss"
+    },
+    "options": [
+      {
+        "text": "A: Epic Cutscene - Dramatic slow-motion with explosions",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossVictory", "variant": "A" },
+        "next": "stage4Preview"
+      },
+      {
+        "text": "B: Quick Celebration - Jump to victory immediately",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "bossVictory", "variant": "B" },
+        "next": "stage4Preview"
+      }
+    ]
+  },
+
+  "stage4Preview": {
+    "id": "stage4Preview",
+    "speaker": "Pixel",
+    "text": "Epic boss battle configured! Let's see it in action...",
+    "action": "launchPyodidePreview",
+    "actionParams": { "scene": "boss_fight" },
+    "next": "levelComplete"
+  },
+
+  "levelComplete": {
+    "id": "levelComplete",
+    "speaker": "Pixel",
+    "text": "STAGE 5: Transitions & Polish! What happens when a level is completed?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "levelEnd",
+      "category": "transitions"
+    },
+    "options": [
+      {
+        "text": "A: Stats Screen - Show time, score, collectibles found",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "levelEnd", "variant": "A" },
+        "next": "gameOver"
+      },
+      {
+        "text": "B: Victory Dance - Character celebrates with animation",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "levelEnd", "variant": "B" },
+        "next": "gameOver"
+      }
+    ]
+  },
+
+  "gameOver": {
+    "id": "gameOver",
+    "speaker": "Pixel",
+    "text": "What happens when the player runs out of lives?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "gameOverScreen",
+      "category": "transitions"
+    },
+    "options": [
+      {
+        "text": "A: Retry from Checkpoint - Continue from last checkpoint",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "gameOverScreen", "variant": "A" },
+        "next": "celebrationEffects"
+      },
+      {
+        "text": "B: Restart Level - Begin the entire level again",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "gameOverScreen", "variant": "B" },
+        "next": "celebrationEffects"
+      }
+    ]
+  },
+
+  "celebrationEffects": {
+    "id": "celebrationEffects",
+    "speaker": "Pixel",
+    "text": "Finally, what celebration effects for game completion?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "celebration",
+      "category": "effects"
+    },
+    "options": [
+      {
+        "text": "A: Confetti Explosion - Colorful paper celebration",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "celebration", "variant": "A" },
+        "next": "complete"
+      },
+      {
+        "text": "B: Fireworks Display - Sky-filling pyrotechnics",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "celebration", "variant": "B" },
+        "next": "complete"
+      }
+    ]
+  },
+
   "complete": {
     "id": "complete",
     "speaker": "Pixel",
-    "text": "🎮 AMAZING! Your platformer is complete! Title ✓ Level Select ✓ Gameplay ✓ Boss ✓ Victory ✓",
-    "followUp": "Every scene flows perfectly into the next. Ready to play?",
+    "text": "🎮 AMAZING! Your platformer is complete with all 5 stages perfectly designed!",
+    "followUp": "Title ✓ Core Mechanics ✓ World Building ✓ Boss Battle ✓ Transitions ✓ Every choice shapes your unique game!",
     "action": "compileFullGame",
     "options": [
       {
-        "text": "Play my platformer!",
+        "text": "Play my complete platformer!",
         "action": "launchPyodideGame"
       },
       {
         "text": "Export as Python file",
-        "action": "exportPyodideGame"
+        "action": "exportPyodideGame"  
       },
       {
         "text": "Open in Pro Editor",
