@@ -14,7 +14,35 @@ from dataclasses import dataclass, field
 # Add backend directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 
-from backend_test_suite import BackendTestCase, APITestHelper
+try:
+    from backend_test_suite import BackendTestCase, APITestHelper
+except ImportError:
+    # If backend_test_suite is not available, create mock classes
+    from unittest import TestCase
+    import requests
+    
+    class MockClient:
+        def __init__(self):
+            self.base_url = 'http://localhost:5000'
+            
+        def get(self, path, **kwargs):
+            return requests.get(f"{self.base_url}{path}", **kwargs)
+            
+        def post(self, path, json=None, **kwargs):
+            return requests.post(f"{self.base_url}{path}", json=json, **kwargs)
+            
+        def put(self, path, json=None, **kwargs):
+            return requests.put(f"{self.base_url}{path}", json=json, **kwargs)
+            
+        def delete(self, path, **kwargs):
+            return requests.delete(f"{self.base_url}{path}", **kwargs)
+    
+    class BackendTestCase(TestCase):
+        def setUp(self):
+            self.client = MockClient()
+            
+    class APITestHelper:
+        pass
 
 
 @dataclass

@@ -63,22 +63,75 @@
     },
     "options": [
       {
-        "text": "A: Ancient Ruins - Stone temples, mystical traps, forgotten treasures",
+        "text": "A: Ancient Ruins - Crumbling stone temples, mystical traps, forgotten treasures",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "dungeonType", 
           "variant": "A",
-          "bundle": ["ancient_walls", "rune_doors", "temple_props", "mystical_fx"]
+          "bundle": ["ancient_walls", "rune_doors", "temple_props", "mystical_fx", "sand_particles"]
         },
-        "next": "titleScreen"
+        "next": "heroClass"
       },
       {
-        "text": "B: Modern Facility - Metal corridors, high-tech security, experimental horrors",
+        "text": "B: Haunted Castle - Gothic corridors, ghostly enemies, cursed chambers",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "dungeonType", 
           "variant": "B",
-          "bundle": ["metal_walls", "keycard_doors", "tech_props", "electric_fx"]
+          "bundle": ["castle_walls", "iron_doors", "gothic_props", "ghost_fx", "fog_effects"]
+        },
+        "next": "heroClass"
+      },
+      {
+        "text": "C: Crystal Caves - Glowing caverns, magical formations, hidden passages",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeonType", 
+          "variant": "C",
+          "bundle": ["cave_walls", "crystal_formations", "cave_props", "glow_fx", "sparkle_particles"]
+        },
+        "next": "heroClass"
+      }
+    ]
+  },
+
+  "heroClass": {
+    "id": "heroClass",
+    "speaker": "Pixel",
+    "text": "Choose your hero class! Each comes with unique abilities and playstyle.",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "heroClass",
+      "category": "character"
+    },
+    "options": [
+      {
+        "text": "A: Knight - Heavy armor, sword & shield, high defense",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "heroClass", 
+          "variant": "knight",
+          "bundle": ["knight_sprite", "sword_weapon", "shield_ability", "armor_buff", "charge_skill"]
+        },
+        "next": "titleScreen"
+      },
+      {
+        "text": "B: Archer - Light armor, bow & arrows, ranged attacks",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "heroClass", 
+          "variant": "archer",
+          "bundle": ["archer_sprite", "bow_weapon", "arrow_types", "dodge_ability", "multishot_skill"]
+        },
+        "next": "titleScreen"
+      },
+      {
+        "text": "C: Mage - Magic robes, staff, powerful spells",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "heroClass", 
+          "variant": "mage",
+          "bundle": ["mage_sprite", "staff_weapon", "spell_types", "mana_system", "teleport_skill"]
         },
         "next": "titleScreen"
       }
@@ -204,6 +257,82 @@
           "variant": "B",
           "bundle": ["free_movement", "collision", "sprint_system"]
         },
+        "next": "proceduralGeneration"
+      }
+    ]
+  },
+
+  "proceduralGeneration": {
+    "id": "proceduralGeneration",
+    "speaker": "Pixel",
+    "text": "How should dungeon layouts be created?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "mapGeneration",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Fully Procedural - Unique dungeon every playthrough with random rooms",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "mapGeneration", 
+          "variant": "A",
+          "bundle": ["room_generator", "corridor_logic", "random_spawns", "seed_system"]
+        },
+        "next": "dungeonSize"
+      },
+      {
+        "text": "B: Handcrafted with Variations - Designed rooms with random arrangements",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "mapGeneration", 
+          "variant": "B",
+          "bundle": ["room_templates", "layout_variations", "secret_rooms", "puzzle_chambers"]
+        },
+        "next": "dungeonSize"
+      }
+    ]
+  },
+
+  "dungeonSize": {
+    "id": "dungeonSize",
+    "speaker": "Pixel",
+    "text": "What's the scale of your dungeon?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "dungeonScale",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Small & Intense - 5-10 floors, focused experience",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeonScale", 
+          "variant": "small",
+          "floors": 5
+        },
+        "next": "combatSystem"
+      },
+      {
+        "text": "B: Medium Adventure - 10-20 floors, balanced challenge",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeonScale", 
+          "variant": "medium",
+          "floors": 15
+        },
+        "next": "combatSystem"
+      },
+      {
+        "text": "C: Epic Journey - 20+ floors, marathon dungeon",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeonScale", 
+          "variant": "large",
+          "floors": 25
+        },
         "next": "combatSystem"
       }
     ]
@@ -245,7 +374,7 @@
   "enemyTypes": {
     "id": "enemyTypes",
     "speaker": "Pixel",
-    "text": "What dangers lurk in the dungeon?",
+    "text": "What dangers lurk in the dungeon? Choose your enemy types!",
     "action": "showComponentChoice",
     "actionParams": {
       "componentId": "enemies",
@@ -253,22 +382,78 @@
     },
     "options": [
       {
-        "text": "A: Living Monsters - Skeletons, slimes, goblins, and beasts",
+        "text": "A: Classic Monsters - Skeletons, slimes, goblins, dragons",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "enemies", 
           "variant": "A",
-          "bundle": ["monster_sprites", "creature_ai", "growl_sounds"]
+          "bundle": ["skeleton_enemy", "slime_enemy", "goblin_enemy", "dragon_boss", "creature_ai"]
         },
-        "next": "lootSystem"
+        "next": "spawnRates"
       },
       {
-        "text": "B: Deadly Traps - Spikes, arrows, crushing walls, and puzzles",
+        "text": "B: Undead Hordes - Zombies, ghosts, vampires, liches",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "enemies", 
           "variant": "B",
-          "bundle": ["trap_sprites", "trigger_system", "mechanism_sounds"]
+          "bundle": ["zombie_enemy", "ghost_enemy", "vampire_enemy", "lich_boss", "undead_ai"]
+        },
+        "next": "spawnRates"
+      },
+      {
+        "text": "C: Magical Constructs - Golems, elementals, animated armor",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemies", 
+          "variant": "C",
+          "bundle": ["golem_enemy", "elemental_enemy", "armor_enemy", "construct_boss", "magic_ai"]
+        },
+        "next": "spawnRates"
+      }
+    ]
+  },
+
+  "spawnRates": {
+    "id": "spawnRates",
+    "speaker": "Pixel",
+    "text": "How often should enemies appear?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "enemySpawns",
+      "category": "gameplay"
+    },
+    "options": [
+      {
+        "text": "A: Sparse - Fewer but tougher enemies",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemySpawns", 
+          "variant": "sparse",
+          "spawn_rate": 0.3,
+          "difficulty_multiplier": 1.5
+        },
+        "next": "lootSystem"
+      },
+      {
+        "text": "B: Moderate - Balanced enemy encounters",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemySpawns", 
+          "variant": "moderate",
+          "spawn_rate": 0.5,
+          "difficulty_multiplier": 1.0
+        },
+        "next": "lootSystem"
+      },
+      {
+        "text": "C: Dense - Many enemies, swarm tactics",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "enemySpawns", 
+          "variant": "dense",
+          "spawn_rate": 0.7,
+          "difficulty_multiplier": 0.8
         },
         "next": "lootSystem"
       }
@@ -278,7 +463,7 @@
   "lootSystem": {
     "id": "lootSystem",
     "speaker": "Pixel",
-    "text": "STAGE 4: Rewards! How should treasure work?",
+    "text": "STAGE 4: Rewards! How should the treasure system work?",
     "action": "showComponentChoice",
     "actionParams": {
       "componentId": "loot",
@@ -291,9 +476,9 @@
         "actionParams": { 
           "componentId": "loot", 
           "variant": "A",
-          "bundle": ["loot_tables", "rarity_colors", "drop_particles"]
+          "bundle": ["loot_tables", "rarity_colors", "drop_particles", "enchantment_system"]
         },
-        "next": "inventoryManagement"
+        "next": "treasureTypes"
       },
       {
         "text": "B: Fixed Treasures - Handcrafted rewards in specific locations",
@@ -301,7 +486,50 @@
         "actionParams": { 
           "componentId": "loot", 
           "variant": "B",
-          "bundle": ["treasure_chests", "key_items", "unique_weapons"]
+          "bundle": ["treasure_chests", "key_items", "unique_weapons", "legendary_artifacts"]
+        },
+        "next": "treasureTypes"
+      }
+    ]
+  },
+
+  "treasureTypes": {
+    "id": "treasureTypes",
+    "speaker": "Pixel",
+    "text": "What types of treasures can be found?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "treasures",
+      "category": "items"
+    },
+    "options": [
+      {
+        "text": "A: Equipment Focus - Weapons, armor, accessories",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "treasures", 
+          "variant": "equipment",
+          "bundle": ["weapon_types", "armor_sets", "ring_accessories", "upgrade_materials"]
+        },
+        "next": "inventoryManagement"
+      },
+      {
+        "text": "B: Consumables Focus - Potions, scrolls, bombs",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "treasures", 
+          "variant": "consumables",
+          "bundle": ["health_potions", "magic_scrolls", "bomb_types", "buff_items"]
+        },
+        "next": "inventoryManagement"
+      },
+      {
+        "text": "C: Balanced Mix - All treasure types",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "treasures", 
+          "variant": "balanced",
+          "bundle": ["all_weapons", "all_armor", "all_consumables", "special_items"]
         },
         "next": "inventoryManagement"
       }
@@ -322,45 +550,12 @@
         "text": "A: Grid Inventory - Limited space, item tetris management",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "inventory", "variant": "A" },
-        "next": "mapGeneration"
+        "next": "lightingSystem"
       },
       {
         "text": "B: List Inventory - Categorized items with weight limits",
         "action": "selectComponentVariant",
         "actionParams": { "componentId": "inventory", "variant": "B" },
-        "next": "mapGeneration"
-      }
-    ]
-  },
-
-  "mapGeneration": {
-    "id": "mapGeneration",
-    "speaker": "Pixel",
-    "text": "STAGE 5: World Design! How should dungeon layouts be created?",
-    "action": "showComponentChoice",
-    "actionParams": {
-      "componentId": "mapGen",
-      "category": "world"
-    },
-    "options": [
-      {
-        "text": "A: Procedural Generation - Unique dungeon every playthrough",
-        "action": "selectComponentVariant",
-        "actionParams": { 
-          "componentId": "mapGen", 
-          "variant": "A",
-          "bundle": ["room_generator", "corridor_logic", "random_spawns"]
-        },
-        "next": "lightingSystem"
-      },
-      {
-        "text": "B: Handcrafted Levels - Designed challenges and secrets",
-        "action": "selectComponentVariant",
-        "actionParams": { 
-          "componentId": "mapGen", 
-          "variant": "B",
-          "bundle": ["level_templates", "secret_rooms", "puzzle_layouts"]
-        },
         "next": "lightingSystem"
       }
     ]
@@ -384,7 +579,7 @@
           "variant": "A",
           "bundle": ["torch_system", "light_radius", "darkness_fog"]
         },
-        "next": "bossEncounter"
+        "next": "explorationMechanics"
       },
       {
         "text": "B: Always Visible - Full room visibility for strategic play",
@@ -393,6 +588,39 @@
           "componentId": "lighting", 
           "variant": "B",
           "bundle": ["full_visibility", "room_lighting", "ambient_glow"]
+        },
+        "next": "explorationMechanics"
+      }
+    ]
+  },
+
+  "explorationMechanics": {
+    "id": "explorationMechanics",
+    "speaker": "Pixel",
+    "text": "What exploration mechanics should we include?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "exploration",
+      "category": "world"
+    },
+    "options": [
+      {
+        "text": "A: Map System - Auto-mapping as you explore",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "exploration", 
+          "variant": "map",
+          "bundle": ["minimap", "room_discovery", "secret_markers", "fog_of_war"]
+        },
+        "next": "bossEncounter"
+      },
+      {
+        "text": "B: Memory Challenge - No map, rely on memory",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "exploration", 
+          "variant": "memory",
+          "bundle": ["breadcrumb_trail", "landmark_system", "compass_only"]
         },
         "next": "bossEncounter"
       }
@@ -410,22 +638,32 @@
     },
     "options": [
       {
-        "text": "A: Puzzle Boss - Defeat through wit and environment",
+        "text": "A: Dragon Lord - Fire-breathing, flying, treasure hoarder",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "bossType", 
-          "variant": "A",
-          "bundle": ["puzzle_boss", "mechanism_phases", "environmental_damage"]
+          "variant": "dragon",
+          "bundle": ["dragon_boss", "fire_attacks", "flight_phases", "treasure_room"]
         },
         "next": "bossArena"
       },
       {
-        "text": "B: Combat Boss - Epic battle with attack patterns",
+        "text": "B: Lich King - Undead master, necromancy, minion summoner",
         "action": "selectComponentVariant",
         "actionParams": { 
           "componentId": "bossType", 
-          "variant": "B",
-          "bundle": ["combat_boss", "phase_system", "attack_patterns"]
+          "variant": "lich",
+          "bundle": ["lich_boss", "death_magic", "summon_undead", "phylactery_mechanic"]
+        },
+        "next": "bossArena"
+      },
+      {
+        "text": "C: Demon Lord - Multi-phase, elemental attacks, corruption",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "bossType", 
+          "variant": "demon",
+          "bundle": ["demon_boss", "phase_system", "elemental_attacks", "corruption_aura"]
         },
         "next": "bossArena"
       }
@@ -552,7 +790,7 @@
     "id": "complete",
     "speaker": "Pixel",
     "text": "⚔️ LEGENDARY! Your dungeon crawler is complete with all 8 stages perfectly crafted!",
-    "followUp": "Atmosphere ✓ Theme ✓ Exploration ✓ Combat ✓ Loot ✓ World ✓ Boss ✓ Victory ✓ Every choice shapes your unique dungeon adventure!",
+    "followUp": "Theme ✓ Hero Class ✓ Procedural Gen ✓ Combat ✓ Enemies ✓ Loot ✓ Exploration ✓ Boss ✓ Victory ✓ Every choice shapes your unique dungeon adventure!",
     "action": "compileFullGame",
     "options": [
       {
