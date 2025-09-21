@@ -2,164 +2,272 @@
   "start": {
     "id": "start",
     "speaker": "Pixel",
-    "text": "An RPG! Time to craft an epic adventure with story, characters, and battles!",
-    "followUp": "Let's build your world scene by scene, starting with the title.",
-    "next": "titleFantasyTheme"
-  },
-  "titleFantasyTheme": {
-    "id": "titleFantasyTheme",
-    "speaker": "Pixel",
-    "text": "First, what fantasy setting calls to you?",
+    "text": "An RPG adventure awaits! Let's craft an epic game with meaningful choices that shape your world. First, let's choose your universe!",
+    "followUp": "Every choice you make will bundle matching assets and mechanics. Choose your setting!",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "worldSetting",
+      "category": "theme"
+    },
     "options": [
       {
-        "text": "Medieval kingdom with castles and dragons",
-        "next": "titleMedievalAssets"
+        "text": "A: Fantasy Realm - Swords, magic, dragons, and ancient kingdoms",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "worldSetting", 
+          "variant": "A",
+          "bundle": ["fantasy_bg", "medieval_tiles", "orchestral_music", "sword_combat"]
+        },
+        "next": "titlePresentation"
       },
       {
-        "text": "Mystical forest with magic and elves",
-        "next": "titleForestAssets"
-      },
-      {
-        "text": "Dark dungeon with monsters and treasure",
-        "next": "titleDungeonAssets"
+        "text": "B: Sci-Fi Universe - Lasers, tech, aliens, and space colonies",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "worldSetting", 
+          "variant": "B",
+          "bundle": ["scifi_bg", "tech_tiles", "synth_music", "laser_combat"]
+        },
+        "next": "titlePresentation"
       }
     ]
   },
-  "titleMedievalAssets": {
-    "id": "titleMedievalAssets",
+  "titlePresentation": {
+    "id": "titlePresentation",
     "speaker": "Pixel",
-    "text": "Medieval it is! Let's pick a majestic castle background.",
-    "action": "showAssets",
+    "text": "STAGE 1: Title Screen! How should your game title be presented?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["castle", "medieval", "kingdom"]
+      "componentId": "titleStyle",
+      "category": "ui"
     },
-    "next": "titleHeroSilhouette"
-  },
-  "titleForestAssets": {
-    "id": "titleForestAssets",
-    "speaker": "Pixel",
-    "text": "Mystical forest! Choose an enchanted woodland background.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["forest", "mystical", "nature"]
-    },
-    "next": "titleHeroSilhouette"
-  },
-  "titleDungeonAssets": {
-    "id": "titleDungeonAssets",
-    "speaker": "Pixel",
-    "text": "Dark and mysterious! Pick a dungeon entrance background.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["dungeon", "cave", "dark"]
-    },
-    "next": "titleHeroSilhouette"
-  },
-  "titleHeroSilhouette": {
-    "id": "titleHeroSilhouette",
-    "speaker": "Pixel",
-    "text": "Your hero's silhouette will appear dramatically on the title. Choose your protagonist!",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "characters",
-      "curated": true,
-      "tags": ["hero", "rpg", "protagonist"]
-    },
-    "next": "titleEpicMusic"
-  },
-  "titleEpicMusic": {
-    "id": "titleEpicMusic",
-    "speaker": "Pixel",
-    "text": "RPGs need epic orchestral music! Pick your main theme.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["epic", "orchestral", "fantasy"]
-    },
-    "next": "characterCreation"
-  },
-  "characterCreation": {
-    "id": "characterCreation",
-    "speaker": "Pixel",
-    "text": "Character creation time! What class system should we use?",
     "options": [
       {
-        "text": "Classic trinity: Warrior, Mage, Rogue",
-        "next": "characterStats"
+        "text": "A: Epic Cinematic - Sweeping camera, particle effects, dramatic reveal",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "titleStyle", 
+          "variant": "A",
+          "bundle": ["cinematic_title", "particles", "camera_sweep"]
+        },
+        "next": "menuSystem"
       },
       {
-        "text": "Expanded: Knight, Wizard, Archer, Cleric, Thief",
-        "next": "characterStats"
+        "text": "B: Classic RPG - Static logo with glowing effects and ambient animations",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "titleStyle", 
+          "variant": "B",
+          "bundle": ["static_title", "glow_effects", "ambient_anim"]
+        },
+        "next": "menuSystem"
       }
     ]
   },
-  "characterStats": {
-    "id": "characterStats",
+  "menuSystem": {
+    "id": "menuSystem",
     "speaker": "Pixel",
-    "text": "Stats define your hero! Which system works best?",
+    "text": "How should the main menu work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "menuDesign",
+      "category": "ui"
+    },
     "options": [
       {
-        "text": "Simple: Health, Magic, Strength",
-        "next": "villageHub"
+        "text": "A: Interactive 3D Menu - Rotating options in 3D space",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "menuDesign", "variant": "A" },
+        "next": "characterClass"
       },
       {
-        "text": "Complex: STR, DEX, INT, WIS, CON, CHA",
-        "next": "villageHub"
+        "text": "B: Traditional List - Clean vertical menu with hover effects",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "menuDesign", "variant": "B" },
+        "next": "characterClass"
       }
     ]
   },
-  "villageHub": {
-    "id": "villageHub",
+  "characterClass": {
+    "id": "characterClass",
     "speaker": "Pixel",
-    "text": "Every RPG needs a home village! This is where adventures begin.",
-    "followUp": "Let's build your village hub with NPCs and shops.",
-    "next": "villageBackground"
-  },
-  "villageBackground": {
-    "id": "villageBackground",
-    "speaker": "Pixel",
-    "text": "Pick a cozy village setting for your hub world.",
-    "action": "showAssets",
+    "text": "STAGE 2: Character Creation! What class system should define your heroes?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "background",
-      "curated": true,
-      "tags": ["village", "town", "peaceful"]
+      "componentId": "classSystem",
+      "category": "character"
     },
-    "next": "villageNPCs"
-  },
-  "villageNPCs": {
-    "id": "villageNPCs",
-    "speaker": "Pixel",
-    "text": "Villages need NPCs! Choose townspeople sprites.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "characters",
-      "curated": true,
-      "multiple": true,
-      "tags": ["npc", "villager", "merchant"]
-    },
-    "next": "villageShops"
-  },
-  "villageShops": {
-    "id": "villageShops",
-    "speaker": "Pixel",
-    "text": "What shops should your village have?",
     "options": [
       {
-        "text": "Weapon Shop, Item Shop, Inn",
+        "text": "A: Classic Trinity - Warrior (tank), Mage (damage), Healer (support)",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "classSystem", 
+          "variant": "A",
+          "bundle": ["warrior_sprite", "mage_sprite", "healer_sprite"]
+        },
+        "next": "statSystem"
+      },
+      {
+        "text": "B: Hybrid System - Multi-class with skill trees and specializations",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "classSystem", 
+          "variant": "B",
+          "bundle": ["hybrid_classes", "skill_trees", "specializations"]
+        },
+        "next": "statSystem"
+      }
+    ]
+  },
+  "statSystem": {
+    "id": "statSystem",
+    "speaker": "Pixel",
+    "text": "How complex should the stat system be?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "stats",
+      "category": "character"
+    },
+    "options": [
+      {
+        "text": "A: Simplified - HP, MP, Attack, Defense (easy to understand)",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "stats", "variant": "A" },
+        "next": "movementStyle"
+      },
+      {
+        "text": "B: D&D Style - STR, DEX, INT, WIS, CON, CHA (deep customization)",
+        "action": "selectComponentVariant",
+        "actionParams": { "componentId": "stats", "variant": "B" },
+        "next": "movementStyle"
+      }
+    ]
+  },
+  "movementStyle": {
+    "id": "movementStyle",
+    "speaker": "Pixel",
+    "text": "STAGE 3: World Exploration! How should players navigate your world?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "movement",
+      "category": "exploration"
+    },
+    "options": [
+      {
+        "text": "A: Top-Down View - Classic Zelda-style exploration",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "movement", 
+          "variant": "A",
+          "bundle": ["topdown_camera", "8dir_movement"]
+        },
+        "next": "combatSystem"
+      },
+      {
+        "text": "B: Isometric View - Diablo-style perspective",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "movement", 
+          "variant": "B",
+          "bundle": ["iso_camera", "point_click_movement"]
+        },
+        "next": "combatSystem"
+      }
+    ]
+  },
+  "combatSystem": {
+    "id": "combatSystem",
+    "speaker": "Pixel",
+    "text": "The heart of RPG battles! Choose your combat style:",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "combat",
+      "category": "battle"
+    },
+    "options": [
+      {
+        "text": "A: Turn-Based Strategy - Classic JRPG with menus and tactics",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "combat", 
+          "variant": "A",
+          "bundle": ["turn_based", "battle_menu", "atb_gauge"]
+        },
+        "next": "dialogueSystem"
+      },
+      {
+        "text": "B: Action Combat - Real-time hack and slash battles",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "combat", 
+          "variant": "B",
+          "bundle": ["realtime_combat", "combo_system", "dodge_roll"]
+        },
+        "next": "dialogueSystem"
+      }
+    ]
+  },
+  "dialogueSystem": {
+    "id": "dialogueSystem",
+    "speaker": "Pixel",
+    "text": "How should NPCs communicate with the player?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "dialogue",
+      "category": "interface"
+    },
+    "options": [
+      {
+        "text": "A: Text Boxes - Full dialogue windows with portraits",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dialogue", 
+          "variant": "A",
+          "bundle": ["dialogue_box", "character_portraits", "text_speed"]
+        },
+        "next": "inventorySystem"
+      },
+      {
+        "text": "B: Speech Bubbles - Comic-style bubbles above characters",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dialogue", 
+          "variant": "B",
+          "bundle": ["speech_bubbles", "emotes", "floating_text"]
+        },
+        "next": "inventorySystem"
+      }
+    ]
+  },
+  "inventorySystem": {
+    "id": "inventorySystem",
+    "speaker": "Pixel",
+    "text": "STAGE 4: Items & Equipment! How should inventory management work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "inventory",
+      "category": "interface"
+    },
+    "options": [
+      {
+        "text": "A: Grid System - Tetris-style inventory management",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "inventory", 
+          "variant": "A",
+          "bundle": ["grid_inventory", "item_stacking", "weight_system"]
+        },
         "next": "questSystem"
       },
       {
-        "text": "Blacksmith, Alchemist, Magic Shop, Inn, Guild",
+        "text": "B: List System - Categorized tabs with unlimited slots",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "inventory", 
+          "variant": "B",
+          "bundle": ["list_inventory", "auto_sort", "categories"]
+        },
         "next": "questSystem"
       }
     ]
@@ -167,161 +275,300 @@
   "questSystem": {
     "id": "questSystem",
     "speaker": "Pixel",
-    "text": "Quest time! How should players receive missions?",
-    "options": [
-      {
-        "text": "Quest board with posted missions",
-        "next": "battleSystem"
-      },
-      {
-        "text": "NPCs with speech bubbles and requests",
-        "next": "battleSystem"
-      }
-    ]
-  },
-  "battleSystem": {
-    "id": "battleSystem",
-    "speaker": "Pixel",
-    "text": "Combat is crucial in RPGs! Pick your battle style.",
+    "text": "How should players track their quests and objectives?",
     "action": "showComponentChoice",
     "actionParams": {
-      "componentId": "shooting",
-      "category": "combat"
+      "componentId": "quests",
+      "category": "interface"
     },
     "options": [
       {
-        "text": "A: Real-time action combat",
+        "text": "A: Quest Journal - Detailed log with story and objectives",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "shooting", "variant": "A" },
-        "next": "battleEnemies"
+        "actionParams": { 
+          "componentId": "quests", 
+          "variant": "A",
+          "bundle": ["quest_log", "objective_tracker", "story_entries"]
+        },
+        "next": "worldStructure"
       },
       {
-        "text": "B: Turn-based strategic combat",
+        "text": "B: Map Markers - Visual indicators on world map",
         "action": "selectComponentVariant",
-        "actionParams": { "componentId": "shooting", "variant": "B" },
-        "next": "battleEnemies"
+        "actionParams": { 
+          "componentId": "quests", 
+          "variant": "B",
+          "bundle": ["map_markers", "compass", "waypoints"]
+        },
+        "next": "worldStructure"
       }
     ]
   },
-  "battleEnemies": {
-    "id": "battleEnemies",
+  "worldStructure": {
+    "id": "worldStructure",
     "speaker": "Pixel",
-    "text": "Choose enemies for random encounters!",
-    "action": "showAssets",
+    "text": "How should the game world be structured?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "sprite",
-      "category": "enemies",
-      "curated": true,
-      "multiple": true,
-      "tags": ["monster", "rpg", "enemy"]
+      "componentId": "worldDesign",
+      "category": "world"
     },
-    "next": "battleMusic"
-  },
-  "battleMusic": {
-    "id": "battleMusic",
-    "speaker": "Pixel",
-    "text": "Battle music gets the blood pumping! Pick your combat theme.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["battle", "intense", "combat"]
-    },
-    "next": "dungeonExploration"
-  },
-  "dungeonExploration": {
-    "id": "dungeonExploration",
-    "speaker": "Pixel",
-    "text": "Time to explore dungeons! How should they generate?",
     "options": [
       {
-        "text": "Pre-designed levels with secrets",
-        "next": "dungeonTreasure"
+        "text": "A: Open World - Free exploration with level scaling",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "worldDesign", 
+          "variant": "A",
+          "bundle": ["open_world", "fast_travel", "level_scaling"]
+        },
+        "next": "dungeonGeneration"
       },
       {
-        "text": "Randomly generated mazes",
-        "next": "dungeonTreasure"
+        "text": "B: Linear Progression - Story-driven chapter system",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "worldDesign", 
+          "variant": "B",
+          "bundle": ["linear_chapters", "story_gates", "progression_locks"]
+        },
+        "next": "dungeonGeneration"
       }
     ]
   },
-  "dungeonTreasure": {
-    "id": "dungeonTreasure",
+  "dungeonGeneration": {
+    "id": "dungeonGeneration",
     "speaker": "Pixel",
-    "text": "Dungeons need treasure! Pick loot to discover.",
-    "action": "showAssets",
+    "text": "STAGE 5: Dungeons! How should dungeons be created?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "sprite",
-      "category": "items",
-      "curated": true,
-      "multiple": true,
-      "tags": ["treasure", "loot", "chest"]
+      "componentId": "dungeons",
+      "category": "world"
     },
-    "next": "bossBattle"
-  },
-  "bossBattle": {
-    "id": "bossBattle",
-    "speaker": "Pixel",
-    "text": "Every quest needs a final boss! Choose your big bad.",
-    "action": "showAssets",
-    "actionParams": {
-      "type": "sprite",
-      "category": "enemies",
-      "curated": true,
-      "tags": ["boss", "dragon", "demon"]
-    },
-    "next": "bossStrategy"
-  },
-  "bossStrategy": {
-    "id": "bossStrategy",
-    "speaker": "Pixel",
-    "text": "How should the boss fight work?",
     "options": [
       {
-        "text": "Multiple phases with increasing difficulty",
-        "next": "endingChoice"
+        "text": "A: Procedural Generation - Roguelike random dungeons",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeons", 
+          "variant": "A",
+          "bundle": ["proc_gen", "random_loot", "permadeath_option"]
+        },
+        "next": "lootSystem"
       },
       {
-        "text": "Puzzle-based with weak points",
-        "next": "endingChoice"
+        "text": "B: Hand-Crafted - Designed puzzles and encounters",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "dungeons", 
+          "variant": "B",
+          "bundle": ["designed_dungeons", "puzzle_rooms", "secret_areas"]
+        },
+        "next": "lootSystem"
       }
     ]
   },
-  "endingChoice": {
-    "id": "endingChoice",
+  "lootSystem": {
+    "id": "lootSystem",
     "speaker": "Pixel",
-    "text": "Your epic needs an ending! How should the story conclude?",
+    "text": "How should treasure and loot work?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "loot",
+      "category": "items"
+    },
     "options": [
       {
-        "text": "Hero returns home as a legend",
-        "next": "endingCredits"
+        "text": "A: Random Drops - Diablo-style with rarity tiers",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "loot", 
+          "variant": "A",
+          "bundle": ["rarity_tiers", "random_stats", "loot_explosions"]
+        },
+        "next": "bossMechanics"
       },
       {
-        "text": "Sets up for a sequel adventure",
-        "next": "endingCredits"
+        "text": "B: Fixed Rewards - Curated items in specific locations",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "loot", 
+          "variant": "B",
+          "bundle": ["unique_items", "quest_rewards", "treasure_maps"]
+        },
+        "next": "bossMechanics"
       }
     ]
   },
-  "endingCredits": {
-    "id": "endingCredits",
+  "bossMechanics": {
+    "id": "bossMechanics",
     "speaker": "Pixel",
-    "text": "Pick triumphant ending music for your credits!",
-    "action": "showAssets",
+    "text": "STAGE 6: Boss Battles! How should epic boss fights work?",
+    "action": "showComponentChoice",
     "actionParams": {
-      "type": "music",
-      "curated": true,
-      "tags": ["ending", "credits", "peaceful"]
+      "componentId": "bossFight",
+      "category": "battle"
     },
-    "next": "complete"
+    "options": [
+      {
+        "text": "A: Phase System - Multiple forms with increasing difficulty",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "bossFight", 
+          "variant": "A",
+          "bundle": ["boss_phases", "form_changes", "desperation_attacks"]
+        },
+        "next": "bossArena"
+      },
+      {
+        "text": "B: Pattern Learning - Predictable attacks to memorize",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "bossFight", 
+          "variant": "B",
+          "bundle": ["attack_patterns", "telegraphs", "weak_points"]
+        },
+        "next": "bossArena"
+      }
+    ]
+  },
+  "bossArena": {
+    "id": "bossArena",
+    "speaker": "Pixel",
+    "text": "What kind of arena for the boss battle?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "arena",
+      "category": "battle"
+    },
+    "options": [
+      {
+        "text": "A: Dynamic Arena - Environment changes during battle",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "arena", 
+          "variant": "A",
+          "bundle": ["destructible_env", "arena_hazards", "changing_terrain"]
+        },
+        "next": "victoryStyle"
+      },
+      {
+        "text": "B: Static Arena - Focus on boss mechanics only",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "arena", 
+          "variant": "B",
+          "bundle": ["simple_arena", "clear_space", "boss_focus"]
+        },
+        "next": "victoryStyle"
+      }
+    ]
+  },
+  "victoryStyle": {
+    "id": "victoryStyle",
+    "speaker": "Pixel",
+    "text": "STAGE 7: Victory & Endings! How should victories be celebrated?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "victory",
+      "category": "presentation"
+    },
+    "options": [
+      {
+        "text": "A: Cinematic Cutscenes - Story sequences with dialogue",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "victory", 
+          "variant": "A",
+          "bundle": ["cutscenes", "story_resolution", "character_epilogues"]
+        },
+        "next": "creditStyle"
+      },
+      {
+        "text": "B: Quick Results - Stats screen with rewards",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "victory", 
+          "variant": "B",
+          "bundle": ["results_screen", "exp_gain", "loot_summary"]
+        },
+        "next": "creditStyle"
+      }
+    ]
+  },
+  "creditStyle": {
+    "id": "creditStyle",
+    "speaker": "Pixel",
+    "text": "How should the credits be presented?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "credits",
+      "category": "presentation"
+    },
+    "options": [
+      {
+        "text": "A: Scrolling Credits - Classic movie-style with music",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "credits", 
+          "variant": "A",
+          "bundle": ["scroll_credits", "epic_music", "concept_art"]
+        },
+        "next": "newGamePlus"
+      },
+      {
+        "text": "B: Interactive Credits - Playable mini-game during credits",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "credits", 
+          "variant": "B",
+          "bundle": ["playable_credits", "bonus_content", "easter_eggs"]
+        },
+        "next": "newGamePlus"
+      }
+    ]
+  },
+  "newGamePlus": {
+    "id": "newGamePlus",
+    "speaker": "Pixel",
+    "text": "Should there be post-game content?",
+    "action": "showComponentChoice",
+    "actionParams": {
+      "componentId": "postgame",
+      "category": "content"
+    },
+    "options": [
+      {
+        "text": "A: New Game+ - Restart with bonuses and harder enemies",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "postgame", 
+          "variant": "A",
+          "bundle": ["ng_plus", "carry_over", "difficulty_boost"]
+        },
+        "next": "complete"
+      },
+      {
+        "text": "B: Endgame Content - Secret dungeons and superbosses",
+        "action": "selectComponentVariant",
+        "actionParams": { 
+          "componentId": "postgame", 
+          "variant": "B",
+          "bundle": ["secret_dungeons", "superbosses", "ultimate_gear"]
+        },
+        "next": "complete"
+      }
+    ]
   },
   "complete": {
     "id": "complete",
     "speaker": "Pixel",
-    "text": "⚔️ LEGENDARY! Your RPG is complete! Title ✓ Character ✓ Village ✓ Quests ✓ Battles ✓ Boss ✓ Ending ✓",
-    "followUp": "An epic adventure awaits! Ready to embark?",
+    "text": "⚔️ LEGENDARY! Your RPG is complete with all 7 stages perfectly crafted!",
+    "followUp": "Setting ✓ Title ✓ Character ✓ Exploration ✓ Items ✓ Dungeons ✓ Boss Battles ✓ Victory ✓ Every choice shapes your unique adventure!",
     "action": "compileFullGame",
     "options": [
       {
-        "text": "Play my RPG!",
+        "text": "Play my complete RPG!",
         "action": "launchPyodideGame"
       },
       {
