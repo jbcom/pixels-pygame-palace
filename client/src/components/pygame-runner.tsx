@@ -1,6 +1,6 @@
 // PyGame Runner Component - Executes compiled Python games using Pyodide
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, RefreshCw, Download, Maximize, Minimize } from 'lucide-react';
+import { Play, Pause, RefreshCw, Download, Maximize, Minimize, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { compilePythonGame } from '@/lib/pygame-game-compiler';
@@ -11,6 +11,7 @@ interface PygameRunnerProps {
   previewMode?: string;
   className?: string;
   onError?: (error: string) => void;
+  onClose?: () => void;
 }
 
 // Declare Pyodide types
@@ -26,7 +27,8 @@ export default function PygameRunner({
   selectedAssets = [],
   previewMode = 'full',
   className = '',
-  onError
+  onError,
+  onClose
 }: PygameRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pyodideRef = useRef<any>(null);
@@ -480,6 +482,16 @@ if 'global_key_state' in globals():
                 <Maximize className="w-4 h-4" />
               )}
             </Button>
+            
+            {onClose && (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
         
