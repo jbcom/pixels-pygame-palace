@@ -1,9 +1,7 @@
 import os
 import json
 import uuid
-import subprocess
-import re
-import ast
+import secrets
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
@@ -19,10 +17,26 @@ import queue
 import time
 import atexit
 import signal
+from datetime import timedelta
 
-# Initialize Flask app
+# Initialize Flask app with secure configuration
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Security: Generate secure SECRET_KEY
+if os.environ.get('FLASK_ENV') == 'production':
+    # In production, require SECRET_KEY from environment
+    if not os.environ.get('FLASK_SECRET_KEY'):
+        raise RuntimeError("FLASK_SECRET_KEY environment variable is required in production")
+    app.config['SECRET_KEY'] = os.environ['FLASK_SECRET_KEY']
+else:
+    # In development, generate a random secret key
+    app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+
+# Session security settings
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session timeout
 
 # Security Configuration
 MAX_CONCURRENT_SESSIONS = 10  # Limit concurrent game sessions
@@ -144,17 +158,18 @@ def execute_game():
                     'error': 'Maximum concurrent sessions reached. Please try again later.'
                 }), 429
         
-        # Security: Validate and sanitize code
-        validation_result = validate_user_code(code)
-        if not validation_result['valid']:
+        # Security: Validate code using enhanced security validator
+        from security_config import CodeValidator
+        is_valid, error_msg = CodeValidator.validate_code(code)
+        if not is_valid:
             return jsonify({
                 'success': False,
-                'error': validation_result['error']
+                'error': error_msg
             }), 400
         
         session_id = str(uuid.uuid4())
         
-        # Import the game engine module
+        # Import the secure game engine module
         from game_engine import GameExecutor
         
         # Create a new game executor with timeout
@@ -482,67 +497,8 @@ def list_active_sessions():
             'error': str(e)
         }), 500
 
-def validate_user_code(code):
-    """Validate and sanitize user code for security"""
-    # List of dangerous imports and functions
-    dangerous_patterns = [
-        r'\b__import__\b',
-        r'\beval\b',
-        r'\bexec\b',
-        r'\bcompile\b',
-        r'\bopen\b',
-        r'\bfile\b',
-        r'\binput\b',
-        r'\braw_input\b',
-        r'\bos\.',
-        r'\bsubprocess\.',
-        r'\bsocket\.',
-        r'\burllib\.',
-        r'\brequests\.',
-        r'\b__builtins__\b',
-        r'\bglobals\b',
-        r'\blocals\b',
-        r'\bvars\b',
-        r'\bdir\b',
-        r'\bgetattr\b',
-        r'\bsetattr\b',
-        r'\bdelattr\b',
-        r'\bhasattr\b',
-        r'\b__class__\b',
-        r'\b__bases__\b',
-        r'\b__subclasses__\b',
-        r'\bimportlib\.',
-        r'\bpkgutil\.',
-        r'\bsys\.exit\b',
-        r'\bexit\b',
-        r'\bquit\b',
-    ]
-    
-    # Check for dangerous patterns
-    for pattern in dangerous_patterns:
-        if re.search(pattern, code):
-            return {
-                'valid': False,
-                'error': f'Dangerous code pattern detected: {pattern}'
-            }
-    
-    # Try to parse the code as valid Python
-    try:
-        ast.parse(code)
-    except SyntaxError as e:
-        return {
-            'valid': False,
-            'error': f'Syntax error in code: {str(e)}'
-        }
-    
-    # Check for valid pygame imports
-    if 'import pygame' not in code and 'from pygame' not in code:
-        return {
-            'valid': False,
-            'error': 'Code must import pygame to create a game'
-        }
-    
-    return {'valid': True}
+# Code validation is now handled by security_config.CodeValidator
+# This provides enhanced AST-based validation with better security
 
 def generate_python_code(components, game_type):
     """Generate Python pygame code from visual components"""

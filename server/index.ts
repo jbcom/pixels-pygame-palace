@@ -2,9 +2,34 @@ import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import rateLimit from "express-rate-limit";
 
 // Export app for testing
 export const app = express();
+
+// Configure rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply rate limiting to all API routes
+app.use("/api/", limiter);
+
+// Stricter rate limiting for expensive operations
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 requests per windowMs
+  message: "Too many project operations, please try again later.",
+});
+
+// Apply stricter limits to project creation and execution
+app.use("/api/projects", strictLimiter);
+app.use("/api/execute", strictLimiter);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
