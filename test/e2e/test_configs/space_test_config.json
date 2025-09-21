@@ -1,0 +1,260 @@
+{
+  "game_type": "space",
+  "description": "Test configuration for space shooter game creation flow",
+  "stages": {
+    "title_screen": {
+      "title": "Galactic Defender",
+      "font": "futuristic",
+      "background": "#000033",
+      "music": "space_epic.mp3",
+      "style": "sci-fi",
+      "effects": ["stars", "nebula"],
+      "buttons": ["Launch", "Hangar", "Missions", "Settings", "Credits", "Exit"]
+    },
+    "gameplay": {
+      "spaceship": {
+        "model": "fighter_x1",
+        "sprite": "spaceship_blue.png",
+        "health": 100,
+        "shields": 50,
+        "speed": 7,
+        "weapons": ["laser", "missiles", "plasma_cannon"],
+        "animations": ["idle", "thrust", "bank_left", "bank_right", "damage", "explode"]
+      },
+      "movement": {
+        "style": "free_movement",
+        "rotation": true,
+        "inertia": true,
+        "boost": true,
+        "strafe": true
+      },
+      "weapons": [
+        {
+          "type": "laser",
+          "damage": 10,
+          "rate_of_fire": 0.2,
+          "sprite": "laser_green.png",
+          "sound": "laser_fire.wav",
+          "auto_fire": true
+        },
+        {
+          "type": "missile",
+          "damage": 30,
+          "rate_of_fire": 1,
+          "sprite": "missile.png",
+          "sound": "missile_launch.wav",
+          "homing": true,
+          "ammo": 20
+        },
+        {
+          "type": "plasma_cannon",
+          "damage": 50,
+          "rate_of_fire": 2,
+          "sprite": "plasma_ball.png",
+          "sound": "plasma_charge.wav",
+          "charge_time": 1,
+          "area_damage": true
+        }
+      ],
+      "enemies": [
+        {
+          "type": "scout",
+          "sprite": "enemy_scout.png",
+          "health": 20,
+          "speed": 8,
+          "pattern": "zigzag",
+          "weapon": "laser",
+          "points": 100
+        },
+        {
+          "type": "fighter",
+          "sprite": "enemy_fighter.png",
+          "health": 40,
+          "speed": 6,
+          "pattern": "aggressive",
+          "weapon": "dual_laser",
+          "points": 200
+        },
+        {
+          "type": "bomber",
+          "sprite": "enemy_bomber.png",
+          "health": 60,
+          "speed": 4,
+          "pattern": "straight",
+          "weapon": "bombs",
+          "points": 300
+        },
+        {
+          "type": "boss_mothership",
+          "sprite": "boss_mothership.png",
+          "health": 500,
+          "speed": 2,
+          "pattern": "complex",
+          "weapons": ["turrets", "missiles", "beam"],
+          "phases": 3,
+          "points": 5000
+        }
+      ],
+      "asteroids": {
+        "types": ["small", "medium", "large"],
+        "breakable": true,
+        "drops": ["health", "ammo", "power_ups"],
+        "damage_on_collision": true,
+        "sprites": ["asteroid_small.png", "asteroid_medium.png", "asteroid_large.png"]
+      },
+      "power_ups": [
+        {
+          "type": "rapid_fire",
+          "effect": "double_fire_rate",
+          "duration": 10,
+          "sprite": "powerup_rapid.png"
+        },
+        {
+          "type": "shield_boost",
+          "effect": "invincibility",
+          "duration": 5,
+          "sprite": "powerup_shield.png"
+        },
+        {
+          "type": "multi_shot",
+          "effect": "triple_bullets",
+          "duration": 15,
+          "sprite": "powerup_multi.png"
+        },
+        {
+          "type": "bomb",
+          "effect": "clear_screen",
+          "instant": true,
+          "sprite": "powerup_bomb.png"
+        }
+      ]
+    },
+    "assets": {
+      "sprites": [
+        {"name": "spaceships", "path": "assets/2d/space/ships.png"},
+        {"name": "enemies", "path": "assets/2d/space/enemies.png"},
+        {"name": "projectiles", "path": "assets/2d/space/weapons.png"},
+        {"name": "asteroids", "path": "assets/2d/space/asteroids.png"},
+        {"name": "effects", "path": "assets/2d/space/effects.png"},
+        {"name": "powerups", "path": "assets/2d/space/powerups.png"}
+      ],
+      "sounds": [
+        {"name": "laser", "path": "assets/audio/sfx/weapons/laser.wav"},
+        {"name": "explosion", "path": "assets/audio/sfx/impacts/explosion.wav"},
+        {"name": "shield_hit", "path": "assets/audio/sfx/impacts/shield.wav"},
+        {"name": "powerup", "path": "assets/audio/sfx/pickups/powerup.wav"},
+        {"name": "warning", "path": "assets/audio/sfx/interface/warning.wav"}
+      ],
+      "backgrounds": [
+        {"name": "space", "path": "assets/2d/space/backgrounds/stars.png"},
+        {"name": "nebula", "path": "assets/2d/space/backgrounds/nebula.png"},
+        {"name": "planet", "path": "assets/2d/space/backgrounds/planet.png"},
+        {"name": "asteroid_field", "path": "assets/2d/space/backgrounds/asteroids.png"}
+      ],
+      "music": [
+        {"name": "battle", "path": "assets/audio/music/loops/space_battle.mp3"},
+        {"name": "boss", "path": "assets/audio/music/loops/boss_intense.mp3"},
+        {"name": "victory", "path": "assets/audio/music/stingers/victory.mp3"}
+      ]
+    },
+    "levels": {
+      "structure": "wave_based",
+      "waves_per_level": 5,
+      "difficulty_scaling": "progressive",
+      "boss_frequency": "every_5_waves",
+      "environments": ["deep_space", "asteroid_belt", "nebula", "planet_orbit", "enemy_base"]
+    },
+    "game_modes": {
+      "campaign": {
+        "description": "Story-driven mission mode",
+        "missions": 20,
+        "cutscenes": true,
+        "objectives": ["survive", "destroy_target", "escort", "defend"]
+      },
+      "survival": {
+        "description": "Endless wave survival",
+        "leaderboard": true,
+        "difficulty_increase": "per_wave"
+      },
+      "arcade": {
+        "description": "Classic high-score mode",
+        "lives": 3,
+        "continues": 2,
+        "score_multiplier": true
+      },
+      "boss_rush": {
+        "description": "Fight all bosses in sequence",
+        "health_restore": "partial",
+        "time_attack": true
+      }
+    },
+    "upgrades": {
+      "weapons": {
+        "damage": [1, 2, 3, 4, 5],
+        "fire_rate": [1, 2, 3, 4, 5],
+        "special_abilities": ["piercing", "explosive", "chain_lightning"]
+      },
+      "ship": {
+        "health": [100, 125, 150, 200, 250],
+        "shields": [50, 75, 100, 150, 200],
+        "speed": [7, 8, 9, 10, 12]
+      },
+      "special": {
+        "auto_aim": true,
+        "shield_regeneration": true,
+        "weapon_overcharge": true
+      }
+    },
+    "ending_screen": {
+      "win_message": "Mission Complete! Galaxy Saved!",
+      "lose_message": "Ship Destroyed - Try Again!",
+      "music": "ending_theme.mp3",
+      "style": "space_panorama",
+      "show_score": true,
+      "show_accuracy": true,
+      "show_enemies_destroyed": true,
+      "show_rank": true,
+      "options": ["Continue", "Replay Mission", "Upgrade Ship", "Main Menu"]
+    },
+    "ui_elements": {
+      "hud": {
+        "health_bar": "bottom_left",
+        "shield_bar": "below_health",
+        "score": "top_right",
+        "lives": "top_left",
+        "ammo_counter": "bottom_right",
+        "weapon_indicator": "bottom_center",
+        "radar": "top_center",
+        "boss_health": "top_screen_wide"
+      },
+      "effects": {
+        "screen_shake": true,
+        "particle_effects": true,
+        "bullet_trails": true,
+        "explosion_debris": true
+      }
+    },
+    "expected_flow": [
+      "welcome",
+      "choose_game_type",
+      "title_screen_setup",
+      "spaceship_selection",
+      "movement_configuration",
+      "weapon_system",
+      "enemy_waves",
+      "asteroid_settings",
+      "power_up_configuration",
+      "level_design",
+      "game_mode_selection",
+      "upgrade_system",
+      "ending_configuration",
+      "compile_and_test",
+      "export_game"
+    ],
+    "validation": {
+      "required_components": ["title_screen", "spaceship", "enemies", "weapons", "game_loop", "collision_detection", "score_system"],
+      "minimum_assets": 7,
+      "code_requirements": ["pygame.init", "game loop", "projectile system", "collision detection", "wave spawning", "particle effects"]
+    }
+  }
+}
