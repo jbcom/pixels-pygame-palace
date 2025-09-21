@@ -1,0 +1,182 @@
+{
+  "game_type": "racing",
+  "description": "Test configuration for racing game creation flow",
+  "stages": {
+    "title_screen": {
+      "title": "Speed Racer Pro",
+      "font": "bold",
+      "background": "#E74C3C",
+      "music": "engine_rev.mp3",
+      "style": "dynamic",
+      "buttons": ["Race", "Garage", "Career", "Multiplayer", "Settings", "Exit"]
+    },
+    "gameplay": {
+      "vehicle": {
+        "type": "car",
+        "sprite": "sports_car_red.png",
+        "speed": 200,
+        "acceleration": 5,
+        "handling": 8,
+        "nitro": 100,
+        "animations": ["idle", "accelerate", "brake", "drift", "crash"]
+      },
+      "track": {
+        "style": "circuit",
+        "surface": "asphalt",
+        "width": 400,
+        "laps": 3,
+        "checkpoints": true,
+        "obstacles": ["barriers", "oil_slicks", "speed_bumps"]
+      },
+      "physics": {
+        "friction": 0.95,
+        "drift_threshold": 0.7,
+        "collision_damage": true,
+        "realistic_handling": false
+      },
+      "ai_opponents": [
+        {
+          "name": "Speed Demon",
+          "vehicle": "sports_car_blue.png",
+          "difficulty": "hard",
+          "aggression": 8
+        },
+        {
+          "name": "Cruiser",
+          "vehicle": "sedan_green.png",
+          "difficulty": "easy",
+          "aggression": 3
+        }
+      ],
+      "power_ups": [
+        {
+          "type": "nitro_boost",
+          "effect": "speed_increase",
+          "duration": 3,
+          "sprite": "nitro.png"
+        },
+        {
+          "type": "shield",
+          "effect": "invincibility",
+          "duration": 5,
+          "sprite": "shield.png"
+        },
+        {
+          "type": "oil_slick",
+          "effect": "opponent_slip",
+          "sprite": "oil.png"
+        }
+      ],
+      "camera": {
+        "view": "top_down",
+        "follow_smooth": true,
+        "zoom_on_speed": true,
+        "shake_on_collision": true
+      }
+    },
+    "assets": {
+      "sprites": [
+        {"name": "vehicles", "path": "assets/2d/racing/vehicles.png"},
+        {"name": "track_tiles", "path": "assets/2d/racing/track.png"},
+        {"name": "power_ups", "path": "assets/2d/racing/powerups.png"},
+        {"name": "effects", "path": "assets/2d/racing/effects.png"}
+      ],
+      "sounds": [
+        {"name": "engine", "path": "assets/audio/sfx/racing/engine.wav"},
+        {"name": "brake", "path": "assets/audio/sfx/racing/brake.wav"},
+        {"name": "drift", "path": "assets/audio/sfx/racing/drift.wav"},
+        {"name": "collision", "path": "assets/audio/sfx/racing/crash.wav"},
+        {"name": "nitro", "path": "assets/audio/sfx/racing/nitro.wav"}
+      ],
+      "backgrounds": [
+        {"name": "city", "path": "assets/2d/racing/backgrounds/city.png"},
+        {"name": "desert", "path": "assets/2d/racing/backgrounds/desert.png"},
+        {"name": "forest", "path": "assets/2d/racing/backgrounds/forest.png"}
+      ],
+      "music": [
+        {"name": "race_theme", "path": "assets/audio/music/loops/racing_intense.mp3"},
+        {"name": "menu_theme", "path": "assets/audio/music/loops/garage.mp3"}
+      ]
+    },
+    "tracks": {
+      "environments": ["city", "desert", "forest", "snow", "beach"],
+      "count": 10,
+      "difficulty_progression": true,
+      "weather_effects": ["rain", "fog", "night"],
+      "track_features": ["jumps", "shortcuts", "pit_stops"]
+    },
+    "game_modes": {
+      "time_trial": {
+        "description": "Beat the clock",
+        "ghost_car": true,
+        "leaderboards": true
+      },
+      "championship": {
+        "description": "Multi-race tournament",
+        "points_system": true,
+        "upgrades_between_races": true
+      },
+      "elimination": {
+        "description": "Last place eliminated each lap",
+        "countdown_timer": true
+      },
+      "free_roam": {
+        "description": "Open world exploration",
+        "collectibles": true
+      }
+    },
+    "upgrades": {
+      "engine": ["turbo", "supercharger", "nitrous"],
+      "tires": ["street", "racing", "drift"],
+      "body": ["aerodynamic", "reinforced", "lightweight"],
+      "paint": ["colors", "patterns", "decals"]
+    },
+    "ending_screen": {
+      "win_message": "WINNER! New Track Record!",
+      "lose_message": "Race Over - Better Luck Next Time!",
+      "music": "victory_lap.mp3",
+      "style": "podium",
+      "show_time": true,
+      "show_position": true,
+      "show_best_lap": true,
+      "options": ["Race Again", "Next Track", "Garage", "Main Menu"]
+    },
+    "ui_elements": {
+      "hud": {
+        "speedometer": "bottom_right",
+        "position_indicator": "top_left",
+        "lap_counter": "top_center",
+        "minimap": "top_right",
+        "nitro_gauge": "bottom_left",
+        "damage_indicator": true
+      },
+      "race_info": {
+        "countdown": "3-2-1-GO",
+        "wrong_way_warning": true,
+        "checkpoint_notifications": true,
+        "lap_time_display": true
+      }
+    },
+    "expected_flow": [
+      "welcome",
+      "choose_game_type",
+      "title_screen_setup",
+      "vehicle_selection",
+      "track_design",
+      "physics_configuration",
+      "opponent_setup",
+      "power_up_selection",
+      "camera_settings",
+      "game_mode_selection",
+      "upgrade_system",
+      "ending_configuration",
+      "compile_and_test",
+      "export_game"
+    ],
+    "validation": {
+      "required_components": ["title_screen", "vehicle", "track", "physics", "game_loop", "input_handler", "collision_detection"],
+      "minimum_assets": 6,
+      "code_requirements": ["pygame.init", "game loop", "vehicle physics", "collision detection", "lap counting"]
+    }
+  }
+}

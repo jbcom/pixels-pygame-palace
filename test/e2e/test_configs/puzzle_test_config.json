@@ -1,0 +1,163 @@
+{
+  "game_type": "puzzle",
+  "description": "Test configuration for puzzle game creation flow",
+  "stages": {
+    "title_screen": {
+      "title": "Mind Twister",
+      "font": "clean",
+      "background": "#3498DB",
+      "music": "ambient_thinking.mp3",
+      "style": "minimalist",
+      "buttons": ["Play", "Tutorial", "Levels", "Settings", "Quit"]
+    },
+    "gameplay": {
+      "grid": {
+        "rows": 8,
+        "cols": 8,
+        "tile_size": 64,
+        "style": "flat",
+        "animation": "smooth"
+      },
+      "pieces": {
+        "types": ["gem", "block", "shape"],
+        "colors": ["red", "blue", "green", "yellow", "purple", "orange"],
+        "special": ["wild", "bomb", "line_clear", "color_change"],
+        "sprites": "puzzle_pieces.png"
+      },
+      "mechanics": {
+        "type": "match_3",
+        "swap_method": "click_and_drag",
+        "gravity": true,
+        "chain_reactions": true,
+        "combo_multiplier": true
+      },
+      "scoring": {
+        "base_points": 10,
+        "combo_bonus": "exponential",
+        "time_bonus": true,
+        "perfect_clear_bonus": 1000
+      },
+      "power_ups": [
+        {
+          "name": "Shuffle",
+          "effect": "randomize_board",
+          "cost": 100
+        },
+        {
+          "name": "Hint",
+          "effect": "show_move",
+          "cost": 50
+        },
+        {
+          "name": "Time Freeze",
+          "effect": "pause_timer",
+          "duration": 10,
+          "cost": 200
+        }
+      ]
+    },
+    "assets": {
+      "sprites": [
+        {"name": "gems", "path": "assets/2d/puzzle/gems.png"},
+        {"name": "blocks", "path": "assets/2d/puzzle/blocks.png"},
+        {"name": "effects", "path": "assets/2d/puzzle/effects.png"},
+        {"name": "ui_elements", "path": "assets/2d/puzzle/ui.png"}
+      ],
+      "sounds": [
+        {"name": "match", "path": "assets/audio/sfx/puzzle/match.wav"},
+        {"name": "combo", "path": "assets/audio/sfx/puzzle/combo.wav"},
+        {"name": "clear", "path": "assets/audio/sfx/puzzle/clear.wav"},
+        {"name": "fail", "path": "assets/audio/sfx/puzzle/fail.wav"}
+      ],
+      "backgrounds": [
+        {"name": "abstract", "path": "assets/2d/puzzle/backgrounds/abstract.png"},
+        {"name": "gradient", "path": "assets/2d/puzzle/backgrounds/gradient.png"}
+      ],
+      "music": [
+        {"name": "thinking_time", "path": "assets/audio/music/loops/puzzle_ambient.mp3"},
+        {"name": "speed_round", "path": "assets/audio/music/loops/fast_puzzle.mp3"}
+      ]
+    },
+    "levels": {
+      "progression": "linear_unlock",
+      "count": 50,
+      "difficulty_curve": "gradual",
+      "objectives": [
+        {"type": "score", "target": 1000},
+        {"type": "clear_pieces", "target": 20},
+        {"type": "time_limit", "seconds": 120},
+        {"type": "limited_moves", "moves": 30}
+      ],
+      "special_levels": ["boss", "timed", "endless", "challenge"]
+    },
+    "game_modes": {
+      "classic": {
+        "description": "Standard match-3 gameplay",
+        "time_limit": false,
+        "move_limit": true
+      },
+      "timed": {
+        "description": "Race against the clock",
+        "time_limit": 60,
+        "move_limit": false
+      },
+      "endless": {
+        "description": "Play until you can't make moves",
+        "time_limit": false,
+        "move_limit": false
+      },
+      "puzzle": {
+        "description": "Solve specific board configurations",
+        "predefined_boards": true
+      }
+    },
+    "ending_screen": {
+      "win_message": "Level Complete!",
+      "lose_message": "Try Again!",
+      "music": "victory_jingle.mp3",
+      "style": "animated_stars",
+      "show_score": true,
+      "show_stars": true,
+      "show_time": true,
+      "options": ["Next Level", "Replay", "Level Select", "Main Menu"]
+    },
+    "ui_elements": {
+      "hud": {
+        "score_display": "top_center",
+        "moves_remaining": "top_left",
+        "timer": "top_right",
+        "objective": "bottom",
+        "combo_indicator": true
+      },
+      "pause_menu": {
+        "enabled": true,
+        "options": ["Resume", "Restart", "Hint", "Quit"]
+      },
+      "level_select": {
+        "style": "grid",
+        "show_stars": true,
+        "show_high_score": true
+      }
+    },
+    "expected_flow": [
+      "welcome",
+      "choose_game_type",
+      "title_screen_setup",
+      "grid_configuration",
+      "piece_selection",
+      "mechanic_choice",
+      "scoring_setup",
+      "power_up_selection",
+      "level_design",
+      "game_mode_configuration",
+      "ending_configuration",
+      "compile_and_test",
+      "export_game"
+    ],
+    "validation": {
+      "required_components": ["title_screen", "grid", "pieces", "game_loop", "scoring_system", "input_handler"],
+      "minimum_assets": 4,
+      "code_requirements": ["pygame.init", "game loop", "grid management", "match detection", "input handling"]
+    }
+  }
+}

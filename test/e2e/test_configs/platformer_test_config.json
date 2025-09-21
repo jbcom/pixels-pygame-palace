@@ -1,0 +1,128 @@
+{
+  "game_type": "platformer",
+  "description": "Test configuration for platformer game creation flow",
+  "stages": {
+    "title_screen": {
+      "title": "Super Jump Adventure",
+      "font": "pixel",
+      "background": "#2C3E50",
+      "music": "upbeat_theme.mp3",
+      "style": "retro",
+      "buttons": ["Start Game", "Settings", "Quit"]
+    },
+    "gameplay": {
+      "player": {
+        "sprite": "player_blue.png",
+        "speed": 5,
+        "jump_height": 15,
+        "health": 3,
+        "animations": ["idle", "run", "jump", "fall"]
+      },
+      "platforms": {
+        "tiles": ["ground_grass.png", "platform_wood.png", "platform_stone.png"],
+        "types": ["solid", "moving", "breakable", "bouncy"]
+      },
+      "gravity": 0.8,
+      "physics": {
+        "friction": 0.9,
+        "air_resistance": 0.98
+      },
+      "enemies": [
+        {
+          "type": "walker",
+          "sprite": "enemy_slime.png",
+          "speed": 2,
+          "damage": 1
+        },
+        {
+          "type": "flyer",
+          "sprite": "enemy_bat.png",
+          "speed": 3,
+          "pattern": "sine_wave"
+        }
+      ],
+      "collectibles": [
+        {
+          "type": "coin",
+          "sprite": "coin_gold.png",
+          "value": 10
+        },
+        {
+          "type": "powerup",
+          "sprite": "powerup_star.png",
+          "effect": "invincibility",
+          "duration": 5
+        }
+      ]
+    },
+    "assets": {
+      "sprites": [
+        {"name": "player_blue", "path": "assets/2d/platformer/characters/Player Blue/player_blue.png"},
+        {"name": "ground_tiles", "path": "assets/2d/platformer/tiles/ground.png"},
+        {"name": "platforms", "path": "assets/2d/platformer/tiles/platforms.png"},
+        {"name": "coins", "path": "assets/2d/platformer/items/coins.png"},
+        {"name": "enemies", "path": "assets/2d/platformer/enemies/slime.png"}
+      ],
+      "sounds": [
+        {"name": "jump", "path": "assets/audio/sfx/movement/jump.wav"},
+        {"name": "coin_pickup", "path": "assets/audio/sfx/pickups/coin.wav"},
+        {"name": "hit", "path": "assets/audio/sfx/impacts/hit.wav"}
+      ],
+      "backgrounds": [
+        {"name": "sky", "path": "assets/2d/platformer/backgrounds/sky.png"},
+        {"name": "mountains", "path": "assets/2d/platformer/backgrounds/mountains.png"}
+      ],
+      "music": [
+        {"name": "level_theme", "path": "assets/audio/music/loops/platformer_loop.mp3"},
+        {"name": "boss_theme", "path": "assets/audio/music/loops/boss_battle.mp3"}
+      ]
+    },
+    "levels": {
+      "structure": "linear",
+      "count": 5,
+      "themes": ["grassland", "cave", "sky", "castle", "boss"],
+      "difficulty_curve": "gradual",
+      "checkpoints": true
+    },
+    "ending_screen": {
+      "win_message": "Congratulations! You saved the kingdom!",
+      "lose_message": "Game Over - Try Again!",
+      "music": "victory_fanfare.mp3",
+      "style": "animated",
+      "show_score": true,
+      "show_time": true,
+      "options": ["Play Again", "Main Menu", "Quit"]
+    },
+    "ui_elements": {
+      "hud": {
+        "health_display": "hearts",
+        "score_display": "top_right",
+        "timer": false,
+        "minimap": false
+      },
+      "pause_menu": {
+        "enabled": true,
+        "options": ["Resume", "Restart Level", "Settings", "Quit"]
+      }
+    },
+    "expected_flow": [
+      "welcome",
+      "choose_game_type",
+      "title_screen_setup",
+      "player_selection",
+      "movement_setup",
+      "platform_configuration",
+      "enemy_selection",
+      "collectible_setup",
+      "level_design",
+      "ending_configuration",
+      "compile_and_test",
+      "export_game"
+    ],
+    "validation": {
+      "required_components": ["title_screen", "player", "platforms", "gravity", "game_loop"],
+      "minimum_assets": 5,
+      "code_requirements": ["pygame.init", "game loop", "collision detection", "input handling"]
+    }
+  }
+}
