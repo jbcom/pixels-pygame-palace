@@ -198,6 +198,10 @@ class AssetPackager:
             return None
         
         # Find asset file
+        if default_asset is None:
+            if required:
+                logger.warning(f"Required asset not specified")
+            return None
         asset_path = self._find_asset_file(default_asset, asset_type)
         if not asset_path:
             if required:
@@ -306,9 +310,9 @@ class AssetPackager:
             
             # Add metadata based on type
             if asset_type == AssetType.SPRITE:
-                asset_info.metadata = self._get_image_metadata(final_path)
+                asset_info.metadata = self._get_image_metadata(str(final_path))
             elif asset_type in [AssetType.SOUND, AssetType.MUSIC]:
-                asset_info.metadata = self._get_audio_metadata(final_path)
+                asset_info.metadata = self._get_audio_metadata(str(final_path))
             
             # Cache the asset
             self.asset_cache[checksum] = asset_info
@@ -327,12 +331,20 @@ class AssetPackager:
             return output_path
             
         try:
+            if Image is None:
+                logger.warning(f"PIL Image not available for processing {source_path}")
+                shutil.copy2(source_path, output_path)
+                return output_path
             with Image.open(source_path) as img:
                 # Convert to RGB if necessary
                 if img.mode in ('RGBA', 'LA'):
                     # Keep transparency for PNG
                     if output_path.suffix.lower() != '.png':
                         # Convert to RGB for JPEG
+                        if Image is None:
+                            logger.warning(f"PIL Image not available for RGB conversion")
+                            shutil.copy2(source_path, output_path)
+                            return output_path
                         background = Image.new('RGB', img.size, (255, 255, 255))
                         background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
                         img = background
@@ -342,14 +354,16 @@ class AssetPackager:
                 # Resize if too large
                 if self.enable_compression and (img.width > self.max_image_size[0] or 
                                                img.height > self.max_image_size[1]):
-                    img.thumbnail(self.max_image_size, Image.Resampling.LANCZOS)
+                    if Image is None:
+                        logger.warning(f"PIL Image not available for resizing")
+                    else:
+                        img.thumbnail(self.max_image_size, Image.Resampling.LANCZOS)
                 
                 # Save with optimization
-                save_kwargs = {'optimize': True}
                 if output_path.suffix.lower() in ['.jpg', '.jpeg']:
-                    save_kwargs['quality'] = self.image_quality
-                
-                img.save(output_path, **save_kwargs)
+                    img.save(output_path, format='JPEG', optimize=True, quality=self.image_quality)
+                else:
+                    img.save(output_path, optimize=True)
                 return output_path
                 
         except Exception as e:
@@ -410,6 +424,10 @@ class AssetPackager:
                         shutil.copy2(source_path, dest_path)
                     else:
                         try:
+                            if Image is None:
+                                logger.warning(f"PIL Image not available for conversion")
+                                shutil.copy2(source_path, dest_path)
+                                return True
                             with Image.open(source_path) as img:
                                 png_path = dest_path.with_suffix('.png')
                                 img.save(png_path, 'PNG', optimize=True)
@@ -511,6 +529,8 @@ class AssetPackager:
             return {'error': 'Pillow not available for image metadata'}
             
         try:
+            if Image is None:
+                return {'error': 'PIL Image not available'}
             with Image.open(image_path) as img:
                 return {
                     'width': img.width,
