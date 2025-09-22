@@ -76,29 +76,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
-# Create working directory
+# Set working directory
 WORKDIR /workspace
-
-# Copy package files first for better caching
-COPY package*.json ./
-COPY pyproject.toml ./
-COPY uv.lock ./
-COPY apps/frontend/package*.json apps/frontend/
-COPY apps/server/package*.json apps/server/
-COPY packages/assets/package*.json packages/assets/
-COPY packages/shared/package*.json packages/shared/
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application
-COPY . .
-
-# Run bootstrap script
-RUN bash -lc "./scripts/bootstrap_env.sh"
-
-# Expose ports from .replit config
-EXPOSE 5173 5000 5001
-
-# Default command matches .replit run command
-CMD ["bash", "-lc", "source .venv/bin/activate && npm run dev"]
