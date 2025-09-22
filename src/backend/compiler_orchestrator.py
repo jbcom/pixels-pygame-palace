@@ -80,7 +80,7 @@ except ImportError:
             return FallbackConfig()
         
         class AssetPackager:
-            def __init__(self): pass
+            def __init__(self, cache_manager=None, cache_dir=None): pass
             def package_assets(self, *args, **kwargs): 
                 return {'version': '1.0', 'assets': {}, 'total_size': 0}
             def convert_for_web(self, *args, **kwargs):
@@ -128,6 +128,11 @@ except ImportError:
             def put(self, key, data, metadata=None): return False
             def get_stats(self): return {'fallback': True}
             def invalidate(self, scope, key_pattern="*"): return 0
+        
+        class WebGameCompiler:
+            def __init__(self, cache_manager=None, asset_packager=None): pass
+            def compile_to_web(self, *args, **kwargs): 
+                return {'success': False, 'error': 'Fallback WebGameCompiler used'}
 
 logger = logging.getLogger(__name__)
 
@@ -371,15 +376,38 @@ class CompilerOrchestrator:
         self.cache_dir.mkdir(exist_ok=True)
         self.output_dir.mkdir(exist_ok=True)
         
-        # Initialize subsystems
-        self.asset_packager = AssetPackager()
-        self.code_generator = CodeGenerator()
-        self.template_renderer = TemplateRenderer()
-        
-        # Initialize CacheManager with comprehensive caching
+        # Initialize CacheManager first
         max_cache_size_mb = getattr(compilation_config, 'MAX_CACHE_SIZE_MB', 
                                    getattr(compilation_config, 'get', lambda k, d: d)('MAX_CACHE_SIZE_MB', 1024))
         self.cache_manager: CacheManager = CacheManager(self.cache_dir, max_cache_size_mb)
+        
+        # Initialize subsystems with shared CacheManager
+        self.asset_packager = AssetPackager(cache_manager=self.cache_manager)
+        self.code_generator = CodeGenerator()
+        self.template_renderer = TemplateRenderer()
+        
+        # CRITICAL FIX: Initialize WebGameCompiler with shared CacheManager and AssetPackager
+        try:
+            from .web_game_compiler import WebGameCompiler as RealWebGameCompiler
+            # Use real WebGameCompiler with proper types
+            self.web_game_compiler = RealWebGameCompiler(
+                cache_manager=self.cache_manager,  # type: ignore[arg-type]
+                asset_packager=self.asset_packager  # type: ignore[arg-type]
+            )
+        except ImportError:
+            try:
+                from web_game_compiler import WebGameCompiler as RealWebGameCompiler
+                # Use real WebGameCompiler with proper types
+                self.web_game_compiler = RealWebGameCompiler(
+                    cache_manager=self.cache_manager,  # type: ignore[arg-type]
+                    asset_packager=self.asset_packager  # type: ignore[arg-type]
+                )
+            except ImportError:
+                # Use fallback WebGameCompiler - types are compatible since they're all fallbacks
+                self.web_game_compiler = WebGameCompiler(
+                    cache_manager=self.cache_manager,
+                    asset_packager=self.asset_packager
+                )
         
         # Load registries
         self._load_registries()

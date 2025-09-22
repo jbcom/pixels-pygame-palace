@@ -285,7 +285,7 @@ class AssetPackager:
             if self.cache_manager and CacheKey and CacheStage:
                 try:
                     cache_key_obj = CacheKey(scope="compilation", key=cache_key, stage=CacheStage.ASSETS)
-                    self.cache_manager.store_data(cache_key_obj, manifest, metadata={
+                    self.cache_manager.put(cache_key_obj, manifest, metadata={
                         'asset_count': len(deduplicated),
                         'total_size': total_size,
                         'target_format': target_format
@@ -410,7 +410,7 @@ class AssetPackager:
             
             if cached_path and os.path.exists(cached_path):
                 # Cache hit - use cached converted asset
-                logger.debug(f"Cache hit for asset conversion: {source_path}")
+                logger.info(f"[CACHE HIT] ASSETS stage - asset conversion: {source_path} -> {cached_path}")
                 file_size = os.path.getsize(cached_path)
                 
                 # Create asset info for cached conversion
@@ -427,7 +427,7 @@ class AssetPackager:
                 return asset_info
             
             # Cache miss - process and convert asset
-            logger.debug(f"Cache miss for asset: {source_path}")
+            logger.info(f"[CACHE MISS] ASSETS stage - asset conversion: {source_path}")
             
             # Check in-memory cache for same source checksum
             if source_checksum in self.asset_cache and not conversion_params:
@@ -849,7 +849,7 @@ class AssetPackager:
         try:
             # Use a specific scope for asset conversions
             cache_key = CacheKey(scope="asset_conversions", key=conversion_cache_key, stage=CacheStage.ASSETS)
-            cached_data = self.cache_manager.get_data(cache_key)
+            cached_data = self.cache_manager.get(cache_key)
             
             if cached_data and isinstance(cached_data, dict):
                 cached_path = cached_data.get('converted_path')
@@ -879,13 +879,13 @@ class AssetPackager:
                 'metadata': asset_info.metadata
             }
             
-            self.cache_manager.store_data(cache_key, conversion_data, metadata={
+            self.cache_manager.put(cache_key, conversion_data, metadata={
                 'asset_type': asset_info.asset_type,
                 'source_checksum': asset_info.source_checksum,
                 'file_size': asset_info.file_size
             })
             
-            logger.debug(f"Cached conversion for key: {conversion_cache_key}")
+            logger.info(f"[CACHE PUT] ASSETS stage - stored conversion for key: {conversion_cache_key}")
             
         except Exception as e:
             logger.warning(f"Failed to cache conversion for {conversion_cache_key}: {e}")
