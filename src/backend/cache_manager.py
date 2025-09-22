@@ -916,11 +916,14 @@ class CacheManager:
                 logger.info("No cache entries found for cleanup")
                 return
             
-            # Determine cleanup strategy based on current state
+            # Fixed target size calculation using max cache size, not current utilization
             target_utilization = self.eviction_config.target_utilization_percent
+            max_cache_size = self.eviction_config.max_cache_size_bytes
+            target_size = int(max_cache_size * (target_utilization / 100.0))
             current_size = sum(entry['size_bytes'] for entry in entries)
-            target_size = int(current_size * (target_utilization / current_utilization))
-            bytes_to_remove = current_size - target_size
+            bytes_to_remove = max(0, current_size - target_size)  # Ensure non-negative
+            
+            logger.debug(f"Eviction calculation: current={current_size}, target={target_size}, remove={bytes_to_remove}")
             
             # Sort entries by eviction priority (oldest and largest first)
             entries_prioritized = self._prioritize_entries_for_eviction(entries)
@@ -973,17 +976,43 @@ class CacheManager:
                         continue
                     
                     try:
-                        # Calculate entry size
-                        size_bytes = sum(f.stat().st_size for f in stage_dir.rglob('*') if f.is_file())
+                        # Calculate entry size with better error handling and accurate accounting
+                        size_bytes = 0
+                        try:
+                            for file_path in stage_dir.rglob('*'):
+                                if file_path.is_file():
+                                    try:
+                                        size_bytes += file_path.stat().st_size
+                                    except (OSError, ValueError) as e:
+                                        logger.warning(f"Failed to get size for {file_path}: {e}")
+                                        continue
+                        except Exception as e:
+                            logger.warning(f"Failed to calculate size for {stage_dir}: {e}")
+                            # Fallback to simple directory listing
+                            try:
+                                size_bytes = sum(f.stat().st_size for f in stage_dir.iterdir() if f.is_file())
+                            except Exception:
+                                size_bytes = 1024  # Assume 1KB minimum
                         
-                        # Get access times
+                        # Get access times with better handling
                         access_file = stage_dir / 'last_access'
                         access_time = 0
                         age_hours = float('inf')
                         
                         if access_file.exists():
-                            access_time = access_file.stat().st_mtime
-                            age_hours = (now - access_time) / 3600
+                            try:
+                                access_time = access_file.stat().st_mtime
+                                age_hours = (now - access_time) / 3600
+                            except (OSError, ValueError) as e:
+                                logger.warning(f"Failed to read access time for {access_file}: {e}")
+                                # Fall back to directory modification time
+                                try:
+                                    access_time = stage_dir.stat().st_mtime
+                                    age_hours = (now - access_time) / 3600
+                                except (OSError, ValueError):
+                                    # Ultimate fallback
+                                    access_time = now - 86400  # 1 day ago
+                                    age_hours = 24.0
                         
                         # Get creation time from metadata
                         metadata_file = stage_dir / 'metadata.json'
@@ -1015,19 +1044,20 @@ class CacheManager:
         return entries
     
     def _prioritize_entries_for_eviction(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Sort entries by eviction priority."""
+        """Sort entries by eviction priority with proper LRU ordering."""
         def eviction_priority(entry):
-            # Priority factors (lower score = higher priority for eviction)
+            # Priority factors (higher score = higher priority for eviction)
             
-            # 1. Age factor (older = higher priority)
+            # 1. LRU factor - most important for cache eviction (oldest access = highest priority)
+            # Use negative access_time so older entries get higher scores
+            lru_factor = -entry['access_time'] if entry['access_time'] > 0 else float('inf')
+            
+            # 2. Age factor (older creation time = higher priority)
             age_factor = entry['age_hours'] / max(1, self.eviction_config.max_entry_age_hours)
             
-            # 2. Size factor (larger = higher priority for big cleanups)
-            avg_size = 10 * 1024 * 1024  # 10MB baseline
+            # 3. Size factor (larger = higher priority for space recovery)
+            avg_size = 1024 * 1024  # 1MB baseline
             size_factor = entry['size_bytes'] / avg_size
-            
-            # 3. Recent access penalty (recently accessed = lower priority)
-            recency_penalty = -10 if entry['is_recently_accessed'] else 0
             
             # 4. Stage importance (some stages might be more important)
             stage_importance = {
@@ -1039,11 +1069,18 @@ class CacheManager:
             }
             importance_factor = 1.0 / stage_importance.get(entry['stage'], 1.0)
             
-            # Combined priority score
-            return (age_factor * 2.0 + size_factor * 1.0 + importance_factor) + recency_penalty
+            # Combined priority score (LRU is most important factor)
+            return (lru_factor * 100.0 + age_factor * 10.0 + size_factor * 1.0 + importance_factor)
         
         # Sort by priority (highest priority for eviction first)
-        return sorted(entries, key=eviction_priority, reverse=True)
+        sorted_entries = sorted(entries, key=eviction_priority, reverse=True)
+        
+        # Debug logging for LRU ordering
+        if logger.isEnabledFor(logging.DEBUG) and sorted_entries:
+            logger.debug(f"LRU eviction order: oldest access_time = {min(e['access_time'] for e in entries if e['access_time'] > 0)}")
+            logger.debug(f"LRU eviction order: newest access_time = {max(e['access_time'] for e in entries if e['access_time'] > 0)}")
+        
+        return sorted_entries
     
     def _perform_intelligent_eviction(self, entries: List[Dict[str, Any]], 
                                     target_bytes: int, current_utilization: float) -> List[Dict[str, Any]]:
@@ -1059,8 +1096,19 @@ class CacheManager:
         else:
             batch_size = self.eviction_config.min_eviction_batch_size
         
+        # Ensure minimum batch size for high utilization scenarios
+        if current_utilization > self.eviction_config.cleanup_threshold_percent:
+            batch_size = max(batch_size, self.eviction_config.min_eviction_batch_size)
+        
+        logger.debug(f"Eviction: {len(entries)} entries, target_bytes={target_bytes}, batch_size={batch_size}")
+        
+        # If we're severely over threshold, be less restrictive about "recently accessed"
+        critical_threshold = self.eviction_config.cleanup_threshold_percent + 10.0  # 10% above threshold
+        allow_recent_eviction = current_utilization > critical_threshold
+        
         # First pass: Remove aged entries regardless of size
         aged_entries = [e for e in entries if e['is_aged']]
+        logger.debug(f"Found {len(aged_entries)} aged entries")
         for entry in aged_entries[:batch_size // 2]:
             if self._remove_cache_entry(entry):
                 removed_entries.append(entry)
@@ -1068,7 +1116,16 @@ class CacheManager:
                 self.metrics.evictions += 1
         
         # Second pass: Remove by LRU until target is met
-        remaining_entries = [e for e in entries if not e['is_aged'] and not e['is_recently_accessed']]
+        # During critical situations, ignore "recently accessed" filter
+        if allow_recent_eviction:
+            # Remove all non-aged entries when critical
+            remaining_entries = [e for e in entries if not e['is_aged']]
+            logger.debug(f"Critical eviction: processing {len(remaining_entries)} remaining entries")
+        else:
+            # Normal operation: avoid recently accessed entries
+            remaining_entries = [e for e in entries if not e['is_aged'] and not e['is_recently_accessed']]
+            logger.debug(f"Normal eviction: processing {len(remaining_entries)} non-recent entries")
+        
         for entry in remaining_entries:
             if bytes_removed >= target_bytes or len(removed_entries) >= batch_size:
                 break
@@ -1078,6 +1135,7 @@ class CacheManager:
                 bytes_removed += entry['size_bytes']
                 self.metrics.evictions += 1
         
+        logger.debug(f"Eviction completed: removed {len(removed_entries)} entries, {bytes_removed} bytes")
         return removed_entries
     
     def _remove_cache_entry(self, entry: Dict[str, Any]) -> bool:
