@@ -18,7 +18,7 @@
     },
     {
       "description": "Group Python dependencies",
-      "matchManagers": ["pip_setup", "pipenv", "poetry", "pip_requirements", "pep621"],
+      "matchManagers": ["setup-cfg", "pipenv", "poetry", "pip_requirements", "pep621"],
       "groupName": "python dependencies",
       "groupSlug": "python"
     },
