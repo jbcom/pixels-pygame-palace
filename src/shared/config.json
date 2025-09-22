@@ -1,0 +1,59 @@
+{
+  "services": {
+    "express": {
+      "port": 5000
+    },
+    "flask": {
+      "port": 5001,
+      "url": "http://localhost:5001"
+    }
+  },
+  "rate_limits": {
+    "general": {
+      "max": 100,
+      "window_ms": 60000
+    },
+    "game_execution": {
+      "max": 10,
+      "window_ms": 60000
+    },
+    "compilation": {
+      "max": 5,
+      "window_ms": 300000
+    },
+    "strict": {
+      "max": 20,
+      "window_ms": 60000
+    }
+  },
+  "rateLimits": {
+    "general": {
+      "max": 100,
+      "windowMs": 60000
+    },
+    "gameExecution": {
+      "max": 10,
+      "windowMs": 60000
+    },
+    "compilation": {
+      "max": 5,
+      "windowMs": 300000
+    },
+    "strict": {
+      "max": 20,
+      "windowMs": 60000
+    }
+  },
+  "game": {
+    "maxConcurrentSessions": 10,
+    "maxSessionTime": 1800,
+    "maxCodeSize": 50000,
+    "streamFps": 30
+  },
+  "cors": {
+    "allowedOrigins": ["http://localhost:5000", "http://127.0.0.1:5000"]
+  },
+  "security": {
+    "jwtSecret": "dev-secret-change-in-production"
+  }
+}
