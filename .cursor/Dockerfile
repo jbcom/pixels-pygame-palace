@@ -81,7 +81,8 @@ WORKDIR /workspace
 
 # Copy package files first for better caching
 COPY package*.json ./
-COPY apps/backend/pyproject.toml apps/backend/
+COPY pyproject.toml ./
+COPY uv.lock ./
 COPY apps/frontend/package*.json apps/frontend/
 COPY apps/server/package*.json apps/server/
 COPY packages/assets/package*.json packages/assets/
