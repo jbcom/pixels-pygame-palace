@@ -14,7 +14,10 @@ try:
     from .routes import register_api_routes
     from .models import extend_request_class
 except ImportError:
-    # Fallback for when run as script
+    # Fallback for when run as script - look in shared directory
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent / "shared"))
     from config import get_config
     from routes import register_api_routes
     from models import extend_request_class
@@ -75,3 +78,13 @@ def create_app():
     register_api_routes(app, limiter, socketio)
 
     return app, socketio
+
+
+def main():
+    """Entry point for console script."""
+    app, socketio = create_app()
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True, allow_unsafe_werkzeug=True)
+
+
+if __name__ == '__main__':
+    main()
