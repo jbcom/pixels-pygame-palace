@@ -86,6 +86,8 @@ def get_config() -> ConfigProtocol:
         import importlib.util
         config_path = Path(__file__).parent.parent / 'shared' / 'config.py'
         spec = importlib.util.spec_from_file_location("root_config", config_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load config from {config_path}")
         root_config = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(root_config)
         
