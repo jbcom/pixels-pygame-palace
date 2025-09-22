@@ -14,7 +14,7 @@
     "dev:server": "NODE_ENV=development tsx apps/server/index.ts",
     "dev:client": "cd apps/frontend && vite",
     "build": "npm run build:client && npm run build:server && npm run build:python",
-    "build:client": "vite build",
+    "build:client": "cd apps/frontend && vite build",
     "build:server": "esbuild apps/server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:python": "cd apps/backend && uv sync --frozen",
     "start": "concurrently -n 'backend,server' -c 'yellow,cyan' 'npm:start:python' 'npm:start:server'",
@@ -24,7 +24,12 @@
     "check": "tsc && cd apps/backend && mypy .",
     "test": "vitest",
     "test:python": "cd apps/backend && pytest",
-    "test:all": "concurrently -n 'js,python' -c 'cyan,yellow' 'npm:test' 'npm:test:python'"
+    "test:all": "concurrently -n 'js,python' -c 'cyan,yellow' 'npm:test' 'npm:test:python'",
+    "test:frontend": "cd apps/frontend && vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
