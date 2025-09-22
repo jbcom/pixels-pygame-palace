@@ -82,9 +82,9 @@ def get_config() -> ConfigProtocol:
         if root_path not in sys.path:
             sys.path.insert(0, root_path)
         
-        # Import the root config module
+        # Import the shared config module
         import importlib.util
-        config_path = Path(__file__).parent.parent / 'config.py'
+        config_path = Path(__file__).parent.parent / 'shared' / 'config.py'
         spec = importlib.util.spec_from_file_location("root_config", config_path)
         root_config = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(root_config)

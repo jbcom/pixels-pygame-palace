@@ -13,7 +13,7 @@ from typing import Any, Dict
 
 def load_shared_config() -> Dict[str, Any]:
     """Load configuration from shared/config.json."""
-    config_path = Path(__file__).parent / "shared" / "config.json"
+    config_path = Path(__file__).parent / "config.json"
     
     if not config_path.exists():
         raise FileNotFoundError(f"Shared config file not found at {config_path}")
@@ -130,3 +130,8 @@ except Exception as e:
     # Provide a minimal fallback to prevent import errors
     SERVICE_CONFIG = SimpleNamespace()
     RAW_CONFIG = {}
+
+
+def get_config():
+    """Get configuration - compatibility function for Flask backend."""
+    return SERVICE_CONFIG
