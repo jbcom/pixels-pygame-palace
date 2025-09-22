@@ -27,8 +27,8 @@ import logging
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 try:
-    from src.backend.cache_manager import CacheManager, CacheKey, CacheStage
-    from src.backend.asset_packager import AssetPackager, AssetInfo, ConversionParams, AssetType
+    from backend.cache_manager import CacheManager, CacheKey, CacheStage
+    from backend.asset_packager import AssetPackager, AssetInfo, ConversionParams, AssetType
 except ImportError as e:
     print(f"Import error: {e}")
     print("Attempting fallback import...")
@@ -43,12 +43,12 @@ except ImportError as e:
         spec.loader.exec_module(module)
         return module
     
-    cache_module = load_module("cache_manager", "src/backend/cache_manager.py")
+    cache_module = load_module("cache_manager", "backend/cache_manager.py")
     CacheManager = cache_module.CacheManager
     CacheKey = cache_module.CacheKey
     CacheStage = cache_module.CacheStage
     
-    asset_module = load_module("asset_packager", "src/backend/asset_packager.py")
+    asset_module = load_module("asset_packager", "backend/asset_packager.py")
     AssetPackager = asset_module.AssetPackager
     AssetInfo = asset_module.AssetInfo
     ConversionParams = asset_module.ConversionParams

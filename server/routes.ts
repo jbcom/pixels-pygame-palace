@@ -795,7 +795,6 @@ while running:
 # Quit
 pygame.quit()
 sys.exit()`;
-}
 
   // === REGISTRY API ENDPOINTS ===
   
