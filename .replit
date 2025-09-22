@@ -1,5 +1,5 @@
 entrypoint = "client/index.html"
-onBoot = ["bash", "-lc", "./scripts/bootstrap_env.sh"]
+onBoot = ["bash", "-lc", "./src/scripts/bootstrap_env.sh"]
 run = ["bash", "-lc", "source .venv/bin/activate && npm run dev"]
 modules = ["nodejs-24", "web", "python-3.11", "python3"]
 hidden = [
