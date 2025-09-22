@@ -19,11 +19,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 try:
-    from src.backend.cache_manager import CacheManager, CacheKey, CacheStage
+    from backend.cache_manager import CacheManager, CacheKey, CacheStage
 except ImportError:
     # Fallback import
     import importlib.util
-    spec = importlib.util.spec_from_file_location("cache_manager", "src/backend/cache_manager.py")
+    spec = importlib.util.spec_from_file_location("cache_manager", "backend/cache_manager.py")
     if spec is None:
         raise ImportError("Could not load cache_manager module spec")
     cache_module = importlib.util.module_from_spec(spec)

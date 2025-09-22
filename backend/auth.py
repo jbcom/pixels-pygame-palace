@@ -5,7 +5,10 @@ from datetime import datetime
 from functools import wraps
 from flask import request, jsonify
 
-from .config import get_config
+try:
+    from .config import get_config
+except ImportError:
+    from config import get_config
 
 def verify_token(f):
     """Verify JWT token from Express backend."""

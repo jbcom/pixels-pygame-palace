@@ -17,10 +17,16 @@ from io import BytesIO
 from typing import Optional, Dict, Any, Union
 from PIL import Image
 
-from security_config import (
-    SANDBOX_LIMITS,
-    CodeValidator
-)
+try:
+    from .security_config import (
+        SANDBOX_LIMITS,
+        CodeValidator
+    )
+except ImportError:
+    from security_config import (
+        SANDBOX_LIMITS,
+        CodeValidator
+    )
 
 
 class GameExecutor:

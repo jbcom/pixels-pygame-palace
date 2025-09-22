@@ -1,1 +1,1 @@
-# Backend module for game engine
+# Backend source package

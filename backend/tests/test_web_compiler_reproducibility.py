@@ -220,7 +220,7 @@ if __name__ == "__main__":
         # Mock time-dependent functions to ensure deterministic output
         fixed_time = datetime(2024, 1, 1, 0, 0, 0)
         
-        with patch('src.backend.web_game_compiler.datetime') as mock_datetime:
+        with patch('web_game_compiler.datetime') as mock_datetime:
             mock_datetime.now.return_value = fixed_time
             mock_datetime.return_value = fixed_time
             

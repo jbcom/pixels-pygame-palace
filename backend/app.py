@@ -1,37 +1,77 @@
-#!/usr/bin/env python3
-"""Main Flask application entry point for Pixel's PyGame Palace backend."""
+"""Flask application factory and configuration."""
 
 import os
-import sys
-from pathlib import Path
+import secrets
+from datetime import timedelta
+from flask import Flask
+from flask_cors import CORS
+from flask_socketio import SocketIO
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
-# Add the root directory to Python path to find src.backend
-root_dir = Path(__file__).parent.parent
-sys.path.insert(0, str(root_dir))
+try:
+    from .config import get_config
+    from .routes import register_api_routes
+    from .models import extend_request_class
+except ImportError:
+    # Fallback for when run as script
+    from config import get_config
+    from routes import register_api_routes
+    from models import extend_request_class
 
-from src.backend.app import create_app
-from src.backend.websocket_handlers import register_websocket_handlers
 
-# Create Flask application
-app, socketio = create_app()
-
-# Register WebSocket event handlers
-register_websocket_handlers(socketio)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
-    debug = os.environ.get('FLASK_ENV') != 'production'
+def create_app():
+    """Create and configure Flask application."""
+    app = Flask(__name__)
     
-    print(f"🚀 Starting Pygame Execution Backend on port {port}")
-    print(f"🔧 Debug mode: {debug}")
-    print(f"🌍 Environment: {os.environ.get('FLASK_ENV', 'development')}")
+    # Apply Flask Request extensions
+    extend_request_class()
     
-    socketio.run(
-        app,
-        host='0.0.0.0',
-        port=port,
-        debug=debug,
-        use_reloader=False,  # Disable reloader to prevent double startup
-        log_output=True,
-        allow_unsafe_werkzeug=True  # Allow development server for testing
+    # Load configuration
+    config = get_config()
+    
+    # Security: Generate secure SECRET_KEY
+    if os.environ.get('FLASK_ENV') == 'production':
+        if not os.environ.get('FLASK_SECRET_KEY'):
+            raise RuntimeError("FLASK_SECRET_KEY environment variable is required in production")
+        app.config['SECRET_KEY'] = os.environ['FLASK_SECRET_KEY']
+    else:
+        app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+
+    # Session security settings
+    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+
+    # Configure CORS
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": config.allowed_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
+
+    # Initialize rate limiter
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=[
+            f"{config.rate_limits.general.max} per {config.rate_limits.general.window_ms//1000} seconds"
+        ]
     )
+
+    # Initialize SocketIO
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins=config.allowed_origins,
+        async_mode='threading',
+        logger=False,
+        engineio_logger=False
+    )
+
+    # Register API routes
+    register_api_routes(app, limiter, socketio)
+
+    return app, socketio

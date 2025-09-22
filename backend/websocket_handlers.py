@@ -3,7 +3,10 @@
 from flask import request
 from flask_socketio import emit
 
-from .game_manager import game_sessions
+try:
+    from .game_manager import game_sessions
+except ImportError:
+    from game_manager import game_sessions
 
 
 def register_websocket_handlers(socketio):
