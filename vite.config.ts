@@ -16,14 +16,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(import.meta.dirname, 'src/frontend', 'src'),
-      '@shared': path.resolve(import.meta.dirname, 'shared'),
-      '@assets': path.resolve(import.meta.dirname, 'attached_assets'),
+      '@': path.resolve(import.meta.dirname, 'apps/frontend/src'),
+      '@shared': path.resolve(import.meta.dirname, 'packages/shared'),
+      '@assets': path.resolve(import.meta.dirname, 'packages/assets'),
     },
   },
-  root: path.resolve(import.meta.dirname, 'src/frontend'),
+  root: path.resolve(import.meta.dirname, 'apps/frontend'),
   build: {
-    outDir: path.resolve(import.meta.dirname, 'dist/public'),
+    outDir: path.resolve(import.meta.dirname, 'dist/frontend'),
     emptyOutDir: true,
   },
   server: {
