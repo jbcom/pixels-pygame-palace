@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./apps/frontend/tests/setup.ts'],
     // Set test timeout to prevent hanging tests
     testTimeout: 10000,
     hookTimeout: 10000,
@@ -42,7 +42,7 @@ export default defineConfig({
         '**/*.e2e.test.{ts,tsx}'
       ],
       include: [
-        'client/src/**/*.{ts,tsx}'
+        'apps/frontend/src/**/*.{ts,tsx}'
       ],
       thresholds: {
         lines: 90,
@@ -61,13 +61,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './client/src'),
-      '@shared': path.resolve(__dirname, './shared'),
-      '@/components': path.resolve(__dirname, './client/src/components'),
-      '@/lib': path.resolve(__dirname, './client/src/lib'),
-      '@/hooks': path.resolve(__dirname, './client/src/hooks'),
-      '@/pages': path.resolve(__dirname, './client/src/pages'),
-      '@assets': path.resolve(__dirname, './attached_assets')
+      '@': path.resolve(__dirname, './apps/frontend/src'),
+      '@shared': path.resolve(__dirname, './packages/shared'),
+      '@/components': path.resolve(__dirname, './apps/frontend/src/components'),
+      '@/lib': path.resolve(__dirname, './apps/frontend/src/lib'),
+      '@/hooks': path.resolve(__dirname, './apps/frontend/src/hooks'),
+      '@/pages': path.resolve(__dirname, './apps/frontend/src/pages'),
+      '@assets': path.resolve(__dirname, './packages/assets')
     }
   },
   esbuild: {
