@@ -19,7 +19,7 @@ test: test-backend test-frontend test-e2e
 test-backend:
     cd apps/backend && uv run pytest
 
-# Run frontend tests  
+# Run frontend tests
 test-frontend:
     npm run test:frontend
 
