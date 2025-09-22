@@ -1,0 +1,79 @@
+{
+  "tasks": {
+    "install": {
+      "name": "Install dependencies",
+      "description": "Install all npm dependencies for the workspace",
+      "command": "npm install"
+    },
+    "dev": {
+      "name": "Start development server",
+      "description": "Run all services in development mode",
+      "command": "npm run dev"
+    },
+    "build": {
+      "name": "Build for production",
+      "description": "Build all apps for production deployment",
+      "command": "npm run build"
+    },
+    "test": {
+      "name": "Run tests",
+      "description": "Run all test suites",
+      "command": "npm run test"
+    },
+    "test:frontend": {
+      "name": "Test frontend",
+      "description": "Run frontend unit tests",
+      "command": "npm run test:frontend"
+    },
+    "test:python": {
+      "name": "Test backend",
+      "description": "Run Python backend tests",
+      "command": "npm run test:python"
+    },
+    "test:e2e": {
+      "name": "Test E2E",
+      "description": "Run end-to-end tests",
+      "command": "npm run test:e2e"
+    },
+    "lint": {
+      "name": "Lint code",
+      "description": "Run linters for all code",
+      "command": "npm run lint"
+    },
+    "format": {
+      "name": "Format code",
+      "description": "Auto-format all code",
+      "command": "npm run format"
+    },
+    "clean": {
+      "name": "Clean project",
+      "description": "Remove all build artifacts and dependencies",
+      "command": "npm run clean"
+    },
+    "clean:deps": {
+      "name": "Clean dependencies",
+      "description": "Remove all node_modules and virtual environments",
+      "command": "npm run clean:deps"
+    },
+    "typecheck": {
+      "name": "Type check",
+      "description": "Run TypeScript type checking",
+      "command": "npm run typecheck"
+    },
+    "dev:python": {
+      "name": "Start Python backend only",
+      "description": "Run only the Python backend server",
+      "command": "npm run dev:python"
+    },
+    "dev:client": {
+      "name": "Start frontend only",
+      "description": "Run only the Vite frontend server",
+      "command": "npm run dev:client"
+    },
+    "dev:server": {
+      "name": "Start Node server only",
+      "description": "Run only the Node.js server",
+      "command": "npm run dev:server"
+    }
+  }
+}

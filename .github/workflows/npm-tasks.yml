@@ -1,0 +1,51 @@
+name: NPM Tasks
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'NPM task to run'
+        required: true
+        type: choice
+        options:
+          - install
+          - dev
+          - build
+          - test
+          - test:frontend
+          - test:python
+          - test:e2e
+          - lint
+          - format
+          - typecheck
+          - clean
+          - clean:deps
+
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Run npm ${{ github.event.inputs.task }}
+        run: npm run ${{ github.event.inputs.task }}
+        env:
+          FLASK_ENV: development
+          NODE_ENV: development

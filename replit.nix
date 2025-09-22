@@ -1,15 +1,33 @@
 { pkgs }: {
   deps = [
-    # -------- Env / build basics --------
+    # -------- Python environment --------
     pkgs.python313
     pkgs.uv
+    
+    # -------- Build essentials --------
     pkgs.pkg-config
     pkgs.zlib
     pkgs.openssl
     pkgs.libffi
     pkgs.gcc
     pkgs.gnumake
+    
+    # -------- Python image processing deps (from old .replit) --------
+    pkgs.freetype
+    pkgs.lcms2
+    pkgs.libimagequant
+    pkgs.libjpeg
+    pkgs.libtiff
+    pkgs.libwebp
+    pkgs.libxcrypt
+    pkgs.openjpeg
+    pkgs.tcl
+    pkgs.tk
 
+    
+    # -------- Additional deps --------
+    pkgs.iana-etc  # Network protocols database
+    
     # PostgreSQL client libs/headers (psycopg)
     pkgs.postgresql_17
 

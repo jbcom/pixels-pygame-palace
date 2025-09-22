@@ -1,5 +1,34 @@
 # Pixel's PyGame Palace
 
+## Replit Configuration
+
+This project is configured for Replit with the following setup:
+
+### Environment
+- **Node.js**: Version 24 (installed via Replit modules)
+- **Python**: Version 3.13 (installed via Nix)
+- **Web**: HTML/CSS/JS support (via Replit modules)
+
+### Running NPM Commands
+Since Replit agents cannot run npm commands directly, use one of these methods:
+
+1. **Shell Script**: `./scripts/run-npm-task.sh [task-name]`
+2. **Replit Tasks**: Use the task runner UI in Replit
+3. **GitHub Actions**: Trigger workflows manually from the Actions tab
+
+Available tasks:
+- `install` - Install all dependencies
+- `dev` - Start development server (all services)
+- `build` - Build for production
+- `test` - Run all tests
+- `lint` - Lint all code
+- `format` - Format all code
+
+### Port Configuration
+- Frontend (Vite): 5173 → 80 (external)
+- Node Server: 5000 → 3000 (external)  
+- Python Backend: 5001 → 3001 (external)
+
 ## Overview
 
 Pixel's PyGame Palace is a comprehensive educational platform that teaches Python game development through an interactive, conversational approach. The system features a mascot named "Pixel" who guides users through creating six different game types (platformer, RPG, puzzle, racing, space shooter, dungeon crawler) via an intuitive wizard interface. The platform combines visual game development with real-time code generation, allowing users to see their games come to life as they make design choices. Built with modern web technologies, it serves both as a learning tool for beginners and a rapid prototyping environment for more experienced developers.
