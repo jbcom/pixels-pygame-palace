@@ -2,5 +2,44 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "packageRules": [
+    {
+      "description": "Group all non-major dependencies",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "description": "Group all major dependencies",
+      "matchUpdateTypes": ["major"],
+      "groupName": "all major dependencies",
+      "groupSlug": "all-major"
+    },
+    {
+      "description": "Group Python dependencies",
+      "matchManagers": ["pip_setup", "pipenv", "poetry", "pip_requirements", "pep621"],
+      "groupName": "python dependencies",
+      "groupSlug": "python"
+    },
+    {
+      "description": "Group JavaScript dependencies", 
+      "matchManagers": ["npm"],
+      "groupName": "javascript dependencies",
+      "groupSlug": "javascript"
+    }
+  ],
+  "prConcurrentLimit": 3,
+  "prCreation": "not-pending",
+  "rangeStrategy": "bump",
+  "rebaseWhen": "behind-base-branch",
+  "semanticCommits": "enabled",
+  "commitMessageTopic": "dependency {{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "commitMessageSuffix": "",
+  "labels": ["dependencies", "renovate"],
+  "automerge": false,
+  "automergeType": "pr",
+  "schedule": ["after 10pm and before 5am on weekdays", "every weekend"],
+  "timezone": "UTC"
 }
