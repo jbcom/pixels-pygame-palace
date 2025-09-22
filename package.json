@@ -17,7 +17,7 @@
     "build": "npm run build:client && npm run build:server && npm run build:python",
     "build:client": "cd apps/frontend && vite build",
     "build:server": "esbuild apps/server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "build:python": "uv sync --frozen",
+    "build:python": "cd apps/backend && uv sync --frozen",
     "start": "concurrently -n 'backend,server' -c 'yellow,cyan' 'npm:start:python' 'npm:start:server'",
     "start:python": "cd apps/backend && gunicorn app:app -k eventlet -w 1 -b 0.0.0.0:5001 --timeout 120",
     "start:server": "NODE_ENV=production node dist/index.js",
