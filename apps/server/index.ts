@@ -21,7 +21,7 @@ async function startServer() {
   if (process.env.NODE_ENV === 'development') {
     await createViteServer();
   } else {
-    app.use(express.static(path.resolve('dist/public')));
+    app.use(express.static(path.resolve(__dirname, '../../dist/frontend')));
   }
   
   app.listen(PORT, () => {

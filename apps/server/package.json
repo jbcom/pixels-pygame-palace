@@ -1,0 +1,27 @@
+{
+  "name": "@pixels/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx index.ts",
+    "build": "esbuild index.ts --platform=node --packages=external --bundle --format=esm --outdir=../../dist/server",
+    "start": "NODE_ENV=production node ../../dist/server/index.js",
+    "lint": "eslint . --ext ts --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pixels/shared": "workspace:*",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "ws": "^8.18"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19",
+    "esbuild": "^0.25.10"
+  }
+}
