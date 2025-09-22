@@ -26,10 +26,10 @@ dependencies = [
 ]
 
 [project.scripts]
-backend = "backend.app:main"
+backend = "apps.backend.app:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/backend", "src/shared"]
+packages = ["apps/backend", "packages/shared"]
 
 [build-system]
 requires = ["hatchling"]

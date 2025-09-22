@@ -20,8 +20,8 @@ export default defineConfig({
         'server/vite.ts', // Exclude vite setup from coverage
       ],
       include: [
-        'server/**/*.ts',
-        'shared/**/*.ts'
+        'apps/server/**/*.ts',
+        'packages/shared/**/*.ts'
       ],
       thresholds: {
         lines: 90,
@@ -34,8 +34,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@shared': path.resolve(__dirname, './shared'),
-      '@server': path.resolve(__dirname, './server')
+      '@shared': path.resolve(__dirname, './packages/shared'),
+      '@server': path.resolve(__dirname, './apps/server')
     }
   }
 });

@@ -1,0 +1,25 @@
+{
+  "name": "@pixels/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./config": {
+      "import": "./config.js",
+      "types": "./config.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext ts --max-warnings 0"
+  },
+  "devDependencies": {
+    "typescript": "~5.6"
+  }
+}

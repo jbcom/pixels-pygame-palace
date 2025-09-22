@@ -8,7 +8,7 @@ from typing import Dict, Any, Union, Protocol, cast
 from types import SimpleNamespace
 
 # Add project root to Python path for shared imports  
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 
@@ -78,13 +78,13 @@ def get_config() -> ConfigProtocol:
         # Import from root config.py by adding parent to path temporarily
         import sys
         from pathlib import Path
-        root_path = str(Path(__file__).parent.parent)
+        root_path = str(Path(__file__).parent.parent.parent)
         if root_path not in sys.path:
             sys.path.insert(0, root_path)
         
         # Import the shared config module
         import importlib.util
-        config_path = Path(__file__).parent.parent / 'shared' / 'config.py'
+        config_path = Path(__file__).parent.parent.parent / 'packages' / 'shared' / 'config.py'
         spec = importlib.util.spec_from_file_location("root_config", config_path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Could not load config from {config_path}")
