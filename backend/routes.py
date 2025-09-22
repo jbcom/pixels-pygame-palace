@@ -8,15 +8,27 @@ from io import BytesIO
 from flask import request, jsonify, Response
 from werkzeug.exceptions import BadRequest
 
-from .config import get_config
-from .auth import verify_token
-from .game_manager import (
-    game_sessions, session_start_times, 
-    cleanup_expired_sessions, create_game_session, 
-    stop_game_session, get_active_sessions
-)
-from .web_game_compiler import web_game_manager
-from .web_game_server import setup_web_game_server
+try:
+    from .config import get_config
+    from .auth import verify_token
+    from .game_manager import (
+        game_sessions, session_start_times, 
+        cleanup_expired_sessions, create_game_session, 
+        stop_game_session, get_active_sessions
+    )
+    from .web_game_compiler import web_game_manager
+    from .web_game_server import setup_web_game_server
+except ImportError:
+    # Fallback for when run as script
+    from config import get_config
+    from auth import verify_token
+    from game_manager import (
+        game_sessions, session_start_times, 
+        cleanup_expired_sessions, create_game_session, 
+        stop_game_session, get_active_sessions
+    )
+    from web_game_compiler import web_game_manager
+    from web_game_server import setup_web_game_server
 
 # Pre-compute rate limit strings to avoid AttributeError in decorators
 try:

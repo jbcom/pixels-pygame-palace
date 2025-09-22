@@ -10,15 +10,15 @@ import os
 import json
 from pathlib import Path
 
-# Add src directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add current directory to Python path
+sys.path.insert(0, os.path.dirname(__file__))
 
 def test_basic_compilation():
     """Test basic compilation with a simple platformer template."""
     print("🧪 Testing basic compilation pipeline...")
     
     try:
-        from src.compiler_orchestrator import compiler_orchestrator, CompilationRequest
+        from compiler_orchestrator import compiler_orchestrator, CompilationRequest
         
         # Create a test compilation request
         request = CompilationRequest(
@@ -113,7 +113,7 @@ def test_fallback_compilation():
     print("🧪 Testing fallback compilation...")
     
     try:
-        from src.routes import generate_python_code
+        from routes import generate_python_code
         
         # Test components
         components = [
@@ -149,7 +149,7 @@ def test_ecs_runtime():
     print("🧪 Testing ECS runtime system...")
     
     try:
-        from src.ecs_runtime import (
+        from ecs_runtime import (
             World, Entity, EventBus,
             TransformComponent, VelocityComponent,
             InputSystem, PhysicsSystem
@@ -198,7 +198,7 @@ def test_asset_packager():
     print("🧪 Testing asset packager...")
     
     try:
-        from src.asset_packager import AssetPackager
+        from asset_packager import AssetPackager
         
         # Create asset packager
         packager = AssetPackager()
@@ -220,7 +220,7 @@ def test_template_renderer():
     print("🧪 Testing template renderer...")
     
     try:
-        from src.templates.template_renderer import TemplateRenderer
+        from templates.template_renderer import TemplateRenderer
         
         # Create renderer
         renderer = TemplateRenderer()
