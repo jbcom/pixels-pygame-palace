@@ -11,15 +11,45 @@
   "rateLimits": {
     "general": {
       "windowMs": 900000,
+      "window_ms": 900000,
       "max": 100
     },
     "strict": {
       "windowMs": 900000,
+      "window_ms": 900000,
       "max": 20
     },
     "gameExecution": {
       "windowMs": 900000,
+      "window_ms": 900000,
       "max": 10
+    },
+    "compilation": {
+      "windowMs": 900000,
+      "window_ms": 900000,
+      "max": 5
+    }
+  },
+  "rate_limits": {
+    "general": {
+      "windowMs": 900000,
+      "window_ms": 900000,
+      "max": 100
+    },
+    "strict": {
+      "windowMs": 900000,
+      "window_ms": 900000,
+      "max": 20
+    },
+    "game_execution": {
+      "windowMs": 900000,
+      "window_ms": 900000,
+      "max": 10
+    },
+    "compilation": {
+      "windowMs": 900000,
+      "window_ms": 900000,
+      "max": 5
     }
   },
   "game": {
@@ -45,6 +75,7 @@
   },
   "security": {
     "jwtExpiry": "1h",
+    "jwtSecret": null,
     "sessionTimeout": 3600
   }
 }

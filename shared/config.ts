@@ -15,14 +15,44 @@ const configSchema = z.object({
   rateLimits: z.object({
     general: z.object({
       windowMs: z.number(),
+      window_ms: z.number(),
       max: z.number(),
     }),
     strict: z.object({
       windowMs: z.number(),
+      window_ms: z.number(),
       max: z.number(),
     }),
     gameExecution: z.object({
       windowMs: z.number(),
+      window_ms: z.number(),
+      max: z.number(),
+    }),
+    compilation: z.object({
+      windowMs: z.number(),
+      window_ms: z.number(),
+      max: z.number(),
+    }),
+  }),
+  rate_limits: z.object({
+    general: z.object({
+      windowMs: z.number(),
+      window_ms: z.number(),
+      max: z.number(),
+    }),
+    strict: z.object({
+      windowMs: z.number(),
+      window_ms: z.number(),
+      max: z.number(),
+    }),
+    game_execution: z.object({
+      windowMs: z.number(),
+      window_ms: z.number(),
+      max: z.number(),
+    }),
+    compilation: z.object({
+      windowMs: z.number(),
+      window_ms: z.number(),
       max: z.number(),
     }),
   }),
@@ -43,6 +73,7 @@ const configSchema = z.object({
   }),
   security: z.object({
     jwtExpiry: z.string(),
+    jwtSecret: z.string().nullable(),
     sessionTimeout: z.number(),
   }),
 });
